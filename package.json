@@ -1,0 +1,23 @@
+{
+  "name": "musicplayer",
+  "version": "1.0.0",
+  "description": "Music player with extra customizations",
+  "homepage": "./src",
+  "main": "./src/renderer/main.js",
+  "scripts": {
+    "test": "test",
+    "start": "cd react-app && npm run start",
+    "all": "concurrently -k \" npm start\" \"wait-on http://localhost:3000 && electron .\""
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "electron": "^26.0.0",
+    "wait-on": "^7.0.1"
+  },
+  "dependencies": {
+    "glob": "^10.3.3",
+    "music-metadata": "^8.1.4"
+  }
+}
