@@ -1,0 +1,39 @@
+.playbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Each 'section' in the playbar */
+.playbar div {
+}
+
+.current-song {
+  text-align: center;
+  margin-right: auto;
+  margin-left: 0.5%;
+}
+
+.current-song span {
+  display: block;
+  font-size: 14px;
+}
+
+.playbar-controls {
+  display: flex;
+  align-items: center;
+}
+
+.playbar-controls button {
+  background-color: #666;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  margin: 0 5px;
+  cursor: pointer;
+}
+
+.volume-controls {
+  margin-left: auto;
+  margin-right: 0.5%;
+}

@@ -1,0 +1,45 @@
+.song-list-container {
+  padding: 20px;
+  margin-top: 40%;
+}
+
+.empty-message {
+  text-align: center;
+  color: var(--color-text);
+  margin-bottom: 10px;
+}
+
+.empty-message p {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.empty-message label {
+  display: inline-block;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.empty-message label:hover {
+  background-color: #0056b3;
+}
+
+/* Hide the input element */
+#folderInput {
+  display: none;
+}
+
+.song-list {
+  list-style: none;
+  padding: 0;
+}
+
+.song-list li {
+  padding: 10px;
+  border-bottom: 1px solid #ccc;
+}

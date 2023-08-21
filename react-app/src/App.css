@@ -1,0 +1,31 @@
+:root {
+  --color-main: #203245;
+  --color-secondary: #2a4057;
+  --color-button: #e76f51;
+  --color-text: white;
+}
+
+.app-container {
+  display: flex;
+  height: 100vh;
+  color: var(--color-text);
+  flex-direction: initial;
+}
+
+.playbar {
+  width: 100%;
+  background-color: var(--color-main);
+  position: absolute;
+  bottom: 0;
+}
+
+.layout-bar {
+  width: 15%;
+  max-width: 200px;
+  background-color: var(--color-main);
+}
+
+.main-content {
+  flex-grow: 1;
+  background-color: var(--color-secondary);
+}
