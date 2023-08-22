@@ -1,2 +1,6 @@
 .layout-bar {
 }
+
+.layout-bar > * {
+  margin-top: 20%; /* Adjust the margin as needed */
+}

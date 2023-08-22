@@ -11,7 +11,6 @@ function Playbar({ currentSongIndex, loadedSongs, setCurrentSongIndex }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSong, setcurrentSong] = useState(new Audio()); // Current playing audio object
   const [volume, setVolume] = useState(1); // Initial volume is 100%
-  // const [currentSongIndex, setCurrentSongIndex] = useState(0);
 
   // Current song changed! Update our variables
   // Essentially create the new song :)
@@ -32,6 +31,8 @@ function Playbar({ currentSongIndex, loadedSongs, setCurrentSongIndex }) {
       // Automatically play the next song when the current song ends
       playNextSong();
     });
+    currentSong.addEventListener('timeupdate', updateTime); // Listen for time updates
+
     setcurrentSong(currentSong);
   }, [currentSongIndex]);
 
@@ -72,6 +73,19 @@ function Playbar({ currentSongIndex, loadedSongs, setCurrentSongIndex }) {
     console.error('SETTING CUR SONG', currentSong, currentSong.title);
   };
 
+  const [currentTime, setCurrentTime] = useState(0);
+
+  const updateTime = () => {
+    setCurrentTime(currentSong.currentTime);
+  };
+
+  // Helper function to format time (in seconds) as mm:ss
+  function formatTime(timeInSeconds) {
+    const minutes = Math.floor(timeInSeconds / 60);
+    const seconds = Math.floor(timeInSeconds % 60);
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  }
+
   return (
     <div className="playbar">
       <audio
@@ -97,6 +111,9 @@ function Playbar({ currentSongIndex, loadedSongs, setCurrentSongIndex }) {
           isPlaying={isPlaying}
         />
         <NextButton onClick={playNextSong} />
+        <div className="playback-timer">
+          {formatTime(currentTime)} / {formatTime(currentSong.duration)}
+        </div>
       </div>
       <VolumeControl onVolumeChange={handleVolumeChange} />
     </div>
