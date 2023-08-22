@@ -25,6 +25,7 @@ function App() {
         <SongList
           onSongSelect={handleSongSelect}
           loadedSongs={setLoadedSongs}
+          currentSongIndex={currentSongIndex}
         />
       </div>
       <Playbar

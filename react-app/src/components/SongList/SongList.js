@@ -4,12 +4,9 @@ import './songList.css';
 
 import FolderSelection from '../FolderSelection/FolderSelection';
 
-function SongList({ onSongSelect, loadedSongs }) {
+function SongList({ onSongSelect, loadedSongs, currentSongIndex }) {
   // FULL LIST OF SONGS, TODO: Remove? TOO MUCH DATA?
-  // ! viewableSongs <- only need to load as many as the screen should show
-  // const [songs, setSongs] = useState([]);
   const [visibleSongs, setvisibleSongs] = useState([]);
-
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -43,8 +40,15 @@ function SongList({ onSongSelect, loadedSongs }) {
       ) : (
         <ul className="song-list">
           {visibleSongs.map((song, index) => (
-            <li key={song.id} onClick={() => onSongSelect(index)}>
-              {song.title} - {song.artist}
+            <li
+              key={index}
+              onClick={() => onSongSelect(index)}
+              style={{ color: currentSongIndex === index ? 'green' : '' }}
+            >
+              <div>{song.title}</div>
+              <div>{song.artist}</div>
+              <div>{song.album}</div>
+              <div>{song.duration}</div>
             </li>
           ))}
         </ul>
