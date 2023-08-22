@@ -6,31 +6,25 @@ import logo from './logo.svg';
 import Playbar from './components/Playbar/Playbar';
 import SongList from './components/SongList/SongList';
 import LayoutBar from './components/LayoutBar/LayoutBar';
-
-// const { ipcRenderer } = window.require('electron');
+import ErrorMessages from './components/ErrorMessages/ErrorMessages';
 
 function App() {
-  const [songs, setSongs] = useState([
-    // Your song data here...
-  ]);
   const [currentSong, setCurrentSong] = useState(null);
-
-  useEffect(() => {
-    // Listen for the event
-    window.electron.ipcRenderer.on('GET_DATA', (event, arg) => {
-      // setData(arg);
-    });
-    // Clean the listener after the component is dismounted
-    return;
-  }, []);
+  // Update the current song when a song is selected
+  const handleSongSelect = (song) => {
+    setCurrentSong(song);
+    console.error('CURRENT SONG IS ', song);
+  };
 
   return (
     <div className="app-container">
       <LayoutBar />
       <div className="main-content">
-        <SongList songs={songs} />
+        <SongList onSongSelect={handleSongSelect} />
       </div>
       <Playbar currentSong={currentSong} />
+
+      <ErrorMessages />
     </div>
   );
 }

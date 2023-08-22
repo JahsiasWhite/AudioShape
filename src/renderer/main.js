@@ -4,14 +4,14 @@ const path = require('path');
 const fs = require('fs');
 
 const { glob, globSync, Glob } = require('glob');
-// import { glob } from 'glob';
 
-// const metadata = require('music-metadata');
+// Annoying way to import this tbh
 let metadata;
 import('music-metadata').then((module) => {
   metadata = module;
 });
 
+/* Globals */
 let defaultSettings = JSON.stringify({
   libraryDirectory: '',
   loop: 'none',
@@ -19,9 +19,13 @@ let defaultSettings = JSON.stringify({
   allowRemote: true,
 });
 
+// TODO: I don't think I should even save these, at least not all. Is there a way to just access the directory so we don't have to do this?
+let songs = [];
+
 app.name = 'Music Player';
 
 app.on('ready', function () {
+  // Create our app
   const mainWindow = new BrowserWindow({
     width: app.isPackaged ? 800 : 1100, // If we are debugging, we want to double the width for the debug window
     height: 600,
@@ -33,6 +37,9 @@ app.on('ready', function () {
       nodeIntegration: true,
       // enableRemoteModule: true,
       // contextIsolation: false,
+
+      // ! TODO Idk this seems bad... cant play local files without it though?
+      webSecurity: false,
     },
   });
 
@@ -46,7 +53,6 @@ app.on('ready', function () {
         slashes: true,
       })
     : 'http://localhost:3000';
-  // mainWindow.loadFile(__dirname + './index.html');
   mainWindow.loadURL(appURL);
 
   // Automatically open Chrome's DevTools in development mode.
@@ -60,10 +66,17 @@ app.on('ready', function () {
     // Get all songs in the folder
     // TODO Get all songs in subdirectories as well
     const audios = await glob(folderPath + '\\*.{mp3, wav, ogg}');
+
+    // Make sure we have some files
+    // ! Should I also say there's an error here?
     const files = await getMp3FilesFromDirectory(folderPath);
+    if (files.length === 0) {
+      return;
+    }
+
     const file = folderPath + '\\' + files[0];
 
-    let songs = [];
+    let count = 0; // This is so we know when we ran out of files to parse and can return
     metadata
       .parseFile(file)
       .then((data) => {
@@ -99,8 +112,16 @@ app.on('ready', function () {
           album: album,
           duration: duration,
         });
+
+        // So we know when to end :)
+        // Either this or more async + try blocks
+        count++;
+        if (count === files.length) {
+          mainWindow.webContents.send('GRAB_SONGS', songs);
+        }
       })
       .catch((error) => {
+        // TODO: ! SEND THE ERROR MESSAGE THEYRE DIFF
         mainWindow.webContents.send('ERROR_MESSAGE', {
           title: 'Error',
           description: `Unable to parse metadata of: ${file}`,
@@ -178,19 +199,25 @@ app.on('ready', function () {
     //   }
     // });
   });
-});
 
-// Function to get all MP3 files from a directory
-async function getMp3FilesFromDirectory(folderPath) {
-  try {
-    const files = await fs.promises.readdir(folderPath);
-  } catch (e) {
-    console.error(e);
-    return [];
+  /* Helper IPC functions */
+  // Function to get all MP3 files from a directory
+  async function getMp3FilesFromDirectory(folderPath) {
+    let files;
+    try {
+      files = await fs.promises.readdir(folderPath);
+      console.error('FILES ARE : ', files);
+    } catch (e) {
+      mainWindow.webContents.send('ERROR_MESSAGE', {
+        title: 'Error',
+        description: `No file or directory found at: ${folderPath}`,
+      });
+      return [];
+    }
+    const mp3Files = files.filter((file) => path.extname(file) === '.mp3');
+    return mp3Files;
   }
-  const mp3Files = files.filter((file) => path.extname(file) === '.mp3');
-  return mp3Files;
-}
+});
 
 // app.whenReady().then(createWindow);
 

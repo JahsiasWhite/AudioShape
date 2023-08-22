@@ -2,35 +2,19 @@
 import React, { useState, useEffect } from 'react';
 import './songList.css';
 
-function SongList({ songs }) {
-  const [chosenFolderPath, setChosenFolderPath] = useState(null);
+import FolderSelection from '../FolderSelection/FolderSelection';
+
+function SongList({ onSongSelect }) {
+  // FULL LIST OF SONGS, TODO: Remove? TOO MUCH DATA?
+  // ! viewableSongs <- only need to load as many as the screen should show
+  // const [songs, setSongs] = useState([]);
   const [loadedSongs, setLoadedSongs] = useState([]);
-  const [isLoading, setIsLoading] = useState(true); // Add isLoading state
 
-  // Once a folder is selected, we call to the server to load the
-  // file path to grab the songs
-  const handleFolderSelection = (event) => {
-    const filePath = event.target.files[0].path;
-    // const relativePath = event.target.files[0].webkitRelativePath;
+  const [isLoading, setIsLoading] = useState(true);
 
-    const cutoffIndex = filePath.lastIndexOf('\\');
-    const folderPath = filePath.substring(0, cutoffIndex);
-
-    setChosenFolderPath(folderPath);
-    window.electron.ipcRenderer.sendMessage('GET_SONGS', folderPath);
-  };
-
-  // Listen for the mp3-files-loaded event from the main process
-  // useEffect(() => {
-  //   window.electron.ipcRenderer.on('LOAD_SONGS', (mp3Files) => {
-  //     for (const mp3File of mp3Files) {
-  //       console.error(mp3File);
-  //     }
-  //   });
-  // }, [chosenFolderPath]); // ! only load this if chosenFolderPath?
   useEffect(() => {
     // Fetch initial songs when the component mounts
-    if (isLoading && songs.length === 0) {
+    if (isLoading && loadedSongs.length === 0) {
       console.error('GETTING');
       window.electron.ipcRenderer.sendMessage(
         'GET_SONGS',
@@ -40,38 +24,25 @@ function SongList({ songs }) {
     }
 
     // Listen for the mp3-files-loaded event from the main process
-    window.electron.ipcRenderer.on('LOAD_SONGS', (mp3Files) => {
-      console.error('HI');
+    // ! GET_SONGS loads from the dir, while GRAB_SONGS gets songs to show on the frontend
+    window.electron.ipcRenderer.on('GRAB_SONGS', (mp3Files) => {
+      console.error('GRABBING SONGS', mp3Files);
       // Update the loadedSongs state
       setLoadedSongs(mp3Files);
     });
-
-    // TODO ! MOVE THIS SOMEWHERE ELSE, THIS is a generic
-    window.electron.ipcRenderer.on('ERROR_MESSAGE', (err) => {
-      console.error('AHAHA', err);
-    });
-  }, []); // Empty dependency array, so this effect runs only once
+  }, []); // Empty dependency array, so this effect runs only once? ! ITS RUNNING TWICE RN!!!!
 
   return (
     <div className="song-list-container">
-      {songs.length === 0 ? (
+      {loadedSongs.length === 0 ? (
         <div className="empty-message">
           <p>No songs found! Make sure the file path is correct, or reset it</p>
-          <label htmlFor="folderInput">
-            Choose Folder
-            <input
-              id="folderInput"
-              type="file"
-              directory=""
-              webkitdirectory=""
-              onChange={handleFolderSelection}
-            />
-          </label>
+          <FolderSelection />
         </div>
       ) : (
         <ul className="song-list">
-          {songs.map((song) => (
-            <li key={song.id}>
+          {loadedSongs.map((song) => (
+            <li key={song.id} onClick={() => onSongSelect(song)}>
               {song.title} - {song.artist}
             </li>
           ))}
