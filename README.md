@@ -7,6 +7,7 @@ TODO:
 3. cleanup react-app, lots of unused stuff
 4. implement testing
 5. Watch the library directory for file changes so we don't need a manual refresh
+6. Fix all the prop drilling? -- Should setup the audio list in a context?
 
 ## Launching
 

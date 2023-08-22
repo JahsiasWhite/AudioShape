@@ -6,29 +6,36 @@ import PlayButton from './PlayButton/PlayButton';
 import NextButton from './NextButton/NextButton';
 import VolumeControl from './VolumeControl/VolumeControl'; // ! I don't know if I like this name
 
-function Playbar({ currentSong }) {
+function Playbar({ currentSongIndex, loadedSongs, setCurrentSongIndex }) {
+  // ! Should currentSong actually be the index int?
   const [isPlaying, setIsPlaying] = useState(false);
-  const [audioElement, setAudioElement] = useState(new Audio());
+  const [currentSong, setcurrentSong] = useState(new Audio()); // Current playing audio object
   const [volume, setVolume] = useState(1); // Initial volume is 100%
+  // const [currentSongIndex, setCurrentSongIndex] = useState(0);
 
   // Current song changed! Update our variables
   // Essentially create the new song :)
   useEffect(() => {
     // ? Can we do something here so if this is null, we never would even end up here
-    if (currentSong === null) return;
+    if (currentSongIndex === null) return;
 
-    const audio = new Audio(currentSong.file);
-    // audio.src = currentSong.file; // Assuming currentSong includes the file URL
+    const newSong = loadedSongs[currentSongIndex];
 
-    audio.volume = volume;
-    audio.addEventListener('ended', () => {
+    currentSong.src = newSong.file;
+    currentSong.volume = volume;
+    currentSong.load(); // Load the new song's data
+    currentSong.play();
+    setIsPlaying(true);
+
+    // audio.volume = volume;
+    currentSong.addEventListener('ended', () => {
       // Automatically play the next song when the current song ends
-      // Call a function to play the next song here
+      playNextSong();
     });
-    setAudioElement(audio);
-  }, [currentSong]);
+    setcurrentSong(currentSong);
+  }, [currentSongIndex]);
 
-  // Toggles the audio
+  // ? Toggles the audio
   // Less ternary I guess? ... if we convert to func
   // useEffect(() => {
   //   if (isPlaying) {
@@ -38,24 +45,31 @@ function Playbar({ currentSong }) {
   //   }
   // }, [isPlaying]);
 
-  // When a new song is selected, it will auto play :D
-  useEffect(() => {
-    playAudio();
-  }, [audioElement]);
-
   const playAudio = () => {
-    audioElement.play();
+    currentSong.play();
     setIsPlaying(true);
   };
 
   const pauseAudio = () => {
-    audioElement.pause();
+    currentSong.pause();
     setIsPlaying(false);
   };
 
   const handleVolumeChange = (newVolume) => {
     setVolume(newVolume);
-    audioElement.volume = newVolume;
+    currentSong.volume = newVolume;
+  };
+
+  const playPreviousSong = () => {
+    const previousIndex =
+      (currentSongIndex - 1 + loadedSongs.length) % loadedSongs.length;
+    setCurrentSongIndex(previousIndex);
+  };
+
+  const playNextSong = () => {
+    const nextIndex = (currentSongIndex + 1) % loadedSongs.length;
+    setCurrentSongIndex(nextIndex);
+    console.error('SETTING CUR SONG', currentSong, currentSong.title);
   };
 
   return (
@@ -66,17 +80,23 @@ function Playbar({ currentSong }) {
       ></audio>
       <div className="current-song">
         <span id="song-title">
-          {currentSong ? currentSong.title : 'No song playing'}
+          {loadedSongs[currentSongIndex]
+            ? loadedSongs[currentSongIndex].title
+            : 'No song playing'}
         </span>
-        <span id="artist">{currentSong ? currentSong.artist : ''}</span>
+        <span id="artist">
+          {loadedSongs[currentSongIndex]
+            ? loadedSongs[currentSongIndex].artist
+            : ''}
+        </span>
       </div>
       <div className="playbar-controls">
-        <PreviousButton />
+        <PreviousButton onClick={playPreviousSong} />
         <PlayButton
           onClick={isPlaying ? pauseAudio : playAudio}
           isPlaying={isPlaying}
         />
-        <NextButton />
+        <NextButton onClick={playNextSong} />
       </div>
       <VolumeControl onVolumeChange={handleVolumeChange} />
     </div>

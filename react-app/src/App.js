@@ -9,20 +9,29 @@ import LayoutBar from './components/LayoutBar/LayoutBar';
 import ErrorMessages from './components/ErrorMessages/ErrorMessages';
 
 function App() {
-  const [currentSong, setCurrentSong] = useState(null);
+  const [currentSongIndex, setCurrentSongIndex] = useState(null);
+  const [loadedSongs, setLoadedSongs] = useState([]);
+
   // Update the current song when a song is selected
-  const handleSongSelect = (song) => {
-    setCurrentSong(song);
-    console.error('CURRENT SONG IS ', song);
+  const handleSongSelect = (songIndex) => {
+    setCurrentSongIndex(songIndex);
+    console.error('CURRENT SONG IDX IS ', songIndex, loadedSongs);
   };
 
   return (
     <div className="app-container">
       <LayoutBar />
       <div className="main-content">
-        <SongList onSongSelect={handleSongSelect} />
+        <SongList
+          onSongSelect={handleSongSelect}
+          loadedSongs={setLoadedSongs}
+        />
       </div>
-      <Playbar currentSong={currentSong} />
+      <Playbar
+        currentSongIndex={currentSongIndex}
+        loadedSongs={loadedSongs}
+        setCurrentSongIndex={setCurrentSongIndex}
+      />
 
       <ErrorMessages />
     </div>
