@@ -1,5 +1,5 @@
 function Playlists() {
-  return <div></div>;
+  return <div>Playlists</div>;
 }
 
 export default Playlists;

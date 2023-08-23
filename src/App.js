@@ -7,6 +7,7 @@ import Playbar from './components/Playbar/Playbar';
 import SongList from './components/SongList/SongList';
 import Playlists from './components/Playlists/Playlists';
 import Artists from './components/Artists/Artists';
+import Settings from './components/Settings/Settings';
 import LayoutBar from './components/LayoutBar/LayoutBar';
 import ErrorMessages from './components/ErrorMessages/ErrorMessages';
 
@@ -25,6 +26,11 @@ function App() {
   const [currentSection, setCurrentSection] = useState('songs');
   // Function to toggle between SongList and Playlists
   const toggleSection = (section) => {
+    //TODO FIX THIS, Each page should be its own component... instead of SongList showing all types
+    if (section === 'allSongs') {
+      setVisibleSongs(loadedSongs);
+      section = 'songs';
+    }
     setCurrentSection(section);
   };
 
@@ -69,13 +75,15 @@ function App() {
           />
         ) : currentSection === 'playlists' ? (
           <Playlists songs={loadedSongs} />
-        ) : (
+        ) : currentSection === 'artists' ? (
           <Artists songs={loadedSongs} onArtistSelect={handleArtistSelect} />
+        ) : (
+          <Settings />
         )}
       </div>
       <Playbar
         currentSongIndex={currentSongIndex}
-        loadedSongs={loadedSongs} // TODO Dont import this entire object, you don't have to
+        visibleSongs={visibleSongs} // TODO Dont import this entire object, you don't have to
         setCurrentSongIndex={setCurrentSongIndex}
       />
 

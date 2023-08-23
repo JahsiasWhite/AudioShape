@@ -101,7 +101,7 @@ app.on('ready', function () {
 
     // Get all songs in the given directory as well as all subdirectories
     const audios = await glob(correctedPath + '/**/*.{mp3, wav, ogg}');
-    console.error(audios);
+    const imageFiles = await glob(correctedPath + '/**/*.{jpg, jpeg, png}');
 
     // Make sure we have some files
     if (audios.length === 0) {
@@ -110,6 +110,7 @@ app.on('ready', function () {
       return;
     }
 
+    /* Get all songs */
     let count = 0; // This is so we know when we ran out of files to parse and can return
     audios.map((file) => {
       metadata
@@ -140,12 +141,22 @@ app.on('ready', function () {
             artist = 'Unknown Artist';
           }
 
+          /* Gets image for the song / album */
+          // TODO Make this loop through all images
+          const albumDir = path.dirname(file);
+          const imageDir = path.dirname(imageFiles[0]);
+          let savedImage = undefined;
+          if (albumDir === imageDir) {
+            savedImage = imageFiles[0];
+          }
+
           songs.push({
             file: file,
             title: title,
             artist: artist,
             album: album,
             duration: duration,
+            albumImage: savedImage, // Init image
           });
 
           // So we know when to end :)

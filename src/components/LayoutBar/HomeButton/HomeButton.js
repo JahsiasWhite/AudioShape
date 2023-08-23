@@ -1,5 +1,5 @@
 function HomeButton({ toggleSection }) {
-  return <div onClick={() => toggleSection('songs')}>Home</div>;
+  return <div onClick={() => toggleSection('allSongs')}>Home</div>;
 }
 
 export default HomeButton;

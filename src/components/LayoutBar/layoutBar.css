@@ -1,6 +1,15 @@
 .layout-bar {
+  padding-top: 5px;
 }
 
-.layout-bar > * {
-  margin-top: 20%; /* Adjust the margin as needed */
+.centered-content {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  margin-left: 10px;
+  flex-direction: column;
+}
+
+.centered-content > * {
+  margin-top: 20%;
 }

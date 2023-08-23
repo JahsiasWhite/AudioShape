@@ -1,5 +1,6 @@
 .song-list-container {
   padding: 20px;
+  padding-top: 0px;
 }
 
 .empty-message {
@@ -34,12 +35,43 @@
   display: none;
 }
 
+.song {
+  position: relative;
+}
+
 .song-list {
   list-style: none;
   padding: 0;
 }
 
-.song-list li {
+.list-item {
   padding: 10px;
   border-bottom: 1px solid #ccc;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.list-image {
+  height: 70px;
+  width: 70px;
+  margin-right: 10px;
+}
+
+.song-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.plus-sign {
+  font-size: 20px;
+  margin-right: 10px;
+
+  display: flex;
+  flex: auto;
+  justify-content: end;
+}
+
+.dropdown-button {
+  font-size: 20px;
 }

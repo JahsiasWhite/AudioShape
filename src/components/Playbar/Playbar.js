@@ -6,7 +6,7 @@ import PlayButton from './PlayButton/PlayButton';
 import NextButton from './NextButton/NextButton';
 import VolumeControl from './VolumeControl/VolumeControl'; // ! I don't know if I like this name
 
-function Playbar({ currentSongIndex, loadedSongs, setCurrentSongIndex }) {
+function Playbar({ currentSongIndex, visibleSongs, setCurrentSongIndex }) {
   // ! Should currentSong actually be the index int?
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSong, setcurrentSong] = useState(new Audio()); // Current playing audio object
@@ -18,7 +18,7 @@ function Playbar({ currentSongIndex, loadedSongs, setCurrentSongIndex }) {
     // ? Can we do something here so if this is null, we never would even end up here
     if (currentSongIndex === null) return;
 
-    const newSong = loadedSongs[currentSongIndex];
+    const newSong = visibleSongs[currentSongIndex];
 
     currentSong.src = newSong.file;
     currentSong.volume = volume;
@@ -63,12 +63,12 @@ function Playbar({ currentSongIndex, loadedSongs, setCurrentSongIndex }) {
 
   const playPreviousSong = () => {
     const previousIndex =
-      (currentSongIndex - 1 + loadedSongs.length) % loadedSongs.length;
+      (currentSongIndex - 1 + visibleSongs.length) % visibleSongs.length;
     setCurrentSongIndex(previousIndex);
   };
 
   const playNextSong = () => {
-    const nextIndex = (currentSongIndex + 1) % loadedSongs.length;
+    const nextIndex = (currentSongIndex + 1) % visibleSongs.length;
     setCurrentSongIndex(nextIndex);
   };
 
@@ -102,13 +102,13 @@ function Playbar({ currentSongIndex, loadedSongs, setCurrentSongIndex }) {
       ></audio>
       <div className="current-song">
         <span id="song-title">
-          {loadedSongs[currentSongIndex]
-            ? loadedSongs[currentSongIndex].title
+          {visibleSongs[currentSongIndex]
+            ? visibleSongs[currentSongIndex].title
             : 'No song playing'}
         </span>
         <span id="artist">
-          {loadedSongs[currentSongIndex]
-            ? loadedSongs[currentSongIndex].artist
+          {visibleSongs[currentSongIndex]
+            ? visibleSongs[currentSongIndex].artist
             : ''}
         </span>
       </div>
