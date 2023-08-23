@@ -70,13 +70,21 @@ function Playbar({ currentSongIndex, loadedSongs, setCurrentSongIndex }) {
   const playNextSong = () => {
     const nextIndex = (currentSongIndex + 1) % loadedSongs.length;
     setCurrentSongIndex(nextIndex);
-    console.error('SETTING CUR SONG', currentSong, currentSong.title);
   };
 
+  /**
+   * Song Timer stuff, last time I tried to put in own component, something went wrong so
+   * I left it here :(
+   */
   const [currentTime, setCurrentTime] = useState(0);
 
   const updateTime = () => {
     setCurrentTime(currentSong.currentTime);
+  };
+  const handleTimeChange = (event) => {
+    const newTime = parseFloat(event.target.value);
+    currentSong.currentTime = newTime;
+    setCurrentTime(newTime);
   };
 
   // Helper function to format time (in seconds) as mm:ss
@@ -113,6 +121,17 @@ function Playbar({ currentSongIndex, loadedSongs, setCurrentSongIndex }) {
         <NextButton onClick={playNextSong} />
         <div className="playback-timer">
           {formatTime(currentTime)} / {formatTime(currentSong.duration)}
+        </div>
+        <div className="playback-timer">
+          {/* ... other elements ... */}
+          <input
+            type="range"
+            min="0"
+            max={currentSong.duration}
+            value={currentTime}
+            onChange={handleTimeChange}
+            className="playback-timer"
+          />
         </div>
       </div>
       <VolumeControl onVolumeChange={handleVolumeChange} />

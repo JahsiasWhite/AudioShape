@@ -12,7 +12,9 @@ import ErrorMessages from './components/ErrorMessages/ErrorMessages';
 
 function App() {
   const [currentSongIndex, setCurrentSongIndex] = useState(null);
-  const [loadedSongs, setLoadedSongs] = useState([]);
+
+  const [loadedSongs, setLoadedSongs] = useState([]); // ? Can we use this as just visibleSongs ? Or should we have two objects?
+  const [visibleSongs, setVisibleSongs] = useState([]);
 
   // Update the current song when a song is selected
   const handleSongSelect = (songIndex) => {
@@ -26,6 +28,34 @@ function App() {
     setCurrentSection(section);
   };
 
+  /* When the songs first load, we want all songs to be shown */
+  const handleSongLoad = (songs) => {
+    setLoadedSongs(songs);
+    setVisibleSongs(songs);
+  };
+
+  const handleArtistSelect = (artist, songs) => {
+    // setSelectedArtist(artist);
+    setCurrentSection('songs');
+    setVisibleSongs(songs);
+  };
+
+  /**
+   * When the app first loads, we make a call to the server to grab the songs. It will pull any songs if a
+   * previous directory was given in the past. Once the server is donw processing, it sends the songs back
+   * here where they are saved.
+   */
+  useEffect(() => {
+    // Fetch initial songs when the component mounts
+    window.electron.ipcRenderer.sendMessage('GET_SONGS', '');
+
+    // ! GET_SONGS loads from the dir, while GRAB_SONGS gets songs to show on the frontend
+    window.electron.ipcRenderer.on('GRAB_SONGS', (mp3Files) => {
+      setVisibleSongs(mp3Files);
+      setLoadedSongs(mp3Files);
+    });
+  }, []);
+
   return (
     <div className="app-container">
       <LayoutBar toggleSection={toggleSection} />
@@ -33,18 +63,19 @@ function App() {
         {currentSection === 'songs' ? (
           <SongList
             onSongSelect={handleSongSelect}
-            loadedSongs={setLoadedSongs}
+            loadedSongs={handleSongLoad}
             currentSongIndex={currentSongIndex}
+            songs={visibleSongs}
           />
         ) : currentSection === 'playlists' ? (
           <Playlists songs={loadedSongs} />
         ) : (
-          <Artists songs={loadedSongs} />
+          <Artists songs={loadedSongs} onArtistSelect={handleArtistSelect} />
         )}
       </div>
       <Playbar
         currentSongIndex={currentSongIndex}
-        loadedSongs={loadedSongs}
+        loadedSongs={loadedSongs} // TODO Dont import this entire object, you don't have to
         setCurrentSongIndex={setCurrentSongIndex}
       />
 

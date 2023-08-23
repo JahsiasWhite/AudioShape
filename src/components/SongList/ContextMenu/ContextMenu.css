@@ -1,0 +1,23 @@
+.context-menu-container {
+  position: absolute;
+  display: block;
+}
+
+.context-menu {
+  list-style: none;
+  background-color: var(--color-secondary);
+  border: 1px solid #ccc;
+  padding: 0;
+  margin: 0;
+  position: absolute;
+  z-index: 1000;
+}
+
+.context-menu li {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.context-menu-container.active .context-menu {
+  display: block;
+}
