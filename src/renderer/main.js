@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 
 const path = require('path');
 const fs = require('fs');
+const url = require('url');
 
 const { glob, globSync, Glob } = require('glob');
 
@@ -21,6 +22,20 @@ let defaultSettings = JSON.stringify({
 
 // TODO: I don't think I should even save these, at least not all. Is there a way to just access the directory so we don't have to do this?
 let songs = [];
+
+/* Create the files to save settings */
+const dataDirectory = path.join(app.getPath('userData'), 'Data');
+const settingsFile = dataDirectory + 'settings.json';
+const playlistsFile = dataDirectory + 'playlists.json';
+if (!fs.existsSync(dataDirectory)) {
+  fs.mkdirSync(dataDirectory);
+}
+if (!fs.existsSync(settingsFile)) {
+  fs.writeFileSync(settingsFile, defaultSettings);
+}
+if (!fs.existsSync(playlistsFile)) {
+  fs.writeFileSync(playlistsFile, '');
+}
 
 app.name = 'Music Player';
 
@@ -63,8 +78,26 @@ app.on('ready', function () {
   /* IPC STUFF */
 
   ipcMain.on('GET_SONGS', async (event, folderPath) => {
-    // Our string has '\' instead of '/' so we gotta fix that
-    const correctedPath = folderPath.replace(/\\/g, '/');
+    let correctedPath = '';
+    // If folderPath is empty, use the default path
+    if (folderPath === '') {
+      // ? Put in its own function? getSongDirectory
+      const settingsPath = path.join(
+        app.getPath('userData'),
+        'Data',
+        'settings.json'
+      );
+      const settingsData = fs.readFileSync(settingsPath, 'utf-8');
+      const settings = JSON.parse(settingsData);
+
+      correctedPath = settings.libraryDirectory;
+    } else {
+      // Our string has '\' instead of '/' so we gotta fix that
+      correctedPath = folderPath.replace(/\\/g, '/');
+
+      // Save the new path to settings so when the app first starts, it will grab these
+      updateLibraryDirectory(correctedPath);
+    }
 
     // Get all songs in the given directory as well as all subdirectories
     const audios = await glob(correctedPath + '/**/*.{mp3, wav, ogg}');
@@ -131,6 +164,32 @@ app.on('ready', function () {
         });
     });
   });
+
+  /* Helper function */
+
+  function updateLibraryDirectory(newLibraryDirectory) {
+    const settingsPath = path.join(
+      app.getPath('userData'),
+      'Data',
+      'settings.json'
+    );
+
+    try {
+      const settingsData = fs.readFileSync(settingsPath, 'utf-8');
+      const settings = JSON.parse(settingsData);
+
+      settings.libraryDirectory = newLibraryDirectory;
+
+      console.error(
+        'WRITING PATH',
+        settings.libraryDirectory,
+        newLibraryDirectory
+      );
+      fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+    } catch (error) {
+      console.error('Error updating libraryDirectory in settings:', error);
+    }
+  }
 });
 
 // app.whenReady().then(createWindow);

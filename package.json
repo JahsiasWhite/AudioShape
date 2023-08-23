@@ -7,7 +7,8 @@
   "scripts": {
     "test": "test",
     "start": "cd react-app && npm run start",
-    "all": "concurrently -k \" npm start\" \"wait-on http://localhost:3000 && electron .\""
+    "all": "concurrently -k \" npm start\" \"wait-on http://localhost:3000 && electron .\"",
+    "package-win": "electron-packager . MusicPlayer --platform=win32 --arch=x64 --out=release-builds"
   },
   "author": "",
   "license": "ISC",

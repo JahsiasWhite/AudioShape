@@ -14,6 +14,12 @@ TODO:
 10. Using remotely - server & remote
 11. Get from Youtube
 12. Caching?
+13. Easy support for creating own themes
+14. Change the time in the current song
+15. Addon support
+    - Lyrics
+    - Themes?
+    - Youtube?
 
 999 Easy file/song sharing
 

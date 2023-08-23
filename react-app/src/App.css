@@ -1,6 +1,8 @@
 :root {
-  --color-main: #203245;
-  --color-secondary: #2a4057;
+  /* --color-main: #203245; */
+  --color-main: black;
+  /* --color-secondary: #2a4057; */
+  --color-secondary: rgb(26, 25, 26);
   --color-button: #e76f51;
   --color-text: white;
 }
