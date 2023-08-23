@@ -2,7 +2,7 @@ Lots to fix up
 
 TODO:
 
-1. rename src/renderer
+1. I think there's some over lap of 'npm i'. Pretty sure react-scripts is in both, probably much more
 2. rename react-app
 3. cleanup react-app, lots of unused stuff
 4. implement testing
