@@ -3,11 +3,10 @@
   "version": "1.0.0",
   "description": "Music player with extra customizations",
   "homepage": "./",
-  "main": "./public/main.js",
+  "main": "./public/electron.js",
   "scripts": {
-    "test": "test",
-    "start": "cd react-app && npm run start",
-    "all": "concurrently -k \" npm start\" \"wait-on http://localhost:3000 && electron .\"",
+    "react-start": "react-scripts start",
+    "all": "concurrently -k \" npm run react-start\" \"wait-on http://localhost:3000 && electron .\"",
     "package-win": "electron-packager . MusicPlayer --platform=win32 --arch=x64 --out=release-builds",
     "react-build": "react-scripts build",
     "electron-build": "electron-builder",
@@ -23,6 +22,19 @@
   "dependencies": {
     "glob": "^10.3.3",
     "music-metadata": "^8.1.4",
+    "react-dom": "^18.2.0",
     "react-scripts": "^5.0.1"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
