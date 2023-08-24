@@ -108,8 +108,8 @@ app.on('ready', function () {
     }
 
     // Get all songs in the given directory as well as all subdirectories
-    const audios = await glob(correctedPath + '/**/*.{mp3, wav, ogg}');
-    const imageFiles = await glob(correctedPath + '/**/*.{jpg, jpeg, png}');
+    const audios = await glob(correctedPath + '/**/*.{mp3,wav,ogg}');
+    const imageFiles = await glob(correctedPath + '/**/*.{jpg,jpeg,png}');
     console.error('IMAGES : ', imageFiles);
 
     // Make sure we have some files
@@ -178,6 +178,7 @@ app.on('ready', function () {
           }
         })
         .catch((error) => {
+          console.error('ERROR AT ', count, file, error);
           mainWindow.webContents.send('ERROR_MESSAGE', {
             title: 'Error',
             // description: `Unable to parse metadata of: ${file}`,
@@ -187,90 +188,59 @@ app.on('ready', function () {
     });
   });
 
-  ipcMain.on('SAVE_SONG', async (event, speed, filePath) => {
-    console.error('AB   : ', speed, speed.sampleRate);
-    // Apply the speed modification to the audioBuffer (using audio processing libraries)
+  ipcMain.on('SAVE_SONG', async (event, audioData, filePath) => {
+    // Construct the audio data into a Blob of wav data
+    const wavData = await getAudioBuffer(audioData, filePath);
 
-    const audioBuffer = await getAudioBuffer(speed, filePath);
+    // Create the new file path
+    const outputPath = filePath.replace('.mp3', '_modified.wav'); // TODO Make this .mp3 || .wav
 
-    // Convert the audio buffer to a WAV file
-    const wavData = audioBufferToWav(audioBuffer);
+    // Convert the Blob to a Buffer
+    const bufferData = await wavData.arrayBuffer();
+    const buffer = Buffer.from(bufferData);
 
-    // Derive the output file path
-    const outputPath = filePath.replace('.wav', '_modified.wav');
-
-    console.error(wavData);
-
-    // Write the WAV data to the output file
-    // fs.writeFileSync(outputPath, new Buffer(wavData), 'binary');
-    // // Send a response back to the renderer process
-    // event.sender.send('EXPORT_COMPLETE', outputPath);
-
-    // // For demonstration, let's assume modifiedAudioBuffer is the modified audio data
-    // // const modifiedAudioBuffer = applySpeedModification(audioBuffer);
-    // filePath = getParentDirectory(filePath);
-
-    // // Derive the output file path based on the current file path
-    // const outputPath = filePath.replace('.wav', '_modified.wav');
-
-    // if (outputPath) {
-    //   const audioData = {
-    //     sampleRate: audioBuffer.sampleRate,
-    //     channelData: [],
-    //   };
-    //   // Convert each channel's data to a Float32Array
-    //   for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
-    //     audioData.channelData[channel] = audioBuffer.getChannelData(channel);
-    //   }
-
-    //   console.error("HERE : ", audioData);
-    //   // Convert the modified audio buffer to WAV format
-    //   const wavData = await wavEncoder.encode(audioData);
-    //   // Convert the WAV data to a Blob
-    //   const wavBlob = new Blob([new Uint8Array(wavData)], {
-    //     type: 'audio/wav',
-    //   });
-    // }
+    // Write the Buffer to the file
+    fs.writeFileSync(outputPath, buffer);
   });
 
   /* Helper function */
 
-  async function getAudioBuffer(newSpeed, filePath) {
+  async function getAudioBuffer(wavBytes, filePath) {
     // const audioContext = new (window.AudioContext ||
     //   window.webkitAudioContext)();
 
     // Load the current song's audio buffer
-    console.error(filePath);
-    const response = await fetch(filePath);
-    const audioData = await response.arrayBuffer();
+    const wav = new Blob([wavBytes], { type: 'audio/wav' });
+    // const response = await fetch(filePath);
+    // const audioData = await response.arrayBuffer();
 
-    // Decode the audio data to an audio buffer
-    const audioBuffer = await audioContext.decodeAudioData(audioData);
+    // // Decode the audio data to an audio buffer
+    // const audioBuffer = await audioContext.decodeAudioData(audioData);
 
-    // Create a new audio buffer with increased playback speed
-    // .5 === 2x speed, 2 === .5x speed
-    const newLength = audioBuffer.duration * newSpeed;
-    const newSampleCount = Math.ceil(newLength * audioBuffer.sampleRate);
+    // // Create a new audio buffer with increased playback speed
+    // // .5 === 2x speed, 2 === .5x speed
+    // const newLength = audioBuffer.duration * newSpeed;
+    // const newSampleCount = Math.ceil(newLength * audioBuffer.sampleRate);
 
-    const newBuffer = audioContext.createBuffer(
-      audioBuffer.numberOfChannels,
-      newSampleCount,
-      audioBuffer.sampleRate
-    );
+    // const newBuffer = audioContext.createBuffer(
+    //   audioBuffer.numberOfChannels,
+    //   newSampleCount,
+    //   audioBuffer.sampleRate
+    // );
 
-    /* Copies the audio data to the new buffer */
-    for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
-      const oldData = audioBuffer.getChannelData(channel);
-      const newData = newBuffer.getChannelData(channel);
+    // /* Copies the audio data to the new buffer */
+    // for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
+    //   const oldData = audioBuffer.getChannelData(channel);
+    //   const newData = newBuffer.getChannelData(channel);
 
-      console.error(audioBuffer.length, newBuffer.length, newSampleCount);
-      for (let i = 0; i < newBuffer.length; i++) {
-        const oldIndex = Math.floor(i / newSpeed);
-        newData[i] = oldData[oldIndex] || 0;
-      }
-    }
+    //   console.error(audioBuffer.length, newBuffer.length, newSampleCount);
+    //   for (let i = 0; i < newBuffer.length; i++) {
+    //     const oldIndex = Math.floor(i / newSpeed);
+    //     newData[i] = oldData[oldIndex] || 0;
+    //   }
+    // }
 
-    return newBuffer;
+    return wav;
   }
 
   /**
@@ -288,6 +258,11 @@ app.on('ready', function () {
     return fixedFolderPath;
   }
 
+  /**
+   * Changes the current song directory into the new given directory.
+   * Also saves the change so on next boot, the new directory will be loaded
+   * @param {String} newLibraryDirectory - Directory path
+   */
   function updateLibraryDirectory(newLibraryDirectory) {
     const settingsPath = path.join(
       app.getPath('userData'),
@@ -301,11 +276,6 @@ app.on('ready', function () {
 
       settings.libraryDirectory = newLibraryDirectory;
 
-      console.error(
-        'WRITING NEW PATH',
-        settings.libraryDirectory,
-        newLibraryDirectory
-      );
       fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
     } catch (error) {
       console.error('Error updating libraryDirectory in settings:', error);

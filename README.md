@@ -24,6 +24,7 @@ TODO:
 17. Add a queue system
 18. Audio spectrum
 19. Cleanup packages, I know wave-encoder is not used
+20. Need to export to mp3, rn, exporting to WAV is creating audio files x10 as big as their original
 
 999 Easy file/song sharing
 
