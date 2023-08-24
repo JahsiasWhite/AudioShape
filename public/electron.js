@@ -5,6 +5,11 @@ const fs = require('fs');
 const url = require('url');
 
 const { glob, globSync, Glob } = require('glob');
+// const { fetch } = require('node-fetch');
+let fetch;
+import('node-fetch').then((module) => {
+  fetch = module;
+});
 
 // Annoying way to import this tbh
 let metadata;
@@ -78,7 +83,10 @@ app.on('ready', function () {
   /* IPC STUFF */
 
   ipcMain.on('GET_SONGS', async (event, folderPath) => {
+    folderPath = getParentDirectory(folderPath); // ! DOES THIS WORK?
+
     let correctedPath = '';
+    console.error('PATH IS ', folderPath, path.dirname(folderPath));
     // If folderPath is empty, use the default path
     if (folderPath === '') {
       // ? Put in its own function? getSongDirectory
@@ -102,6 +110,7 @@ app.on('ready', function () {
     // Get all songs in the given directory as well as all subdirectories
     const audios = await glob(correctedPath + '/**/*.{mp3, wav, ogg}');
     const imageFiles = await glob(correctedPath + '/**/*.{jpg, jpeg, png}');
+    console.error('IMAGES : ', imageFiles);
 
     // Make sure we have some files
     if (audios.length === 0) {
@@ -112,6 +121,7 @@ app.on('ready', function () {
 
     /* Get all songs */
     let count = 0; // This is so we know when we ran out of files to parse and can return
+    songs = []; // ? Reset songs here?
     audios.map((file) => {
       metadata
         .parseFile(file)
@@ -142,12 +152,13 @@ app.on('ready', function () {
           }
 
           /* Gets image for the song / album */
-          // TODO Make this loop through all images
           const albumDir = path.dirname(file);
-          const imageDir = path.dirname(imageFiles[0]);
           let savedImage = undefined;
-          if (albumDir === imageDir) {
-            savedImage = imageFiles[0];
+          for (image in imageFiles) {
+            const imageDir = path.dirname(imageFiles[image]);
+            if (albumDir === imageDir) {
+              savedImage = imageFiles[image];
+            }
           }
 
           songs.push({
@@ -176,7 +187,106 @@ app.on('ready', function () {
     });
   });
 
+  ipcMain.on('SAVE_SONG', async (event, speed, filePath) => {
+    console.error('AB   : ', speed, speed.sampleRate);
+    // Apply the speed modification to the audioBuffer (using audio processing libraries)
+
+    const audioBuffer = await getAudioBuffer(speed, filePath);
+
+    // Convert the audio buffer to a WAV file
+    const wavData = audioBufferToWav(audioBuffer);
+
+    // Derive the output file path
+    const outputPath = filePath.replace('.wav', '_modified.wav');
+
+    console.error(wavData);
+
+    // Write the WAV data to the output file
+    // fs.writeFileSync(outputPath, new Buffer(wavData), 'binary');
+    // // Send a response back to the renderer process
+    // event.sender.send('EXPORT_COMPLETE', outputPath);
+
+    // // For demonstration, let's assume modifiedAudioBuffer is the modified audio data
+    // // const modifiedAudioBuffer = applySpeedModification(audioBuffer);
+    // filePath = getParentDirectory(filePath);
+
+    // // Derive the output file path based on the current file path
+    // const outputPath = filePath.replace('.wav', '_modified.wav');
+
+    // if (outputPath) {
+    //   const audioData = {
+    //     sampleRate: audioBuffer.sampleRate,
+    //     channelData: [],
+    //   };
+    //   // Convert each channel's data to a Float32Array
+    //   for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
+    //     audioData.channelData[channel] = audioBuffer.getChannelData(channel);
+    //   }
+
+    //   console.error("HERE : ", audioData);
+    //   // Convert the modified audio buffer to WAV format
+    //   const wavData = await wavEncoder.encode(audioData);
+    //   // Convert the WAV data to a Blob
+    //   const wavBlob = new Blob([new Uint8Array(wavData)], {
+    //     type: 'audio/wav',
+    //   });
+    // }
+  });
+
   /* Helper function */
+
+  async function getAudioBuffer(newSpeed, filePath) {
+    // const audioContext = new (window.AudioContext ||
+    //   window.webkitAudioContext)();
+
+    // Load the current song's audio buffer
+    console.error(filePath);
+    const response = await fetch(filePath);
+    const audioData = await response.arrayBuffer();
+
+    // Decode the audio data to an audio buffer
+    const audioBuffer = await audioContext.decodeAudioData(audioData);
+
+    // Create a new audio buffer with increased playback speed
+    // .5 === 2x speed, 2 === .5x speed
+    const newLength = audioBuffer.duration * newSpeed;
+    const newSampleCount = Math.ceil(newLength * audioBuffer.sampleRate);
+
+    const newBuffer = audioContext.createBuffer(
+      audioBuffer.numberOfChannels,
+      newSampleCount,
+      audioBuffer.sampleRate
+    );
+
+    /* Copies the audio data to the new buffer */
+    for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
+      const oldData = audioBuffer.getChannelData(channel);
+      const newData = newBuffer.getChannelData(channel);
+
+      console.error(audioBuffer.length, newBuffer.length, newSampleCount);
+      for (let i = 0; i < newBuffer.length; i++) {
+        const oldIndex = Math.floor(i / newSpeed);
+        newData[i] = oldData[oldIndex] || 0;
+      }
+    }
+
+    return newBuffer;
+  }
+
+  /**
+   * Takes in a directory path, typically of a file. This removes everything after the last '/'
+   */
+  function getParentDirectory(filePath) {
+    const cutoffIndex = filePath.lastIndexOf('\\');
+    const folderPath = filePath.substring(0, cutoffIndex);
+
+    const fixedFolderPath = folderPath.substring(
+      0,
+      folderPath.lastIndexOf('\\')
+    );
+
+    return fixedFolderPath;
+  }
 
   function updateLibraryDirectory(newLibraryDirectory) {
     const settingsPath = path.join(
@@ -192,7 +302,7 @@ app.on('ready', function () {
       settings.libraryDirectory = newLibraryDirectory;
 
       console.error(
-        'WRITING PATH',
+        'WRITING NEW PATH',
         settings.libraryDirectory,
         newLibraryDirectory
       );

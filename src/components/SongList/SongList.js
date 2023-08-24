@@ -12,7 +12,7 @@ function SongList({ onSongSelect, currentSongIndex, songs }) {
   const [isLoading, setIsLoading] = useState(true);
 
   /* For the audio editor drop down */
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  // const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   /**
    * Once songs are loaded in, we know we are done loading
@@ -86,9 +86,11 @@ function SongList({ onSongSelect, currentSongIndex, songs }) {
                   key={index} // TODO Fix this to be more appropriate/an actual unique key, when the page changes to artists for example, the indices are all messed up
                   onDoubleClick={() => {
                     onSongSelect(index);
-                    setIsContextMenuActive(false);
                   }}
-                  onContextMenu={handleContextMenu} // Handle right-clicks
+                  onClick={() => {
+                    setIsContextMenuActive(false); // Hide the 'right-click' menu when we left-click
+                  }}
+                  onContextMenu={handleContextMenu} // Open context menu when we right-click
                   style={{ color: currentSongIndex === index ? 'green' : '' }}
                   className="list-item"
                 >
@@ -119,7 +121,9 @@ function SongList({ onSongSelect, currentSongIndex, songs }) {
                   </div>
                   {/* {openIndex === index && <DropdownMenu isOpen={true} />} */}
                 </li>
-                {openIndex === index && <DropdownMenu isOpen={true} />}
+                {openIndex === index && (
+                  <DropdownMenu isOpen={true} song={song} />
+                )}
               </div>
             ))}
           </ul>

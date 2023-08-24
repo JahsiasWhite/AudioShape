@@ -22,6 +22,8 @@ TODO:
 15. Full screen mode
 16. lazy loading
 17. Add a queue system
+18. Audio spectrum
+19. Cleanup packages, I know wave-encoder is not used
 
 999 Easy file/song sharing
 
