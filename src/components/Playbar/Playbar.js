@@ -5,6 +5,7 @@ import PreviousButton from './PreviousButton/PreviousButton';
 import PlayButton from './PlayButton/PlayButton';
 import NextButton from './NextButton/NextButton';
 import VolumeControl from './VolumeControl/VolumeControl'; // ! I don't know if I like this name
+import PlaybackTimer from './PlaybackTimer/PlaybackTimer';
 
 function Playbar({ currentSongIndex, visibleSongs, setCurrentSongIndex }) {
   // ! Should currentSong actually be the index int?
@@ -31,7 +32,6 @@ function Playbar({ currentSongIndex, visibleSongs, setCurrentSongIndex }) {
       // Automatically play the next song when the current song ends
       playNextSong();
     });
-    currentSong.addEventListener('timeupdate', updateTime); // Listen for time updates
 
     setcurrentSong(currentSong);
   }, [currentSongIndex]);
@@ -72,45 +72,34 @@ function Playbar({ currentSongIndex, visibleSongs, setCurrentSongIndex }) {
     setCurrentSongIndex(nextIndex);
   };
 
-  /**
-   * Song Timer stuff, last time I tried to put in own component, something went wrong so
-   * I left it here :(
-   */
-  const [currentTime, setCurrentTime] = useState(0);
-
-  const updateTime = () => {
-    setCurrentTime(currentSong.currentTime);
-  };
-  const handleTimeChange = (event) => {
-    const newTime = parseFloat(event.target.value);
-    currentSong.currentTime = newTime;
-    setCurrentTime(newTime);
-  };
-
-  // Helper function to format time (in seconds) as mm:ss
-  function formatTime(timeInSeconds) {
-    const minutes = Math.floor(timeInSeconds / 60);
-    const seconds = Math.floor(timeInSeconds % 60);
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-  }
-
   return (
     <div className="playbar">
-      <audio
+      {/* <audio
         preload="auto"
         src="E:\MUSIC\Lil Uzi Vert\AI Lil Uzi Vert - peace V1.mp3"
-      ></audio>
+      ></audio> */}
       <div className="current-song">
-        <span id="song-title">
-          {visibleSongs[currentSongIndex]
-            ? visibleSongs[currentSongIndex].title
-            : 'No song playing'}
-        </span>
-        <span id="artist">
-          {visibleSongs[currentSongIndex]
-            ? visibleSongs[currentSongIndex].artist
-            : ''}
-        </span>
+        {/* TODO Clean this up? */}
+        {visibleSongs[currentSongIndex] &&
+          visibleSongs[currentSongIndex].albumImage && (
+            <img
+              className="playbar-image"
+              src={visibleSongs[currentSongIndex].albumImage}
+              alt={`${visibleSongs[currentSongIndex].album} cover`}
+            />
+          )}
+        <div className="song-details">
+          <span id="song-title">
+            {visibleSongs[currentSongIndex]
+              ? visibleSongs[currentSongIndex].title
+              : 'No song playing'}
+          </span>
+          <span id="artist">
+            {visibleSongs[currentSongIndex]
+              ? visibleSongs[currentSongIndex].artist
+              : ''}
+          </span>
+        </div>
       </div>
       <div className="playbar-controls">
         <PreviousButton onClick={playPreviousSong} />
@@ -119,20 +108,7 @@ function Playbar({ currentSongIndex, visibleSongs, setCurrentSongIndex }) {
           isPlaying={isPlaying}
         />
         <NextButton onClick={playNextSong} />
-        <div className="playback-timer">
-          {formatTime(currentTime)} / {formatTime(currentSong.duration)}
-        </div>
-        <div className="playback-timer">
-          {/* ... other elements ... */}
-          <input
-            type="range"
-            min="0"
-            max={currentSong.duration}
-            value={currentTime}
-            onChange={handleTimeChange}
-            className="playback-timer"
-          />
-        </div>
+        <PlaybackTimer currentSong={currentSong} />
       </div>
       <VolumeControl onVolumeChange={handleVolumeChange} />
     </div>

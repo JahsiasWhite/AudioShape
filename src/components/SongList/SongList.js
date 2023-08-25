@@ -6,6 +6,8 @@ import FolderSelection from '../FolderSelection/FolderSelection';
 import ContextMenu from './ContextMenu/ContextMenu';
 import DropdownMenu from './DropdownMenu/DropdownMenu';
 
+import DownArrowSVG from './down-arrow.svg';
+
 function SongList({ onSongSelect, currentSongIndex, songs }) {
   // FULL LIST OF SONGS, TODO: Remove? TOO MUCH DATA?
   const [visibleSongs, setVisibleSongs] = useState([]);
@@ -107,17 +109,18 @@ function SongList({ onSongSelect, currentSongIndex, songs }) {
                     <div>{song.album}</div>
                     {/* <div>{song.duration}</div> */}
                   </div>
-                  <div
-                    className="plus-sign"
-                    onClick={() => handlePlaylistEdit(index)}
-                  >
-                    +
-                  </div>
-                  <div
-                    className="dropdown-button"
-                    onClick={() => handleToggleDropdown(index)}
-                  >
-                    {'--->'}
+                  <div className="right-side">
+                    <div
+                      className="plus-sign"
+                      onClick={() => handlePlaylistEdit(index)}
+                    >
+                      +
+                    </div>
+                    <img
+                      className="dropdown-button"
+                      src={DownArrowSVG}
+                      onClick={() => handleToggleDropdown(index)}
+                    ></img>
                   </div>
                   {/* {openIndex === index && <DropdownMenu isOpen={true} />} */}
                 </li>

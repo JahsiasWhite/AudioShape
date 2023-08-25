@@ -63,15 +63,20 @@
   flex-direction: column;
 }
 
-.plus-sign {
-  font-size: 20px;
-  margin-right: 10px;
-
+.right-side {
   display: flex;
   flex: auto;
   justify-content: end;
+  align-items: center;
+}
+
+.plus-sign {
+  font-size: 20px;
+  margin-right: 10px;
 }
 
 .dropdown-button {
   font-size: 20px;
+  height: 20px;
+  width: 20px;
 }

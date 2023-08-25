@@ -32,15 +32,11 @@ function DropdownMenu({ isOpen, song }) {
       const oldData = audioBuffer.getChannelData(channel);
       const newData = newBuffer.getChannelData(channel);
 
-      console.error(audioBuffer.length, newBuffer.length, newSampleCount);
       for (let i = 0; i < newBuffer.length; i++) {
         const oldIndex = Math.floor(i / newSpeed);
         newData[i] = oldData[oldIndex] || 0;
       }
     }
-
-    // ? Should I do the above on the server as well?
-    // TODO ? Before sending should I allow a preview?
 
     // Stop the current sample song to get ready to play the new one
     if (sampleAudio) {
@@ -53,27 +49,8 @@ function DropdownMenu({ isOpen, song }) {
     source.connect(audioContext.destination); // Connect the node to the destination so we can hear the sound
     source.start(0);
     sampleAudio = source;
-
-    /* All of this stuff is really annoying. Unfortunately, ipcRenderer can't take in audioBuffer objects so we have to break it down */
-    // Float32Array samples
-    const [left, right] = [
-      newBuffer.getChannelData(0),
-      newBuffer.getChannelData(1),
-    ];
-    // interleaved
-    const interleaved = new Float32Array(left.length + right.length);
-    for (let src = 0, dst = 0; src < left.length; src++, dst += 2) {
-      interleaved[dst] = left[src];
-      interleaved[dst + 1] = right[src];
-    }
-    // get WAV file bytes and audio params of your audio source
-    const wavBytes = getWavBytes(interleaved.buffer, {
-      isFloat: true, // floating point or 16-bit integer
-      numChannels: newBuffer.numberOfChannels,
-      sampleRate: newBuffer.sampleRate,
-    });
-    window.electron.ipcRenderer.sendMessage('SAVE_SONG', wavBytes, song.file);
   };
+
   // Returns Uint8Array of WAV bytes
   function getWavBytes(buffer, options) {
     const type = options.isFloat ? Float32Array : Uint16Array;
@@ -92,7 +69,7 @@ function DropdownMenu({ isOpen, song }) {
   }
 
   // adapted from https://gist.github.com/also/900023
-  // returns Uint8Array of WAV header bytes
+  // Returns Uint8Array of WAV header bytes
   function getWavHeader(options) {
     const numFrames = options.numFrames;
     const numChannels = options.numChannels || 2;
@@ -141,23 +118,57 @@ function DropdownMenu({ isOpen, song }) {
     return new Uint8Array(buffer);
   }
 
+  /**
+   * Sends the edited audio to the server to be saved to the file system
+   */
+  function handleSongExport() {
+    /* All of this stuff is really annoying. Unfortunately, ipcRenderer can't take in audioBuffer objects so we have to break it down */
+    // Float32Array samples
+    const [left, right] = [
+      sampleAudio.buffer.getChannelData(0),
+      sampleAudio.buffer.getChannelData(1),
+    ];
+    // interleaved
+    const interleaved = new Float32Array(left.length + right.length);
+    for (let src = 0, dst = 0; src < left.length; src++, dst += 2) {
+      interleaved[dst] = left[src];
+      interleaved[dst + 1] = right[src];
+    }
+    // get WAV file bytes and audio params of your audio source
+    const wavBytes = getWavBytes(interleaved.buffer, {
+      isFloat: true, // floating point or 16-bit integer
+      numChannels: sampleAudio.buffer.numberOfChannels,
+      sampleRate: sampleAudio.buffer.sampleRate,
+    });
+
+    window.electron.ipcRenderer.sendMessage('SAVE_SONG', wavBytes, song.file);
+  }
+
   return (
     <div className={`dropdown-menu ${isOpen ? 'open' : ''}`}>
-      <div
-        onClick={() => {
-          handleSpeedChange(0.8);
-        }}
-      >
-        Speed up
+      <div className="presets">
+        <div
+          onClick={() => {
+            handleSpeedChange(0.8);
+          }}
+        >
+          Speed up
+        </div>
+        <div
+          onClick={() => {
+            handleSpeedChange(1.2);
+          }}
+        >
+          Slow and reverb
+        </div>
+        <div
+          onClick={() => {
+            handleSongExport();
+          }}
+        >
+          Export
+        </div>
       </div>
-      <div
-        onClick={() => {
-          handleSpeedChange(1.2);
-        }}
-      >
-        Slow and reverb
-      </div>
-      <div>Export</div>
     </div>
   );
 }

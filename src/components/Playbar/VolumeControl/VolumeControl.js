@@ -1,13 +1,9 @@
-// function VolumeControl() {
-//   return (
-//     <div className="volume-controls">
-//       <div className="volume-icon">VOLUME</div>
-//     </div>
-//   );
-// }
-
 import React, { useState } from 'react';
 import './VolumeControl.css';
+
+import VolumeMaxSVG from './volume-max.svg';
+import VolumeLowSVG from './volume-low.svg';
+import VolumeQuietSVG from './volume-quiet.svg';
 
 function VolumeControl({ onVolumeChange }) {
   const [volume, setVolume] = useState(100); // Initial volume is 100
@@ -20,6 +16,16 @@ function VolumeControl({ onVolumeChange }) {
 
   return (
     <div className="volume-control">
+      <img
+        className="volume-icon"
+        src={
+          volume > 60
+            ? VolumeMaxSVG
+            : volume > 0
+            ? VolumeLowSVG
+            : VolumeQuietSVG
+        } // Show max icon when above 50%
+      ></img>
       <input
         type="range"
         min="0"
