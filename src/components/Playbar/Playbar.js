@@ -8,34 +8,38 @@ import VolumeControl from './VolumeControl/VolumeControl'; // ! I don't know if 
 import PlaybackTimer from './PlaybackTimer/PlaybackTimer';
 import speedupButtonSVG from './speedup-button.svg';
 
-function Playbar({ currentSongIndex, visibleSongs, setCurrentSongIndex }) {
+import { useAudioPlayer } from '../AudioContext';
+
+function Playbar() {
+  const { visibleSongs, currentSongIndex } = useAudioPlayer();
+
   // ! Should currentSong actually be the index int?
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentSong, setcurrentSong] = useState(new Audio()); // Current playing audio object
-  const [volume, setVolume] = useState(1); // Initial volume is 100%
+  // const [isPlaying, setIsPlaying] = useState(false);
+  // const [currentSong, setcurrentSong] = useState(new Audio()); // Current playing audio object
+  // const [volume, setVolume] = useState(1); // Initial volume is 100%
 
-  // Current song changed! Update our variables
-  // Essentially create the new song :)
-  useEffect(() => {
-    // ? Can we do something here so if this is null, we never would even end up here
-    if (currentSongIndex === null) return;
+  // // Current song changed! Update our variables
+  // // Essentially create the new song :)
+  // useEffect(() => {
+  //   // ? Can we do something here so if this is null, we never would even end up here
+  //   if (currentSongIndex === null) return;
 
-    const newSong = visibleSongs[currentSongIndex];
+  //   const newSong = visibleSongs[currentSongIndex];
 
-    currentSong.src = newSong.file;
-    currentSong.volume = volume;
-    currentSong.load(); // Load the new song's data
-    currentSong.play();
-    setIsPlaying(true);
+  //   currentSong.src = newSong.file;
+  //   currentSong.volume = volume;
+  //   currentSong.load(); // Load the new song's data
+  //   currentSong.play();
+  //   setIsPlaying(true);
 
-    // audio.volume = volume;
-    currentSong.addEventListener('ended', () => {
-      // Automatically play the next song when the current song ends
-      playNextSong();
-    });
+  //   // audio.volume = volume;
+  //   currentSong.addEventListener('ended', () => {
+  //     // Automatically play the next song when the current song ends
+  //     playNextSong();
+  //   });
 
-    setcurrentSong(currentSong);
-  }, [currentSongIndex]);
+  //   setcurrentSong(currentSong);
+  // }, [currentSongIndex]);
 
   // ? Toggles the audio
   // Less ternary I guess? ... if we convert to func
@@ -47,31 +51,31 @@ function Playbar({ currentSongIndex, visibleSongs, setCurrentSongIndex }) {
   //   }
   // }, [isPlaying]);
 
-  const playAudio = () => {
-    currentSong.play();
-    setIsPlaying(true);
-  };
+  // const playAudio = () => {
+  //   currentSong.play();
+  //   setIsPlaying(true);
+  // };
 
-  const pauseAudio = () => {
-    currentSong.pause();
-    setIsPlaying(false);
-  };
+  // const pauseAudio = () => {
+  //   currentSong.pause();
+  //   setIsPlaying(false);
+  // };
 
-  const handleVolumeChange = (newVolume) => {
-    setVolume(newVolume);
-    currentSong.volume = newVolume;
-  };
+  // const handleVolumeChange = (newVolume) => {
+  //   setVolume(newVolume);
+  //   currentSong.volume = newVolume;
+  // };
 
-  const playPreviousSong = () => {
-    const previousIndex =
-      (currentSongIndex - 1 + visibleSongs.length) % visibleSongs.length;
-    setCurrentSongIndex(previousIndex);
-  };
+  // const playPreviousSong = () => {
+  //   const previousIndex =
+  //     (currentSongIndex - 1 + visibleSongs.length) % visibleSongs.length;
+  //   setCurrentSongIndex(previousIndex);
+  // };
 
-  const playNextSong = () => {
-    const nextIndex = (currentSongIndex + 1) % visibleSongs.length;
-    setCurrentSongIndex(nextIndex);
-  };
+  // const playNextSong = () => {
+  //   const nextIndex = (currentSongIndex + 1) % visibleSongs.length;
+  //   setCurrentSongIndex(nextIndex);
+  // };
 
   return (
     <div className="playbar">
@@ -104,17 +108,14 @@ function Playbar({ currentSongIndex, visibleSongs, setCurrentSongIndex }) {
       </div>
       <div className="playbar-controls">
         <div className="buttons-container">
-          <PreviousButton onClick={playPreviousSong} />
-          <PlayButton
-            onClick={isPlaying ? pauseAudio : playAudio}
-            isPlaying={isPlaying}
-          />
-          <NextButton onClick={playNextSong} />
+          <PreviousButton />
+          <PlayButton />
+          <NextButton />
           <img className="speedup-button" src={speedupButtonSVG}></img>
         </div>
-        <PlaybackTimer currentSong={currentSong} />
+        <PlaybackTimer />
       </div>
-      <VolumeControl onVolumeChange={handleVolumeChange} />
+      <VolumeControl />
     </div>
   );
 }

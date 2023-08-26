@@ -5,13 +5,18 @@ import VolumeMaxSVG from './volume-max.svg';
 import VolumeLowSVG from './volume-low.svg';
 import VolumeQuietSVG from './volume-quiet.svg';
 
-function VolumeControl({ onVolumeChange }) {
-  const [volume, setVolume] = useState(100); // Initial volume is 100
+import { useAudioPlayer } from '../../AudioContext';
+
+function VolumeControl() {
+  const { changeVolume } = useAudioPlayer();
+
+  const [volume, setVolume] = useState(100); // Local variable for showing volume, its different than what the audio player needs
 
   const handleVolumeChange = (event) => {
     const newVolume = event.target.value;
     setVolume(newVolume);
-    onVolumeChange(newVolume / 100); // Convert to a range between 0 and 1
+    // onVolumeChange(newVolume / 100); // Convert to a range between 0 and 1
+    changeVolume(newVolume / 100);
   };
 
   return (

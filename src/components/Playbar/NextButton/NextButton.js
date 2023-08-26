@@ -3,8 +3,14 @@ import './NextButton.css';
 
 import NextButtonSVG from './NextButton.svg';
 
-function NextButton({ onClick }) {
-  return <img className="next-button" src={NextButtonSVG} onClick={onClick} />;
+import { useAudioPlayer } from '../../AudioContext';
+
+function NextButton() {
+  const { playNextSong } = useAudioPlayer();
+
+  return (
+    <img className="next-button" src={NextButtonSVG} onClick={playNextSong} />
+  );
 }
 
 export default NextButton;

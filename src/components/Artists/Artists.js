@@ -1,6 +1,10 @@
 import React from 'react';
 
-function Artists({ songs, onArtistSelect }) {
+import { useAudioPlayer } from '../AudioContext';
+
+function Artists({ songs, toggleSection }) {
+  const { setVisibleSongs } = useAudioPlayer();
+
   /**
    * Finds all artists in the given song list. Matches each artist to each song they have as well
    *
@@ -28,7 +32,8 @@ function Artists({ songs, onArtistSelect }) {
    * @param {*} artist
    */
   const handleArtistClick = (artist) => {
-    onArtistSelect(artist, artistsBySongs[artist]);
+    setVisibleSongs(artistsBySongs[artist]);
+    toggleSection('songs');
   };
 
   const artistsBySongs = groupSongsByArtists(songs);

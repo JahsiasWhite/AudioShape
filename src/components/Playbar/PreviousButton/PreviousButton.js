@@ -3,12 +3,16 @@ import './PreviousButton.css';
 
 import PreviousButtonSVG from './PreviousButton.svg';
 
-function PreviousButton({ onClick }) {
+import { useAudioPlayer } from '../../AudioContext';
+
+function PreviousButton() {
+  const { playPreviousSong } = useAudioPlayer();
+
   return (
     <img
       className="previous-button"
       src={PreviousButtonSVG}
-      onClick={onClick}
+      onClick={playPreviousSong}
     />
   );
 }

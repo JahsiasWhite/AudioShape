@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 
-function PlaybackTimer({ currentSong }) {
+import { useAudioPlayer } from '../../AudioContext';
+
+function PlaybackTimer() {
+  const { currentSong } = useAudioPlayer();
+
   const [currentTime, setCurrentTime] = useState(0);
 
   useEffect(() => {

@@ -4,12 +4,16 @@ import './PlayButton.css';
 import PlayButtonSVG from './PlayButton.svg';
 import PauseButtonSVG from './PauseButton.svg';
 
-function PlayButton({ onClick, isPlaying }) {
+import { useAudioPlayer } from '../../AudioContext';
+
+function PlayButton() {
+  const { isPlaying, pauseAudio, playAudio } = useAudioPlayer();
+
   return (
     <img
       className="play-button"
       src={isPlaying ? PauseButtonSVG : PlayButtonSVG}
-      onClick={onClick}
+      onClick={isPlaying ? pauseAudio : playAudio}
     />
   );
 }
