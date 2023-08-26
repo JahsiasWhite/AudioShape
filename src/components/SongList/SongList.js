@@ -139,7 +139,7 @@ function SongList({ handleSongLoad }) {
                   {/* {openIndex === index && <DropdownMenu isOpen={true} />} */}
                 </li>
                 {openIndex === index && (
-                  <DropdownMenu isOpen={true} song={song} />
+                  <DropdownMenu isOpen={true} index={index} />
                 )}
               </div>
             ))}

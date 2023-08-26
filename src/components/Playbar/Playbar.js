@@ -11,7 +11,7 @@ import speedupButtonSVG from './speedup-button.svg';
 import { useAudioPlayer } from '../AudioContext';
 
 function Playbar() {
-  const { visibleSongs, currentSongIndex } = useAudioPlayer();
+  const { visibleSongs, currentSongIndex, toggleSpeedup } = useAudioPlayer();
 
   // ! Should currentSong actually be the index int?
   // const [isPlaying, setIsPlaying] = useState(false);
@@ -111,7 +111,13 @@ function Playbar() {
           <PreviousButton />
           <PlayButton />
           <NextButton />
-          <img className="speedup-button" src={speedupButtonSVG}></img>
+          <img
+            className="speedup-button"
+            src={speedupButtonSVG}
+            onClick={() => {
+              toggleSpeedup();
+            }}
+          ></img>
         </div>
         <PlaybackTimer />
       </div>

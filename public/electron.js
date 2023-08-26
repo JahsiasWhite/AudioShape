@@ -10,7 +10,6 @@ let fetch;
 import('node-fetch').then((module) => {
   fetch = module;
 });
-
 // Annoying way to import this tbh
 let metadata;
 import('music-metadata').then((module) => {
@@ -41,6 +40,15 @@ if (!fs.existsSync(settingsFile)) {
 if (!fs.existsSync(playlistsFile)) {
   fs.writeFileSync(playlistsFile, '');
 }
+
+/* Where the files are saved for the auto playing  */
+let temporaryFilePath = path.join(dataDirectory, 'temp_song.wav');
+
+/* For the auto playing */
+// const tempDirectory = path.join(os.tmpdir(), 'MusicPlayerTemp');
+// if (!fs.existsSync(tempDirectory)) {
+//   fs.mkdirSync(tempDirectory);
+// }
 
 app.name = 'Music Player';
 
@@ -190,7 +198,7 @@ app.on('ready', function () {
 
   ipcMain.on('SAVE_SONG', async (event, audioData, filePath) => {
     // Construct the audio data into a Blob of wav data
-    const wavData = await getAudioBuffer(audioData, filePath);
+    const wavData = await getAudioBuffer(audioData);
 
     // Create the new file path
     const outputPath = filePath.replace('.mp3', '_modified.wav'); // TODO Make this .mp3 || .wav
@@ -203,9 +211,39 @@ app.on('ready', function () {
     fs.writeFileSync(outputPath, buffer);
   });
 
+  /* When auto playing with edits on, we have to save the song to play it will full functionality */
+  ipcMain.on('SAVE_TEMP_SONG', async (event, audioData) => {
+    // if (!temporaryFilePath) {
+    //   temporaryFilePath = path.join(dataDirectory, 'temp_song.wav');
+    // }
+
+    // Construct the audio data into a Blob of wav data
+    const wavData = await getAudioBuffer(audioData);
+
+    // Convert the Blob to a Buffer
+    const bufferData = await wavData.arrayBuffer();
+    const buffer = Buffer.from(bufferData);
+
+    // Write the Buffer to the temporary file
+    fs.writeFileSync(temporaryFilePath, buffer);
+
+    // Delete the temporary file on exit
+    const deleteOnExit = () => {
+      fs.unlinkSync(temporaryFilePath);
+    };
+    process.on('exit', deleteOnExit);
+    process.on('SIGINT', deleteOnExit); // Listen to Ctrl+C events
+
+    console.error(ipcMain.webContents);
+    // Send back the path to the saved temporary file
+    // event.sender.send('TEMP_SONG_SAVED', outputPath);
+    // event.reply('TEMP_SONG_SAVED', outputPath);
+    mainWindow.webContents.send('TEMP_SONG_SAVED', temporaryFilePath);
+  });
+
   /* Helper function */
 
-  async function getAudioBuffer(wavBytes, filePath) {
+  async function getAudioBuffer(wavBytes) {
     // const audioContext = new (window.AudioContext ||
     //   window.webkitAudioContext)();
 
