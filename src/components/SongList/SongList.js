@@ -7,6 +7,7 @@ import ContextMenu from './ContextMenu/ContextMenu';
 import DropdownMenu from './DropdownMenu/DropdownMenu';
 
 import DownArrowSVG from './down-arrow.svg';
+import PlusButtonSVG from './add-svgrepo-com.svg';
 
 function SongList({ onSongSelect, currentSongIndex, songs }) {
   // FULL LIST OF SONGS, TODO: Remove? TOO MUCH DATA?
@@ -93,7 +94,9 @@ function SongList({ onSongSelect, currentSongIndex, songs }) {
                     setIsContextMenuActive(false); // Hide the 'right-click' menu when we left-click
                   }}
                   onContextMenu={handleContextMenu} // Open context menu when we right-click
-                  style={{ color: currentSongIndex === index ? 'green' : '' }}
+                  style={{
+                    color: currentSongIndex === index ? 'rgb(88, 192, 88)' : '',
+                  }}
                   className="list-item"
                 >
                   {song.albumImage && (
@@ -110,12 +113,11 @@ function SongList({ onSongSelect, currentSongIndex, songs }) {
                     {/* <div>{song.duration}</div> */}
                   </div>
                   <div className="right-side">
-                    <div
+                    <img
                       className="plus-sign"
+                      src={PlusButtonSVG}
                       onClick={() => handlePlaylistEdit(index)}
-                    >
-                      +
-                    </div>
+                    ></img>
                     <img
                       className="dropdown-button"
                       src={DownArrowSVG}

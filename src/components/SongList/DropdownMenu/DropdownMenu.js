@@ -152,7 +152,7 @@ function DropdownMenu({ isOpen, song }) {
             handleSpeedChange(0.8);
           }}
         >
-          Speed up
+          Speedup
         </div>
         <div
           onClick={() => {

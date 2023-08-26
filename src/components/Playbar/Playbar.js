@@ -6,6 +6,7 @@ import PlayButton from './PlayButton/PlayButton';
 import NextButton from './NextButton/NextButton';
 import VolumeControl from './VolumeControl/VolumeControl'; // ! I don't know if I like this name
 import PlaybackTimer from './PlaybackTimer/PlaybackTimer';
+import speedupButtonSVG from './speedup-button.svg';
 
 function Playbar({ currentSongIndex, visibleSongs, setCurrentSongIndex }) {
   // ! Should currentSong actually be the index int?
@@ -102,12 +103,15 @@ function Playbar({ currentSongIndex, visibleSongs, setCurrentSongIndex }) {
         </div>
       </div>
       <div className="playbar-controls">
-        <PreviousButton onClick={playPreviousSong} />
-        <PlayButton
-          onClick={isPlaying ? pauseAudio : playAudio}
-          isPlaying={isPlaying}
-        />
-        <NextButton onClick={playNextSong} />
+        <div className="buttons-container">
+          <PreviousButton onClick={playPreviousSong} />
+          <PlayButton
+            onClick={isPlaying ? pauseAudio : playAudio}
+            isPlaying={isPlaying}
+          />
+          <NextButton onClick={playNextSong} />
+          <img className="speedup-button" src={speedupButtonSVG}></img>
+        </div>
         <PlaybackTimer currentSong={currentSong} />
       </div>
       <VolumeControl onVolumeChange={handleVolumeChange} />

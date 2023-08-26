@@ -1,0 +1,10 @@
+.button-container {
+  display: flex;
+  align-items: center;
+  color: var(--color-button);
+}
+
+.icon {
+  width: 30px;
+  height: 30px;
+}
