@@ -39,12 +39,20 @@ export const AudioProvider = ({ children }) => {
   };
 
   const playPreviousSong = () => {
+    if (currentSong) {
+      currentSong.removeEventListener('ended', onSongEnded);
+    }
+
     const previousIndex =
       (currentSongIndex - 1 + visibleSongs.length) % visibleSongs.length;
     setCurrentSongIndex(previousIndex);
   };
 
   const playNextSong = () => {
+    if (currentSong) {
+      currentSong.removeEventListener('ended', onSongEnded);
+    }
+
     const nextIndex = (currentSongIndex + 1) % visibleSongs.length;
     setCurrentSongIndex(nextIndex);
   };
@@ -63,26 +71,35 @@ export const AudioProvider = ({ children }) => {
       // sppedup
       handleSpeedChange(0.8);
       return;
-      //return
-      console.error('HI');
     } else {
       const newSong = visibleSongs[currentSongIndex];
       currentSong.src = newSong.file;
     }
 
+    /* (Re)Initializes the current song */
+    initCurentSong();
+
+    setCurrentSong(currentSong);
+  }, [currentSongIndex]);
+
+  const initCurentSong = () => {
     currentSong.volume = volume;
     currentSong.load(); // Load the new song's data
     currentSong.play();
     setIsPlaying(true);
 
-    // audio.volume = volume;
-    currentSong.addEventListener('ended', () => {
-      // Automatically play the next song when the current song ends
-      playNextSong();
-    });
+    // currentSong.addEventListener('ended', () => {
+    //   console.error('REMOVING LISTENER');
+    //   // Automatically play the next song when the current song ends
+    //   playNextSong();
+    // });
+    currentSong.addEventListener('ended', onSongEnded);
+  };
 
-    setCurrentSong(currentSong);
-  }, [currentSongIndex]);
+  const onSongEnded = () => {
+    // Automatically play the next song when the current song ends
+    playNextSong();
+  };
 
   /* When the songs first load, we want all songs to be shown */
   const initialSongLoad = (songs) => {
@@ -99,6 +116,11 @@ export const AudioProvider = ({ children }) => {
    * Toggles whether the current and all future songs will be sped up
    */
   const toggleSpeedup = () => {
+    if (currentSong) {
+      // TODO: maybe make this its own function? gets used quite a bit
+      currentSong.removeEventListener('ended', onSongEnded);
+    }
+
     setSpeedupIsEnabled(!speedupIsEnabled);
     handleSpeedChange(0.8);
   };
@@ -162,7 +184,6 @@ export const AudioProvider = ({ children }) => {
     /* If we're using auto-play speedup, the current song should be the one changing */
     /* We have to save a temporary local copy to play the audio and still have full functionality */
     if (index === undefined) {
-      console.error(source.index, currentSongIndex);
       const wavBytes = createWavBytes(source);
       window.electron.ipcRenderer.sendMessage('SAVE_TEMP_SONG', wavBytes);
       return;
@@ -173,28 +194,32 @@ export const AudioProvider = ({ children }) => {
   };
   useEffect(() => {
     const handleTempSongSaved = (outputPath) => {
-      console.log('Temporary song saved at:', outputPath);
+      if (currentSongIndex === null) return;
       // playNextSong();
       // = createNewSong();
 
-      //   stopSampleAudio();
+      //   pauseAudio();
       currentSong.src = outputPath;
+      //   initCurentSong();
+
+      //   stopSampleAudio();
       // // currentSong.load(); // Load the song's new data
-      playAudio();
-      //   currentSong.play();
-      //   setIsPlaying(true);
+      //   currentSong.load();
+      //   playAudio();
+      initCurentSong();
+      setCurrentSong(currentSong);
+
+      /* Cleanup old file */
+      window.electron.ipcRenderer.sendMessage('DELETE_TEMP_SONG');
     };
 
-    window.electron.ipcRenderer.on('TEMP_SONG_SAVED', handleTempSongSaved);
+    window.electron.ipcRenderer.once('TEMP_SONG_SAVED', handleTempSongSaved);
 
-    return () => {
-      // Clean up the event listener when the component unmounts
-      window.electron.ipcRenderer.removeListener(
-        'TEMP_SONG_SAVED',
-        handleTempSongSaved
-      );
-    };
-  }, []);
+    // return () => {
+    //   // Clean up the event listener when the component unmounts
+    //   window.electron.ipcRenderer.removeAllListeners('TEMP_SONG_SAVED');
+    // };
+  }, [currentSongIndex]);
 
   /**
    * Helper to stop the sample song
@@ -223,7 +248,6 @@ export const AudioProvider = ({ children }) => {
   function createWavBytes(inputSong) {
     /* All of this stuff is really annoying. Unfortunately, ipcRenderer can't take in audioBuffer objects so we have to break it down */
     // Float32Array samples
-    console.error(inputSong);
     const [left, right] = [
       inputSong.buffer.getChannelData(0),
       inputSong.buffer.getChannelData(1),
@@ -248,10 +272,8 @@ export const AudioProvider = ({ children }) => {
   function getWavBytes(buffer, options) {
     const type = options.isFloat ? Float32Array : Uint16Array;
     const numFrames = buffer.byteLength / type.BYTES_PER_ELEMENT;
-    console.error(numFrames, buffer);
 
     const headerBytes = getWavHeader(Object.assign({}, options, { numFrames }));
-    console.error(headerBytes);
     const wavBytes = new Uint8Array(headerBytes.length + buffer.byteLength);
 
     // prepend header, then add pcmBytes
@@ -331,6 +353,7 @@ export const AudioProvider = ({ children }) => {
         handleSpeedChange,
         toggleSpeedup,
         handleSongExport,
+        speedupIsEnabled,
       }}
     >
       {children}

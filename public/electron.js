@@ -2,7 +2,10 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 
 const path = require('path');
 const fs = require('fs');
+const fsPromises = require('fs').promises;
 const url = require('url');
+
+const { v4: uuidv4 } = require('uuid');
 
 const { glob, globSync, Glob } = require('glob');
 // const { fetch } = require('node-fetch');
@@ -42,7 +45,8 @@ if (!fs.existsSync(playlistsFile)) {
 }
 
 /* Where the files are saved for the auto playing  */
-let temporaryFilePath = path.join(dataDirectory, 'temp_song.wav');
+let temporaryFilePath = null;
+let newTemporaryFilePath = null;
 
 /* For the auto playing */
 // const tempDirectory = path.join(os.tmpdir(), 'MusicPlayerTemp');
@@ -118,7 +122,6 @@ app.on('ready', function () {
     // Get all songs in the given directory as well as all subdirectories
     const audios = await glob(correctedPath + '/**/*.{mp3,wav,ogg}');
     const imageFiles = await glob(correctedPath + '/**/*.{jpg,jpeg,png}');
-    console.error('IMAGES : ', imageFiles);
 
     // Make sure we have some files
     if (audios.length === 0) {
@@ -213,9 +216,7 @@ app.on('ready', function () {
 
   /* When auto playing with edits on, we have to save the song to play it will full functionality */
   ipcMain.on('SAVE_TEMP_SONG', async (event, audioData) => {
-    // if (!temporaryFilePath) {
-    //   temporaryFilePath = path.join(dataDirectory, 'temp_song.wav');
-    // }
+    newTemporaryFilePath = path.join(dataDirectory, `${uuidv4()}.wav`);
 
     // Construct the audio data into a Blob of wav data
     const wavData = await getAudioBuffer(audioData);
@@ -225,20 +226,33 @@ app.on('ready', function () {
     const buffer = Buffer.from(bufferData);
 
     // Write the Buffer to the temporary file
-    fs.writeFileSync(temporaryFilePath, buffer);
+    fs.writeFileSync(newTemporaryFilePath, buffer);
 
     // Delete the temporary file on exit
     const deleteOnExit = () => {
-      fs.unlinkSync(temporaryFilePath);
+      fs.unlinkSync(newTemporaryFilePath);
     };
     process.on('exit', deleteOnExit);
     process.on('SIGINT', deleteOnExit); // Listen to Ctrl+C events
 
-    console.error(ipcMain.webContents);
     // Send back the path to the saved temporary file
     // event.sender.send('TEMP_SONG_SAVED', outputPath);
     // event.reply('TEMP_SONG_SAVED', outputPath);
-    mainWindow.webContents.send('TEMP_SONG_SAVED', temporaryFilePath);
+    mainWindow.webContents.send('TEMP_SONG_SAVED', newTemporaryFilePath);
+  });
+
+  ipcMain.on('DELETE_TEMP_SONG', async (event) => {
+    console.error('HI', temporaryFilePath);
+    /* Cleanup old file */
+    if (temporaryFilePath) {
+      try {
+        await fsPromises.unlink(temporaryFilePath);
+      } catch (error) {
+        // Handle the error if the file cannot be deleted
+        console.error('Error deleting previous temporary file:', error);
+      }
+    }
+    temporaryFilePath = newTemporaryFilePath;
   });
 
   /* Helper function */

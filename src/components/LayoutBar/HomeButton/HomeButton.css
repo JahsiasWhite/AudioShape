@@ -1,10 +1,10 @@
 .button-container {
   display: flex;
   align-items: center;
-  color: var(--color-button);
+  color: var(--color-text);
 }
 
-.icon {
-  width: 30px;
-  height: 30px;
+.force {
+  width: 25px;
+  height: 25px;
 }

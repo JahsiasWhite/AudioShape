@@ -6,12 +6,13 @@ import PlayButton from './PlayButton/PlayButton';
 import NextButton from './NextButton/NextButton';
 import VolumeControl from './VolumeControl/VolumeControl'; // ! I don't know if I like this name
 import PlaybackTimer from './PlaybackTimer/PlaybackTimer';
-import speedupButtonSVG from './speedup-button.svg';
+import SpeedupButtonSVG from './SpeedupButtonSVG';
 
 import { useAudioPlayer } from '../AudioContext';
 
 function Playbar() {
-  const { visibleSongs, currentSongIndex, toggleSpeedup } = useAudioPlayer();
+  const { visibleSongs, currentSongIndex, toggleSpeedup, speedupIsEnabled } =
+    useAudioPlayer();
 
   // ! Should currentSong actually be the index int?
   // const [isPlaying, setIsPlaying] = useState(false);
@@ -111,13 +112,20 @@ function Playbar() {
           <PreviousButton />
           <PlayButton />
           <NextButton />
-          <img
-            className="speedup-button"
+          <SpeedupButtonSVG
+            speedupIsEnabled={speedupIsEnabled}
+            onClick={() => {
+              toggleSpeedup();
+            }}
+          ></SpeedupButtonSVG>
+
+          {/* <img
+            className={`speedup-icon ${speedupIsEnabled ? 'active' : ''}`}
             src={speedupButtonSVG}
             onClick={() => {
               toggleSpeedup();
             }}
-          ></img>
+          ></img> */}
         </div>
         <PlaybackTimer />
       </div>

@@ -13,6 +13,8 @@
   width: 100vw;
   color: var(--color-text);
   flex-direction: initial;
+  /* I dont like blurry text */
+  font-weight: 300;
 }
 
 .playbar {
@@ -46,10 +48,10 @@
 }
 
 .main-content::-webkit-scrollbar-thumb {
-  background-color: var(--color-button); /* Color of the thumb */
+  background-color: var(--color-text); /* Color of the thumb */
   border-radius: 10px; /* Add rounded corners */
 }
 
 .main-content::-webkit-scrollbar-thumb:hover {
-  background-color: red; /* Color of the thumb on hover */
+  background-color: var(--color-button); /* Color of the thumb on hover */
 }
