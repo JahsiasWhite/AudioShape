@@ -4,6 +4,7 @@ import './layoutBar.css';
 import HomeButton from './HomeButton/HomeButton';
 import PlaylistButton from './PlaylistButton/PlaylistButton';
 import ArtistButton from './ArtistButton/ArtistButton';
+import SpotifyButton from './SpotifyButton/SpotifyButton';
 import SettingsButton from './SettingsButton/SettingsButton';
 
 import { useAudioPlayer } from '../AudioContext';
@@ -26,6 +27,7 @@ function LayoutBar({ toggleSection }) {
         {/* <SpotifyButton toggleSection={modifiedToggleSection} /> */}
         <PlaylistButton toggleSection={modifiedToggleSection} />
         <ArtistButton toggleSection={modifiedToggleSection} />
+        <SpotifyButton toggleSection={modifiedToggleSection} />
         <SettingsButton toggleSection={modifiedToggleSection} />
       </div>
     </div>

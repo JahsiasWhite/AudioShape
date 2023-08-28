@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, session } = require('electron');
 
 const path = require('path');
 const fs = require('fs');
@@ -255,7 +255,60 @@ app.on('ready', function () {
     temporaryFilePath = newTemporaryFilePath;
   });
 
+  /**
+   * Starts the spotify login with the user id
+   */
+  // var spotify_client_id = process.env.SPOTIFY_CLIENT_ID;
+  // var spotify_client_secret = process.env.SPOTIFY_CLIENT_SECRET;
+  var spotify_client_id = '071723df542346fab9e3c0f2dee691fd';
+  var spotify_client_secret = 1;
+  // my application redirect uri
+  const redirectUri = 'http://localhost/oauth/redirect';
+  ipcMain.on('start-spotify-login', (event) => {
+    const spotifyClientId = spotify_client_id;
+    const scope = 'streaming user-read-email user-read-private';
+    const state = generateRandomString(16);
+    // const redirectUri = 'http://localhost:3000/auth/callback';
+    const authUrl =
+      `https://accounts.spotify.com/authorize/?` +
+      `response_type=code&` +
+      `client_id=${spotifyClientId}&` +
+      `scope=${encodeURIComponent(scope)}&` +
+      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+      `state=${state}`;
+
+    shell.openExternal(authUrl);
+  });
+
+  // Prepare to filter only the callbacks for my redirectUri
+  const filter = {
+    urls: [redirectUri + '*'],
+  };
+  // intercept all the requests for that includes my redirect uri
+  session.defaultSession.webRequest.onBeforeRequest(
+    filter,
+    function (details, callback) {
+      const url = details.url;
+      // process the callback url and get any param you need
+
+      // don't forget to let the request proceed
+      callback({
+        cancel: false,
+      });
+    }
+  );
+
   /* Helper function */
+  var generateRandomString = function (length) {
+    var text = '';
+    var possible =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+    for (var i = 0; i < length; i++) {
+      text += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+    return text;
+  };
 
   async function getAudioBuffer(wavBytes) {
     // const audioContext = new (window.AudioContext ||

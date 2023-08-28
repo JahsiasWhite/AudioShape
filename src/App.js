@@ -8,6 +8,7 @@ import SongList from './components/SongList/SongList';
 import Playlists from './components/Playlists/Playlists';
 import Artists from './components/Artists/Artists';
 import Settings from './components/Settings/Settings';
+import Spotify from './components/Spotify/Spotify';
 import LayoutBar from './components/LayoutBar/LayoutBar';
 import ErrorMessages from './components/ErrorMessages/ErrorMessages';
 
@@ -80,6 +81,8 @@ function App() {
             <Playlists songs={loadedSongs} />
           ) : currentSection === 'artists' ? (
             <Artists songs={loadedSongs} toggleSection={toggleSection} />
+          ) : currentSection === 'spotify' ? (
+            <Spotify />
           ) : (
             <Settings />
           )}

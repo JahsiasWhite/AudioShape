@@ -11,7 +11,7 @@ function FolderSelection() {
 
   return (
     <label htmlFor="folderInput">
-      Choose Folder
+      Choose Song Directory
       <input
         id="folderInput"
         type="file"

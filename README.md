@@ -2,8 +2,6 @@ Lots to fix up
 
 TODO:
 
-- Move audio editing into a context -> Should audio playing in general go in the context? YES I THINK SO!!!
-
 1. I think there's some over lap of 'npm i'. Pretty sure react-scripts is in both, probably much more
 2. cleanup react-app, lots of unused stuff
 3. implement testing
