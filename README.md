@@ -1,3 +1,5 @@
+WIP
+
 Lots to fix up
 
 TODO:
@@ -31,3 +33,11 @@ TODO:
 ## Launching
 
 npm run all
+
+print("Hello World")
+
+opposite of functional language
+
+print='Hello World'
+
+x
