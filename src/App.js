@@ -78,7 +78,7 @@ function App() {
               // songs={visibleSongs}
             />
           ) : currentSection === 'playlists' ? (
-            <Playlists songs={loadedSongs} />
+            <Playlists toggleSection={toggleSection} />
           ) : currentSection === 'artists' ? (
             <Artists songs={loadedSongs} toggleSection={toggleSection} />
           ) : currentSection === 'spotify' ? (
@@ -87,9 +87,7 @@ function App() {
             <Settings />
           )}
         </div>
-        <Playbar
-        // visibleSongs={visibleSongs} // TODO Dont import this entire object, you don't have to
-        />
+        <Playbar />
 
         <ErrorMessages />
       </div>

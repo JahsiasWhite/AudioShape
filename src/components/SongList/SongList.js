@@ -5,6 +5,7 @@ import './songList.css';
 import FolderSelection from '../FolderSelection/FolderSelection';
 import ContextMenu from './ContextMenu/ContextMenu';
 import DropdownMenu from './DropdownMenu/DropdownMenu';
+import PlaylistMenu from '../PlaylistMenu/PlaylistMenu';
 
 import DownArrowSVG from './down-arrow.svg';
 import PlusButtonSVG from './add-svgrepo-com.svg';
@@ -78,9 +79,15 @@ function SongList({ handleSongLoad }) {
     }
   };
 
+  const [playlistMenuIndex, setPlaylistMenuOpen] = useState(-1);
   /* Toggles showing the playlist menu */
   const handlePlaylistEdit = (index) => {
-    console.error(index);
+    // Open or close the playlist menu
+    setPlaylistMenuOpen(index);
+  };
+  const closePlaylistMenu = () => {
+    // Close the playlist menu
+    setPlaylistMenuOpen(-1);
   };
 
   return (
@@ -151,6 +158,13 @@ function SongList({ handleSongLoad }) {
                 top: contextMenuPosition.y,
                 left: contextMenuPosition.x,
               }}
+            />
+          )}
+          {/* Render the PlaylistMenu when playlistMenuIndex has a real index */}
+          {playlistMenuIndex >= 0 && (
+            <PlaylistMenu
+              song={visibleSongs[playlistMenuIndex]}
+              closePlaylistMenu={closePlaylistMenu}
             />
           )}
         </div>

@@ -1,0 +1,108 @@
+/* styles.css */
+.playlist-menu {
+  position: fixed;
+  top: 50px;
+  right: 50px; /* Adjust this to move the menu to the right */
+  width: 400px;
+  height: 70%;
+  background-color: var(--color-main);
+  color: var(--color-text);
+  border: 1px solid #ccc;
+  padding: 16px; /* Increased padding for better spacing */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Slightly larger shadow */
+
+  /* Positioning in the container */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.close-menu {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+
+  width: 24px;
+  height: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  /* background-color: #ddd; */
+  border-radius: 50%; /* Circular shape */
+}
+
+.playlist-menu button {
+  padding: 8px 16px; /* More padding for buttons */
+  background-color: #0074d9;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px; /* Rounded corners */
+  transition: background-color 0.3s ease; /* Smooth background color change on hover */
+}
+
+.playlist-menu button:hover {
+  background-color: #0056a9; /* Darker color on hover */
+}
+
+.playlist-menu ul {
+  list-style: none;
+  padding: 0;
+  overflow-y: scroll;
+}
+
+.playlist-menu li {
+  margin-bottom: 8px;
+  margin-right: 5px;
+
+  cursor: pointer;
+  background-color: var(--color-main);
+  border: 1px solid var(--color-text);
+  padding: 8px; /* Padding for playlist items */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.playlist-circle {
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--color-text);
+  border-radius: 50%;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+.playlist-circle.selected {
+  background-color: #00ff00;
+  border-color: #00ff00;
+}
+
+.create-playlist {
+  margin-top: 15px;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+}
+
+.create-playlist input {
+  flex-grow: 1; /* Input field expands to fill available space */
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-right: 8px; /* Spacing between input and button */
+}
+
+.create-playlist button {
+  padding: 8px 16px;
+  background-color: #4caf50; /* Green color for Create Playlist button */
+  color: var(--color-text);
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.create-playlist button:hover {
+  background-color: #45a049; /* Darker green on hover */
+}

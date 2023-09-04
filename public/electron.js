@@ -242,13 +242,10 @@ app.on('ready', function () {
   });
 
   ipcMain.on('DELETE_TEMP_SONG', async (event) => {
-    console.error('HI', temporaryFilePath);
-    /* Cleanup old file */
     if (temporaryFilePath) {
       try {
         await fsPromises.unlink(temporaryFilePath);
       } catch (error) {
-        // Handle the error if the file cannot be deleted
         console.error('Error deleting previous temporary file:', error);
       }
     }
@@ -298,7 +295,173 @@ app.on('ready', function () {
     }
   );
 
-  /* Helper function */
+  /**
+   * Get all user playlists
+   */
+  ipcMain.on('GET_PLAYLISTS', (event) => {
+    // Get filepath
+    const playlistsFilePath = path.join(
+      app.getPath('userData'),
+      'Data',
+      'playlists.json'
+    );
+    const playlists = getPlaylists(playlistsFilePath);
+    mainWindow.webContents.send('GRAB_PLAYLISTS', playlists);
+  });
+
+  /**
+   * Register an IPC listener for creating playlists. Calls back to the sender with the new playlists
+   */
+  ipcMain.on('CREATE_PLAYLIST', (event, playlistName) => {
+    const updatedPlaylists = createPlaylist(playlistName);
+    mainWindow.webContents.send('CREATE_PLAYLIST', updatedPlaylists);
+  });
+
+  ipcMain.on('DELETE_PLAYLIST', (event, playlistToDelete) => {
+    // Get filepath
+    const playlistsFilePath = path.join(
+      app.getPath('userData'),
+      'Data',
+      'playlists.json'
+    );
+
+    // Get playlists
+    const playlists = getPlaylists(playlistsFilePath);
+
+    // Find and remove the playlist with the matching name
+    const updatedPlaylists = playlists.filter(
+      (playlist) => playlist.name !== playlistToDelete.name
+    );
+
+    try {
+      // Write the updated playlists back to the file
+      fs.writeFileSync(
+        playlistsFilePath,
+        JSON.stringify(updatedPlaylists, null, 2)
+      );
+
+      // Update the new playlists
+      mainWindow.webContents.send('GRAB_PLAYLISTS', updatedPlaylists);
+    } catch (error) {
+      console.error('Error deleting playlist:', error);
+
+      // Send an error message back to the renderer process
+      // event.sender.send('PLAYLIST_DELETE_ERROR', error.message);
+    }
+  });
+
+  /**
+   * Add a new song to the given playlist
+   *
+   */
+  ipcMain.on('TOGGLE_SONG_TO_PLAYLIST', (event, playlistName, songName) => {
+    try {
+      // Load the playlists file
+      const playlistsFilePath = path.join(
+        app.getPath('userData'),
+        'Data',
+        'playlists.json'
+      );
+      const playlists = getPlaylists(playlistsFilePath);
+
+      // Find the playlist by name
+      const playlistIndex = playlists.findIndex(
+        (playlist) => playlist.name === playlistName
+      );
+
+      if (playlistIndex === -1) {
+        // Playlist not found, handle accordingly (e.g., show an error)
+        console.error(`Playlist "${playlistName}" not found.`);
+        return;
+      }
+
+      // Add the song to the playlist
+      if (!playlists[playlistIndex].songs) {
+        // If the playlist doesn't have a songs array, create one
+        playlists[playlistIndex].songs = [];
+      }
+
+      // Check if the song is already in the playlist
+      if (playlists[playlistIndex].songs.includes(songName)) {
+        // Remove the song from the playlist
+        playlists[playlistIndex].songs = playlists[playlistIndex].songs.filter(
+          (s) => s !== songName
+        );
+      } else {
+        // Add the song to the playlist
+        playlists[playlistIndex].songs.push(songName);
+      }
+
+      // Save the updated playlists data back to the file
+      fs.writeFileSync(playlistsFilePath, JSON.stringify(playlists, null, 2));
+
+      // Update the new playlists
+      mainWindow.webContents.send('GRAB_PLAYLISTS', playlists);
+    } catch (error) {
+      // Handle any errors that occur during the process
+      console.error('Error adding song to playlist:', error);
+    }
+  });
+
+  /**
+   *
+   *
+   * Helper functions
+   *
+   *
+   *  */
+
+  /**
+   * Gets all user playlists
+   */
+  function getPlaylists(playlistsFilePath) {
+    let playlists = []; // Should I reget this everytime?
+    try {
+      const playlistsData = fs.readFileSync(playlistsFilePath, 'utf-8');
+      playlists = JSON.parse(playlistsData);
+    } catch (error) {
+      console.error('Error reading playlists file:', error);
+    }
+
+    return playlists;
+  }
+
+  /**
+   * Creates a new playlist with the given playlistName
+   * @param {String} playlistName The name of the playlist
+   * @returns [] of playlists with the newly created playlist
+   */
+  function createPlaylist(playlistName) {
+    // Get playlist location
+    const playlistsFilePath = path.join(
+      app.getPath('userData'),
+      'Data',
+      'playlists.json'
+    );
+
+    // Get all, if any, existing playlists
+    let playlists = getPlaylists(playlistsFilePath);
+
+    // Create a new playlist object
+    const newPlaylist = {
+      name: playlistName,
+      songs: [],
+    };
+
+    // Add the new playlist to the list of playlists
+    playlists.push(newPlaylist);
+
+    // Save the updated list of playlists back to the JSON file
+    try {
+      fs.writeFileSync(playlistsFilePath, JSON.stringify(playlists, null, 2));
+    } catch (error) {
+      console.error('Error writing playlists file:', error);
+    }
+
+    // Return the updated list of playlists (optional)
+    return playlists;
+  }
+
   var generateRandomString = function (length) {
     var text = '';
     var possible =

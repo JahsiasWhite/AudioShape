@@ -24,10 +24,9 @@ function LayoutBar({ toggleSection }) {
     <div className="layout-bar">
       <div className="centered-content">
         <HomeButton toggleSection={modifiedToggleSection} />
-        {/* <SpotifyButton toggleSection={modifiedToggleSection} /> */}
         <PlaylistButton toggleSection={modifiedToggleSection} />
         <ArtistButton toggleSection={modifiedToggleSection} />
-        <SpotifyButton toggleSection={modifiedToggleSection} />
+        {/* <SpotifyButton toggleSection={modifiedToggleSection} /> */}
         <SettingsButton toggleSection={modifiedToggleSection} />
       </div>
     </div>

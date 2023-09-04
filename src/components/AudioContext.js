@@ -11,6 +11,9 @@ export const AudioProvider = ({ children }) => {
   const [currentSong, setCurrentSong] = useState(new Audio()); // Current playing audio object
   const [currentSongIndex, setCurrentSongIndex] = useState(null);
 
+  /* Playlists */
+  const [playlists, setPlaylists] = useState([]);
+
   /* Sample song */
   const [sampleSong, setSampleSong] = useState(new Audio());
 
@@ -219,7 +222,7 @@ export const AudioProvider = ({ children }) => {
     //   // Clean up the event listener when the component unmounts
     //   window.electron.ipcRenderer.removeAllListeners('TEMP_SONG_SAVED');
     // };
-  }, [currentSongIndex]);
+  }, [currentSongIndex]); // Uhhhh do i need this ? Or can it just be empty?
 
   /**
    * Helper to stop the sample song
@@ -333,6 +336,21 @@ export const AudioProvider = ({ children }) => {
     return new Uint8Array(buffer);
   }
 
+  const createPlaylist = (playlistName) => {
+    window.electron.ipcRenderer.sendMessage('CREATE_PLAYLIST', playlistName);
+  };
+
+  /**
+   * Callback from the server of the new playlist creation
+   */
+  useEffect(() => {
+    const handlePlaylistAdded = (newPlaylists) => {
+      setPlaylists(newPlaylists);
+    };
+
+    window.electron.ipcRenderer.once('CREATE_PLAYLIST', handlePlaylistAdded);
+  }, [playlists]);
+
   return (
     <AudioContext.Provider
       value={{
@@ -354,6 +372,9 @@ export const AudioProvider = ({ children }) => {
         toggleSpeedup,
         handleSongExport,
         speedupIsEnabled,
+        playlists,
+        setPlaylists,
+        createPlaylist,
       }}
     >
       {children}
