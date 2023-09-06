@@ -1,0 +1,23 @@
+.fullscreen-playbar {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+
+  transition: transform 0.3s ease-in-out;
+  transform: translateY(100%);
+}
+
+.fullscreen-playbar-show {
+  transform: translateY(0%) !important;
+}
+
+.playbar-container {
+  transition: transform 0.3s ease-in-out;
+  transform: translateY(100%);
+}
+
+.playbar-container.show {
+  transform: translateY(
+    0%
+  ); /* Show the playbar by translating it back to its original position */
+}

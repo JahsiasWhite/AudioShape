@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './playbar.css';
+import './FullscreenPlaybar.css';
 
 import PreviousButton from './PreviousButton/PreviousButton';
 import PlayButton from './PlayButton/PlayButton';
@@ -10,20 +10,56 @@ import SpeedupButtonSVG from './SpeedupButtonSVG';
 
 import { useAudioPlayer } from '../AudioContext';
 
-function Playbar({ toggleFullscreen }) {
-  const {
-    visibleSongs,
-    currentSongIndex,
-    toggleSpeedup,
-    speedupIsEnabled,
-    toggleSlowDown,
-    slowDownIsEnabled,
-  } = useAudioPlayer();
+function FullscreenPlaybar({ toggleFullscreen }) {
+  const { toggleSpeedup, speedupIsEnabled, toggleSlowDown, slowDownIsEnabled } =
+    useAudioPlayer();
+
+  const [playbarVisible, setPlaybarVisible] = useState(true);
+  const [timeoutId, setTimeoutId] = useState(null);
+
+  // Function to hide the playbar after 1 second
+  const hidePlaybar = () => {
+    clearTimeout(timeoutId);
+    const newTimeoutId = setTimeout(() => {
+      setPlaybarVisible(false);
+    }, 1000);
+    setTimeoutId(newTimeoutId);
+  };
+
+  // Function to show the playbar
+  const showPlaybar = () => {
+    clearTimeout(timeoutId);
+    setPlaybarVisible(true);
+  };
+
+  // Add mousemove event listener to detect mouse position
+  useEffect(() => {
+    const handleMouseMove = (event) => {
+      const mouseY = event.clientY;
+
+      // Show playbar if mouse is near the bottom of the screen
+      if (mouseY >= window.innerHeight - window.innerHeight * 0.15) {
+        showPlaybar();
+      } else {
+        hidePlaybar();
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [timeoutId]);
 
   return (
-    <div className="playbar">
-      <div className="current-song">
-        {/* TODO Clean this up? */}
+    <div
+      className={`fullscreen-playbar ${
+        playbarVisible ? 'fullscreen-playbar-show' : ''
+      }`}
+    >
+      {/* <div className="current-song">
+         TODO Clean this up? 
         {visibleSongs[currentSongIndex] &&
           visibleSongs[currentSongIndex].albumImage && (
             <img
@@ -44,7 +80,8 @@ function Playbar({ toggleFullscreen }) {
               : ''}
           </span>
         </div>
-      </div>
+      </div> */}
+
       <div className="playbar-controls">
         <div className="buttons-container">
           <SpeedupButtonSVG
@@ -78,4 +115,4 @@ function Playbar({ toggleFullscreen }) {
   );
 }
 
-export default Playbar;
+export default FullscreenPlaybar;

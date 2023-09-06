@@ -8,25 +8,23 @@ TODO:
 2. cleanup react-app, lots of unused stuff
 3. implement testing
 4. Watch the library directory for file changes so we don't need a manual refresh
-5. Fix all the prop drilling? -- Should setup the audio list in a context?
-6. Themes
-7. Playlists
-8. Images
-9. Using remotely - server & remote
-10. Caching?
-11. Easy support for creating own themes
-12. Change the time in the current song
-13. Addon support
-    - Lyrics
-    - Themes?
-    - Youtube?
-14. Add ability to add image ! WILL WRITE TO THAT FILE THEN
-15. Full screen mode
-16. lazy loading
-17. Add a queue system
-18. Audio spectrum
-19. Cleanup packages, I know wave-encoder is not used
-20. Need to export to mp3, rn, exporting to WAV is creating audio files x10 as big as their original
+5. Themes
+6. Using remotely - server & remote
+7. Caching?
+8. Easy support for creating own themes
+9. Addon support
+   - Lyrics
+   - Themes?
+   - Youtube?
+10. Add ability to add image ! WILL WRITE TO THAT FILE THEN
+11. Full screen mode
+12. lazy loading
+13. Add a queue system
+14. Audio spectrum
+15. Cleanup packages, I know wave-encoder is not used
+16. Need to export to mp3, rn, exporting to WAV is creating audio files x10 as big as their original
+17. Shuffle
+18. Resturcture styles, does creating all of these extra folders take up a lot of storage??
 
 999 Easy file/song sharing
 

@@ -10,6 +10,9 @@ import Artists from './components/Artists/Artists';
 import Settings from './components/Settings/Settings';
 import Spotify from './components/Spotify/Spotify';
 import LayoutBar from './components/LayoutBar/LayoutBar';
+
+import FullscreenView from './components/FullscreenView/FullscreenView';
+
 import ErrorMessages from './components/ErrorMessages/ErrorMessages';
 
 // CONTEXT
@@ -66,28 +69,51 @@ function App() {
     });
   }, []);
 
+  /**
+   * Enables fullscreen mode
+   */
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const enableFullscreen = () => {
+    setIsFullscreen(true);
+  };
+
+  /**
+   * Exits out of fullscreen mode
+   */
+  const disableFullscreen = () => {
+    setIsFullscreen(false);
+  };
+
   return (
     <AudioProvider>
       <div className="app-container">
-        <LayoutBar toggleSection={toggleSection} />
-        <div className="main-content">
-          {currentSection === 'songs' ? (
-            <SongList
-              // onSongSelect={handleSongSelect}
-              handleSongLoad={loadedSongs}
-              // songs={visibleSongs}
-            />
-          ) : currentSection === 'playlists' ? (
-            <Playlists toggleSection={toggleSection} />
-          ) : currentSection === 'artists' ? (
-            <Artists songs={loadedSongs} toggleSection={toggleSection} />
-          ) : currentSection === 'spotify' ? (
-            <Spotify />
-          ) : (
-            <Settings />
-          )}
-        </div>
-        <Playbar />
+        {!isFullscreen && (
+          <div className="non-fullscreen">
+            <LayoutBar toggleSection={toggleSection} />
+            <div className="main-content">
+              {currentSection === 'songs' ? (
+                <SongList
+                  // onSongSelect={handleSongSelect}
+                  handleSongLoad={loadedSongs}
+                  // songs={visibleSongs}
+                />
+              ) : currentSection === 'playlists' ? (
+                <Playlists toggleSection={toggleSection} />
+              ) : currentSection === 'artists' ? (
+                <Artists songs={loadedSongs} toggleSection={toggleSection} />
+              ) : currentSection === 'spotify' ? (
+                <Spotify />
+              ) : (
+                <Settings />
+              )}
+            </div>
+            <Playbar toggleFullscreen={enableFullscreen} />
+          </div>
+        )}
+
+        {isFullscreen && (
+          <FullscreenView toggleFullscreen={disableFullscreen} />
+        )}
 
         <ErrorMessages />
       </div>

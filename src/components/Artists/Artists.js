@@ -1,4 +1,5 @@
 import React from 'react';
+import './Artists.css';
 
 import { useAudioPlayer } from '../AudioContext';
 
@@ -40,14 +41,20 @@ function Artists({ songs, toggleSection }) {
   if (artistsBySongs.length === 0) return; // ? Is this happening?
 
   return (
-    <div>
-      Artists:
+    <div className="artists">
+      <h2>Artists</h2>
       <ul>
-        {Object.keys(artistsBySongs).map((artist) => (
-          <li key={artist} onClick={() => handleArtistClick(artist)}>
-            {artist}
-          </li>
-        ))}
+        <div className="playlist-cards">
+          {Object.keys(artistsBySongs).map((artist) => (
+            <div
+              key={artist}
+              className="playlist-card"
+              onDoubleClick={() => handleArtistClick(artist)}
+            >
+              {artist}
+            </div>
+          ))}
+        </div>
       </ul>
     </div>
   );

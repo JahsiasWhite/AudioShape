@@ -1,6 +1,5 @@
 .next-button {
   width: 30px;
   height: 30px;
-  background-color: var(--color-main);
   cursor: pointer;
 }

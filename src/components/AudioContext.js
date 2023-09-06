@@ -8,7 +8,8 @@ export const AudioProvider = ({ children }) => {
   const [loadedSongs, setLoadedSongs] = useState([]);
   const [visibleSongs, setVisibleSongs] = useState([]);
 
-  const [currentSong, setCurrentSong] = useState(new Audio()); // Current playing audio object
+  const [currentSong, setCurrentSong] = useState(new Audio()); // Current playing audio object\
+
   const [currentSongIndex, setCurrentSongIndex] = useState(null);
 
   /* Playlists */
@@ -21,6 +22,7 @@ export const AudioProvider = ({ children }) => {
   const [isPlaying, setIsPlaying] = useState(false);
 
   const [speedupIsEnabled, setSpeedupIsEnabled] = useState(false);
+  const [slowDownIsEnabled, setSlowDownIsEnabled] = useState(false);
 
   const playAudio = () => {
     currentSong.play();
@@ -73,6 +75,9 @@ export const AudioProvider = ({ children }) => {
     if (speedupIsEnabled) {
       // sppedup
       handleSpeedChange(0.8);
+      return;
+    } else if (slowDownIsEnabled) {
+      handleSpeedChange(1.2);
       return;
     } else {
       const newSong = visibleSongs[currentSongIndex];
@@ -129,6 +134,19 @@ export const AudioProvider = ({ children }) => {
   };
 
   /**
+   * Toggles whether the current and all future songs will be slowed down
+   */
+  const toggleSlowDown = () => {
+    if (currentSong) {
+      // TODO: maybe make this its own function? gets used quite a bit
+      currentSong.removeEventListener('ended', onSongEnded);
+    }
+
+    setSlowDownIsEnabled(!slowDownIsEnabled);
+    handleSpeedChange(0.8);
+  };
+
+  /**
    * Changes the speed of the current song and starts playing a sample
    * @param {*} newSpeed
    */
@@ -138,6 +156,10 @@ export const AudioProvider = ({ children }) => {
 
     /* index is only given when using sample audio, if auto-speedup play is enabled, the path should just be the current playing song */
     let filePath = index === undefined ? currentSongIndex : index;
+
+    if (filePath === null) {
+      return;
+    }
 
     // Load the current song's audio buffer
     const response = await fetch(visibleSongs[filePath].file);
@@ -370,8 +392,10 @@ export const AudioProvider = ({ children }) => {
         playNextSong,
         handleSpeedChange,
         toggleSpeedup,
-        handleSongExport,
+        toggleSlowDown,
         speedupIsEnabled,
+        slowDownIsEnabled,
+        handleSongExport,
         playlists,
         setPlaylists,
         createPlaylist,
