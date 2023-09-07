@@ -48,12 +48,6 @@ if (!fs.existsSync(playlistsFile)) {
 let temporaryFilePath = null;
 let newTemporaryFilePath = null;
 
-/* For the auto playing */
-// const tempDirectory = path.join(os.tmpdir(), 'MusicPlayerTemp');
-// if (!fs.existsSync(tempDirectory)) {
-//   fs.mkdirSync(tempDirectory);
-// }
-
 app.name = 'Music Player';
 
 app.on('ready', function () {
@@ -98,15 +92,10 @@ app.on('ready', function () {
     folderPath = getParentDirectory(folderPath); // ! DOES THIS WORK?
 
     let correctedPath = '';
-    console.error('PATH IS ', folderPath, path.dirname(folderPath));
     // If folderPath is empty, use the default path
     if (folderPath === '') {
-      // ? Put in its own function? getSongDirectory
-      const settingsPath = path.join(
-        app.getPath('userData'),
-        'Data',
-        'settings.json'
-      );
+      const settingsPath = getSettingsPath();
+
       const settingsData = fs.readFileSync(settingsPath, 'utf-8');
       const settings = JSON.parse(settingsData);
 
@@ -123,10 +112,10 @@ app.on('ready', function () {
     const audios = await glob(correctedPath + '/**/*.{mp3,wav,ogg}');
     const imageFiles = await glob(correctedPath + '/**/*.{jpg,jpeg,png}');
 
-    // Make sure we have some files
+    // Make sure we have at least one song in the directory
     if (audios.length === 0) {
       // ! OUTPUT ERROR HERE?
-      event.reply('GRAB_SONGS', []); // Send an empty array to the renderer ?? WHAT DOES THIS DO?
+      event.reply('GRAB_SONGS', []); // Send an empty array to the renderer ?? I think this is broke right now
       return;
     }
 
@@ -199,6 +188,9 @@ app.on('ready', function () {
     });
   });
 
+  /**
+   * Exports the given song to the same location it was copied from
+   */
   ipcMain.on('SAVE_SONG', async (event, audioData, filePath) => {
     // Construct the audio data into a Blob of wav data
     const wavData = await getAudioBuffer(audioData);
@@ -236,11 +228,12 @@ app.on('ready', function () {
     process.on('SIGINT', deleteOnExit); // Listen to Ctrl+C events
 
     // Send back the path to the saved temporary file
-    // event.sender.send('TEMP_SONG_SAVED', outputPath);
-    // event.reply('TEMP_SONG_SAVED', outputPath);
     mainWindow.webContents.send('TEMP_SONG_SAVED', newTemporaryFilePath);
   });
 
+  /**
+   * Songs are created when we autoplay songs with custom settings, so they must be deleted when they are finished playing.
+   */
   ipcMain.on('DELETE_TEMP_SONG', async (event) => {
     if (temporaryFilePath) {
       try {
@@ -249,6 +242,8 @@ app.on('ready', function () {
         console.error('Error deleting previous temporary file:', error);
       }
     }
+
+    // newTemporaryFilePath is updated in SAVE_TEMP_SONG, which will be the next song that gets deleted
     temporaryFilePath = newTemporaryFilePath;
   });
 
@@ -294,6 +289,25 @@ app.on('ready', function () {
       });
     }
   );
+
+  /**
+   * Gets all user settings. Called when the user navigates to the settings page
+   */
+  ipcMain.on('GET_SETTINGS', (event) => {
+    const settingsPath = getSettingsPath();
+    const settingsData = fs.readFileSync(settingsPath, 'utf-8');
+    const settings = JSON.parse(settingsData);
+    const songDirectory = settings.libraryDirectory;
+
+    const outputDirectory = dataDirectory;
+
+    const output = {
+      songDirectory: songDirectory,
+      outputDirectory: outputDirectory,
+    };
+
+    mainWindow.webContents.send('GET_SETTINGS', output);
+  });
 
   /**
    * Get all user playlists
@@ -409,7 +423,17 @@ app.on('ready', function () {
    * Helper functions
    *
    *
-   *  */
+   *
+   */
+
+  function getSettingsPath() {
+    const settingsPath = path.join(
+      app.getPath('userData'),
+      'Data',
+      'settings.json'
+    );
+    return settingsPath;
+  }
 
   /**
    * Gets all user playlists
@@ -532,11 +556,7 @@ app.on('ready', function () {
    * @param {String} newLibraryDirectory - Directory path
    */
   function updateLibraryDirectory(newLibraryDirectory) {
-    const settingsPath = path.join(
-      app.getPath('userData'),
-      'Data',
-      'settings.json'
-    );
+    const settingsPath = getSettingsPath();
 
     try {
       const settingsData = fs.readFileSync(settingsPath, 'utf-8');

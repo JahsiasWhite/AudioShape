@@ -6,6 +6,8 @@ import PlayButton from './PlayButton/PlayButton';
 import NextButton from './NextButton/NextButton';
 import VolumeControl from './VolumeControl/VolumeControl'; // ! I don't know if I like this name
 import PlaybackTimer from './PlaybackTimer/PlaybackTimer';
+
+import SlowDownButtonSVG from './SlowDownButtonSVG';
 import SpeedupButtonSVG from './SpeedupButtonSVG';
 
 import { useAudioPlayer } from '../AudioContext';
@@ -84,12 +86,12 @@ function FullscreenPlaybar({ toggleFullscreen }) {
 
       <div className="playbar-controls">
         <div className="buttons-container">
-          <SpeedupButtonSVG
-            speedupIsEnabled={slowDownIsEnabled}
+          <SlowDownButtonSVG
+            slowDownIsEnabled={slowDownIsEnabled}
             onClick={() => {
               toggleSlowDown();
             }}
-          ></SpeedupButtonSVG>
+          ></SlowDownButtonSVG>
           <PreviousButton />
           <PlayButton />
           <NextButton />

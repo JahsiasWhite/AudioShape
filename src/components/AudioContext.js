@@ -25,7 +25,6 @@ export const AudioProvider = ({ children }) => {
   const [slowDownIsEnabled, setSlowDownIsEnabled] = useState(false);
 
   const playAudio = () => {
-    console.error('PLAYING');
     currentSong.play();
     setIsPlaying(true);
 
@@ -93,7 +92,7 @@ export const AudioProvider = ({ children }) => {
 
   const initCurentSong = () => {
     currentSong.volume = volume;
-    currentSong.load(); // Load the new song's data
+    // currentSong.load(); // Load the new song's data
     currentSong.play();
     setIsPlaying(true);
 
@@ -152,7 +151,7 @@ export const AudioProvider = ({ children }) => {
     }
 
     setSlowDownIsEnabled(!slowDownIsEnabled);
-    handleSpeedChange(0.8);
+    handleSpeedChange(1.2);
   };
 
   /**
@@ -166,9 +165,7 @@ export const AudioProvider = ({ children }) => {
     /* index is only given when using sample audio, if auto-speedup play is enabled, the path should just be the current playing song */
     let filePath = index === undefined ? currentSongIndex : index;
 
-    if (filePath === null) {
-      return;
-    }
+    if (filePath === null) return;
 
     // Load the current song's audio buffer
     const response = await fetch(visibleSongs[filePath].file);
@@ -227,33 +224,35 @@ export const AudioProvider = ({ children }) => {
     setSampleSong(source);
   };
   useEffect(() => {
-    const handleTempSongSaved = (outputPath) => {
-      if (currentSongIndex === null) return;
-      // playNextSong();
-      // = createNewSong();
-
-      //   pauseAudio();
-      currentSong.src = outputPath;
-      //   initCurentSong();
-
-      //   stopSampleAudio();
-      // // currentSong.load(); // Load the song's new data
-      //   currentSong.load();
-      //   playAudio();
-      initCurentSong();
-      setCurrentSong(currentSong);
-
-      /* Cleanup old file */
-      window.electron.ipcRenderer.sendMessage('DELETE_TEMP_SONG');
-    };
+    // If these aren't enabled, we dont have a temp song so just leave
+    if (!slowDownIsEnabled && !speedupIsEnabled) return;
 
     window.electron.ipcRenderer.once('TEMP_SONG_SAVED', handleTempSongSaved);
 
-    // return () => {
-    //   // Clean up the event listener when the component unmounts
-    //   window.electron.ipcRenderer.removeAllListeners('TEMP_SONG_SAVED');
-    // };
+    return () => {
+      console.error('HI');
+      // Clean up the event listener when the component unmounts
+      // window.electron.ipcRenderer.removeAllListeners('TEMP_SONG_SAVED');
+    };
   }, [currentSongIndex]); // Uhhhh do i need this ? Or can it just be empty?
+
+  useEffect(() => {
+    console.error('CHANGED', speedupIsEnabled, slowDownIsEnabled);
+    window.electron.ipcRenderer.once('TEMP_SONG_SAVED', handleTempSongSaved);
+  }, [speedupIsEnabled, slowDownIsEnabled]);
+
+  const handleTempSongSaved = (outputPath) => {
+    if (currentSongIndex === null) return;
+
+    console.error('CHANGING SRC', currentSongIndex, outputPath);
+    currentSong.src = outputPath;
+
+    initCurentSong();
+    setCurrentSong(currentSong);
+
+    /* Cleanup old file */
+    window.electron.ipcRenderer.sendMessage('DELETE_TEMP_SONG');
+  };
 
   /**
    * Helper to stop the sample song
@@ -396,6 +395,7 @@ export const AudioProvider = ({ children }) => {
         isPlaying,
         playAudio,
         pauseAudio,
+        volume,
         changeVolume,
         playPreviousSong,
         playNextSong,

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './VolumeControl.css';
 
 import VolumeMaxSVG from './volume-max.svg';
@@ -8,34 +8,43 @@ import VolumeQuietSVG from './volume-quiet.svg';
 import { useAudioPlayer } from '../../AudioContext';
 
 function VolumeControl() {
-  const { changeVolume } = useAudioPlayer();
+  const { volume, changeVolume } = useAudioPlayer();
 
-  const [volume, setVolume] = useState(100); // Local variable for showing volume, its different than what the audio player needs
+  const [localVolume, setLocalVolume] = useState(100);
 
+  /**
+   * Changing the input slider
+   * @param {*} event
+   */
   const handleVolumeChange = (event) => {
     const newVolume = event.target.value;
-    setVolume(newVolume);
-    // onVolumeChange(newVolume / 100); // Convert to a range between 0 and 1
-    changeVolume(newVolume / 100);
+
+    setLocalVolume(newVolume);
+    changeVolume(newVolume / 100); // Convert to a range between 0 and 1
   };
+
+  /* On load, get current volume */
+  useEffect(() => {
+    setLocalVolume(volume * 100); // Convert from the 0-1 range
+  }, []);
 
   return (
     <div className="volume-control">
       <img
         className="volume-icon"
         src={
-          volume > 60
+          localVolume > 60
             ? VolumeMaxSVG
-            : volume > 0
+            : localVolume > 0
             ? VolumeLowSVG
             : VolumeQuietSVG
-        } // Show max icon when above 50%
+        }
       ></img>
       <input
         type="range"
         min="0"
         max="100"
-        value={volume}
+        value={localVolume}
         onChange={handleVolumeChange}
         className="volume-slider"
       />

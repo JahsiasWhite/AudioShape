@@ -114,10 +114,9 @@ function SongList({ handleSongLoad }) {
                     setIsContextMenuActive(false); // Hide the 'right-click' menu when we left-click
                   }}
                   onContextMenu={handleContextMenu} // Open context menu when we right-click
-                  style={{
-                    color: currentSongIndex === index ? 'rgb(88, 192, 88)' : '',
-                  }}
-                  className="list-item"
+                  className={`list-item ${
+                    currentSongIndex === index ? 'highlighted' : ''
+                  }`}
                 >
                   {song.albumImage && (
                     <img
@@ -127,7 +126,15 @@ function SongList({ handleSongLoad }) {
                     />
                   )}
                   <div className="song-details">
-                    <div>{song.title}</div>
+                    <div
+                      className={`song-title ${
+                        currentSongIndex === index
+                          ? 'highlighted'
+                          : 'header-color'
+                      }`}
+                    >
+                      {song.title}
+                    </div>
                     <div>{song.artist}</div>
                     <div>{song.album}</div>
                     {/* <div>{song.duration}</div> */}
