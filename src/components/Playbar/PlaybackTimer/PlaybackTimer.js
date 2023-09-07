@@ -41,7 +41,7 @@ function PlaybackTimer() {
         <input
           type="range"
           min="0"
-          max={currentSong.duration}
+          max={currentSong.duration ? currentSong.duration : 0}
           value={currentTime}
           onChange={handleTimeChange}
           className="playback-bar"

@@ -46,9 +46,10 @@ const AudioSpectrum = ({ song }) => {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       for (let i = 0; i < bufferLength; i++) {
-        const barHeight = dataArray[i];
+        let barHeight = dataArray[i];
+        barHeight *= 2;
 
-        const r = barHeight + 25 * (i / bufferLength);
+        const r = barHeight / 2 + 25 * (i / bufferLength);
         const g = 250 * (i / bufferLength);
         const b = 50;
 

@@ -30,15 +30,7 @@ const FullscreenView = ({ toggleFullscreen }) => {
       )}
       <AudioSpectrum song={currentSong} />
 
-      {/* <div
-        className={`playbar-container ${
-          playbarVisible ? 'playbar-container.show' : ''
-        }`}
-      >
-        {' '} */}
       <FullscreenPlaybar toggleFullscreen={toggleFullscreen} />
-      {/* <Playbar toggleFullscreen={toggleFullscreen} /> */}
-      {/* </div> */}
     </div>
   );
 };

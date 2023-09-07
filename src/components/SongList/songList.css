@@ -3,6 +3,11 @@
   padding-top: 0px;
 }
 
+.song-list-header {
+  height: 10%;
+  font-size: 100px;
+}
+
 .empty-message {
   margin-top: 40%;
   text-align: center;

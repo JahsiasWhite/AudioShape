@@ -8,6 +8,7 @@
   align-items: baseline;
   flex-direction: column;
   margin-right: 10px;
+  width: 100%;
 }
 
 .centered-content > * {

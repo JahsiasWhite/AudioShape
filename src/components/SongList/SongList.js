@@ -92,6 +92,7 @@ function SongList({ handleSongLoad }) {
 
   return (
     <div className="song-list-container">
+      <div className="song-list-header">Songs</div>
       {isLoading ? (
         <p>Loading...</p>
       ) : visibleSongs.length === 0 ? (
@@ -103,7 +104,7 @@ function SongList({ handleSongLoad }) {
         <div>
           <ul className="song-list">
             {visibleSongs.map((song, index) => (
-              <div className="song">
+              <div className="song" key={index}>
                 <li
                   key={index} // TODO Fix this to be more appropriate/an actual unique key, when the page changes to artists for example, the indices are all messed up
                   onDoubleClick={() => {

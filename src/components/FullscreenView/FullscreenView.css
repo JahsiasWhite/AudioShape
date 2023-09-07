@@ -5,15 +5,17 @@
 }
 
 .song-image {
-  width: 200px;
-  height: 200px;
+  width: 400px;
+  height: 400px;
   position: fixed;
+  top: 20%;
+  left: 5%;
   z-index: 1;
 }
 
 .fullscreen-song-details {
   position: fixed;
   font-size: 40px;
-  left: 230px;
-  top: 20px;
+  left: 33%;
+  top: 20%;
 }

@@ -17,14 +17,12 @@ TODO:
    - Themes?
    - Youtube?
 10. Add ability to add image ! WILL WRITE TO THAT FILE THEN
-11. Full screen mode
-12. lazy loading
-13. Add a queue system
-14. Audio spectrum
-15. Cleanup packages, I know wave-encoder is not used
-16. Need to export to mp3, rn, exporting to WAV is creating audio files x10 as big as their original
-17. Shuffle
-18. Resturcture styles, does creating all of these extra folders take up a lot of storage??
+11. lazy loading
+12. Add a queue system
+13. Cleanup packages, I know wave-encoder is not used
+14. Need to export to mp3, rn, exporting to WAV is creating audio files x10 as big as their original
+15. Shuffle
+16. Resturcture styles, does creating all of these extra folders take up a lot of storage??
 
 999 Easy file/song sharing
 

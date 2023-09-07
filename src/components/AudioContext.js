@@ -25,6 +25,7 @@ export const AudioProvider = ({ children }) => {
   const [slowDownIsEnabled, setSlowDownIsEnabled] = useState(false);
 
   const playAudio = () => {
+    console.error('PLAYING');
     currentSong.play();
     setIsPlaying(true);
 
@@ -129,6 +130,10 @@ export const AudioProvider = ({ children }) => {
       currentSong.removeEventListener('ended', onSongEnded);
     }
 
+    if (slowDownIsEnabled) {
+      setSlowDownIsEnabled(false);
+    }
+
     setSpeedupIsEnabled(!speedupIsEnabled);
     handleSpeedChange(0.8);
   };
@@ -140,6 +145,10 @@ export const AudioProvider = ({ children }) => {
     if (currentSong) {
       // TODO: maybe make this its own function? gets used quite a bit
       currentSong.removeEventListener('ended', onSongEnded);
+    }
+
+    if (speedupIsEnabled) {
+      setSpeedupIsEnabled(false);
     }
 
     setSlowDownIsEnabled(!slowDownIsEnabled);
