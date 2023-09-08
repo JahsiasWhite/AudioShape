@@ -7,6 +7,9 @@ const url = require('url');
 
 const { v4: uuidv4 } = require('uuid');
 
+// For downloading youtube videos
+const ytdl = require('ytdl-core');
+
 const { glob, globSync, Glob } = require('glob');
 // const { fetch } = require('node-fetch');
 let fetch;
@@ -96,8 +99,7 @@ app.on('ready', function () {
     if (folderPath === '') {
       const settingsPath = getSettingsPath();
 
-      const settingsData = fs.readFileSync(settingsPath, 'utf-8');
-      const settings = JSON.parse(settingsData);
+      const settings = getSettings(settingsPath);
 
       correctedPath = settings.libraryDirectory;
     } else {
@@ -294,9 +296,7 @@ app.on('ready', function () {
    * Gets all user settings. Called when the user navigates to the settings page
    */
   ipcMain.on('GET_SETTINGS', (event) => {
-    const settingsPath = getSettingsPath();
-    const settingsData = fs.readFileSync(settingsPath, 'utf-8');
-    const settings = JSON.parse(settingsData);
+    const settings = getSettings();
     const songDirectory = settings.libraryDirectory;
 
     const outputDirectory = dataDirectory;
@@ -418,6 +418,56 @@ app.on('ready', function () {
   });
 
   /**
+   * Downloads the youtube video from the specified url
+   */
+  ipcMain.on('DOWNLOAD_YOUTUBE_VID', async (event, videoUrl) => {
+    console.error('URL IS : ', videoUrl);
+    try {
+      // Get the youtube video title
+      const info = await ytdl.getInfo(videoUrl);
+      const videoTitle = info.videoDetails.title;
+
+      // Get where we are saving the video to
+      const settings = getSettings();
+      const songDirectory = settings.libraryDirectory;
+
+      const downloadOptions = {
+        directory: songDirectory, // Update with your desired directory
+        filename: `${videoTitle}.mp4`,
+      };
+      console.error('DOWNLAODING ', videoTitle);
+      // Start the download
+      ytdl(videoUrl, downloadOptions)
+        .pipe(
+          fs.createWriteStream(
+            path.join(downloadOptions.directory, downloadOptions.filename)
+          )
+        )
+        .on('finish', () => {
+          console.error('FINISHED DOWNLOADING');
+          mainWindow.webContents.send(
+            'download-success',
+            'Download completed!'
+          );
+        })
+        .on('error', (error) => {
+          console.error('Error downloading video', error.message);
+          mainWindow.webContents.send('download-error', error.message);
+        });
+    } catch (error) {
+      console.error('Error fetching video', error.message);
+
+      // maybe use error.name === 'SyntaxError' instead?
+      if (error.message === 'Invalid or unexpected token') {
+        // This error usually happens when the ytdl package is broken
+        console.error('ytdl package is most likely broken');
+      }
+
+      mainWindow.webContents.send('download-error', error.message);
+    }
+  });
+
+  /**
    *
    *
    * Helper functions
@@ -433,6 +483,16 @@ app.on('ready', function () {
       'settings.json'
     );
     return settingsPath;
+  }
+
+  function getSettings(settingsPath) {
+    // Optional parameter
+    if (settingsPath === undefined) {
+      settingsPath = getSettingsPath();
+    }
+
+    const settingsData = fs.readFileSync(settingsPath, 'utf-8');
+    return JSON.parse(settingsData);
   }
 
   /**
@@ -556,15 +616,15 @@ app.on('ready', function () {
    * @param {String} newLibraryDirectory - Directory path
    */
   function updateLibraryDirectory(newLibraryDirectory) {
-    const settingsPath = getSettingsPath();
+    const settingsPath = getSettingsPath(); // TODO: Can I combine this function with getSettings?
 
     try {
-      const settingsData = fs.readFileSync(settingsPath, 'utf-8');
-      const settings = JSON.parse(settingsData);
+      const settings = getSettings(settingsPath);
 
       settings.libraryDirectory = newLibraryDirectory;
 
       fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+      console.error('Updated song directory to ', newLibraryDirectory);
     } catch (error) {
       console.error('Error updating libraryDirectory in settings:', error);
     }

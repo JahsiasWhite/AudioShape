@@ -9,6 +9,7 @@ import Playlists from './components/Playlists/Playlists';
 import Artists from './components/Artists/Artists';
 import Settings from './components/Settings/Settings';
 import Spotify from './components/Spotify/Spotify';
+import Youtube from './components/Youtube/Youtube';
 import LayoutBar from './components/LayoutBar/LayoutBar';
 import Mixer from './components/Mixer/Mixer';
 
@@ -108,6 +109,8 @@ function App() {
                 <Settings />
               ) : currentSection === 'mixer' ? (
                 <Mixer />
+              ) : currentSection === 'youtube' ? (
+                <Youtube />
               ) : (
                 <div>NO SECTION FOUND</div>
               )}

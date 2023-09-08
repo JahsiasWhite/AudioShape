@@ -6,6 +6,7 @@ import MixerButton from './MixerButton/MixerButton';
 import PlaylistButton from './PlaylistButton/PlaylistButton';
 import ArtistButton from './ArtistButton/ArtistButton';
 import SpotifyButton from './SpotifyButton/SpotifyButton';
+import YoutubeButton from './YoutubeButton/YoutubeButton';
 import SettingsButton from './SettingsButton/SettingsButton';
 
 import { useAudioPlayer } from '../AudioContext';
@@ -29,6 +30,7 @@ function LayoutBar({ toggleSection }) {
         <PlaylistButton toggleSection={modifiedToggleSection} />
         <ArtistButton toggleSection={modifiedToggleSection} />
         {/* <SpotifyButton toggleSection={modifiedToggleSection} /> */}
+        <YoutubeButton toggleSection={modifiedToggleSection} />
         <SettingsButton toggleSection={modifiedToggleSection} />
       </div>
     </div>

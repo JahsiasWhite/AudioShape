@@ -16,6 +16,7 @@ TODO:
    - Lyrics
    - Themes?
    - Youtube?
+   - Audio edit plugins
 10. Add ability to add image ! WILL WRITE TO THAT FILE THEN
 11. lazy loading
 12. Add a queue system
