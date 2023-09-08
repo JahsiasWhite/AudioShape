@@ -10,6 +10,7 @@ import Artists from './components/Artists/Artists';
 import Settings from './components/Settings/Settings';
 import Spotify from './components/Spotify/Spotify';
 import LayoutBar from './components/LayoutBar/LayoutBar';
+import Mixer from './components/Mixer/Mixer';
 
 import FullscreenView from './components/FullscreenView/FullscreenView';
 
@@ -103,8 +104,12 @@ function App() {
                 <Artists songs={loadedSongs} toggleSection={toggleSection} />
               ) : currentSection === 'spotify' ? (
                 <Spotify />
-              ) : (
+              ) : currentSection === 'settings' ? (
                 <Settings />
+              ) : currentSection === 'mixer' ? (
+                <Mixer />
+              ) : (
+                <div>NO SECTION FOUND</div>
               )}
             </div>
             <Playbar toggleFullscreen={enableFullscreen} />

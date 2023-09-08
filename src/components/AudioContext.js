@@ -20,6 +20,7 @@ export const AudioProvider = ({ children }) => {
 
   const [volume, setVolume] = useState(1); // Initial volume is 100%
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
 
   const [speedupIsEnabled, setSpeedupIsEnabled] = useState(false);
   const [slowDownIsEnabled, setSlowDownIsEnabled] = useState(false);
@@ -61,6 +62,19 @@ export const AudioProvider = ({ children }) => {
     const nextIndex = (currentSongIndex + 1) % visibleSongs.length;
     setCurrentSongIndex(nextIndex);
   };
+
+  /**
+   * Toggle mute
+   */
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+  };
+
+  useEffect(() => {
+    if (isMuted) {
+    } else {
+    }
+  }, [isMuted]);
 
   // Current song changed! Update our variables
   // Essentially create the new song :)
@@ -397,6 +411,8 @@ export const AudioProvider = ({ children }) => {
         pauseAudio,
         volume,
         changeVolume,
+        isMuted,
+        toggleMute,
         playPreviousSong,
         playNextSong,
         handleSpeedChange,

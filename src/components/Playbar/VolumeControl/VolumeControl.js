@@ -8,9 +8,9 @@ import VolumeQuietSVG from './volume-quiet.svg';
 import { useAudioPlayer } from '../../AudioContext';
 
 function VolumeControl() {
-  const { volume, changeVolume } = useAudioPlayer();
+  const { volume, changeVolume, isMuted, toggleMute } = useAudioPlayer();
 
-  const [localVolume, setLocalVolume] = useState(100);
+  const [localVolume, setLocalVolume] = useState(100); // TODO: Move this to audiocontext to fix toggle mute issues
 
   /**
    * Changing the input slider
@@ -39,6 +39,7 @@ function VolumeControl() {
             ? VolumeLowSVG
             : VolumeQuietSVG
         }
+        onClick={toggleMute}
       ></img>
       <input
         type="range"

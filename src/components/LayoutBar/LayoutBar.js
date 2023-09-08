@@ -2,6 +2,7 @@ import React from 'react';
 import './layoutBar.css';
 
 import HomeButton from './HomeButton/HomeButton';
+import MixerButton from './MixerButton/MixerButton';
 import PlaylistButton from './PlaylistButton/PlaylistButton';
 import ArtistButton from './ArtistButton/ArtistButton';
 import SpotifyButton from './SpotifyButton/SpotifyButton';
@@ -24,6 +25,7 @@ function LayoutBar({ toggleSection }) {
     <div className="layout-bar">
       <div className="centered-content">
         <HomeButton toggleSection={modifiedToggleSection} />
+        <MixerButton toggleSection={modifiedToggleSection} />
         <PlaylistButton toggleSection={modifiedToggleSection} />
         <ArtistButton toggleSection={modifiedToggleSection} />
         {/* <SpotifyButton toggleSection={modifiedToggleSection} /> */}
