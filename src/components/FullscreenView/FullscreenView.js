@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import './FullscreenView.css';
 
 import AudioSpectrum from '../AudioSpectrum/AudioSpectrum.js';
-import Playbar from '../Playbar/Playbar.js';
 import FullscreenPlaybar from '../Playbar/FullscreenPlaybar.js';
 
 import { useAudioPlayer } from '../AudioContext';

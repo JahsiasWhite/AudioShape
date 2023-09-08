@@ -8,9 +8,9 @@ export const AudioProvider = ({ children }) => {
   const [loadedSongs, setLoadedSongs] = useState([]);
   const [visibleSongs, setVisibleSongs] = useState([]);
 
-  const [currentSong, setCurrentSong] = useState(new Audio()); // Current playing audio object\
-
+  const [currentSong, setCurrentSong] = useState(new Audio()); // Current playing audio object
   const [currentSongIndex, setCurrentSongIndex] = useState(null);
+  const [isRandomMode, setIsRandomMode] = useState(false);
 
   /* Playlists */
   const [playlists, setPlaylists] = useState([]);
@@ -75,6 +75,30 @@ export const AudioProvider = ({ children }) => {
     } else {
     }
   }, [isMuted]);
+
+  /**
+   * Toggles shuffle
+   * TODO: Should I not make a new list? Better to create a list and set currentSongIndex to the values.
+   */
+  const toggleShuffle = () => {
+    setIsRandomMode(!isRandomMode);
+
+    if (!isRandomMode) {
+      // Shuffle the visibleSongs array if random mode is enabled
+      const shuffledSongs = [...visibleSongs];
+      for (let i = shuffledSongs.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledSongs[i], shuffledSongs[j]] = [
+          shuffledSongs[j],
+          shuffledSongs[i],
+        ];
+      }
+      setVisibleSongs(shuffledSongs);
+    } else {
+      // Restore the original order of songs if random mode is disabled
+      setVisibleSongs(loadedSongs);
+    }
+  };
 
   // Current song changed! Update our variables
   // Essentially create the new song :)
@@ -250,8 +274,10 @@ export const AudioProvider = ({ children }) => {
     };
   }, [currentSongIndex]); // Uhhhh do i need this ? Or can it just be empty?
 
+  /**
+   * Gets the updated temporary song
+   */
   useEffect(() => {
-    console.error('CHANGED', speedupIsEnabled, slowDownIsEnabled);
     window.electron.ipcRenderer.once('TEMP_SONG_SAVED', handleTempSongSaved);
   }, [speedupIsEnabled, slowDownIsEnabled]);
 

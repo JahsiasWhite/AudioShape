@@ -21,16 +21,25 @@ function Settings() {
   }, []);
 
   return (
-    <div className="settings-container">
-      {' '}
-      {/* Apply a container class */}
-      <div className="setting-item">
-        <strong>Song Directory:</strong> {settings.songDirectory}
+    <div className="settings">
+      <div className="settings-container">
+        <div className="container-header">Directories</div>
+
+        <div className="setting-item">
+          <strong>Song Directory:</strong> {settings.songDirectory}
+        </div>
+        <div className="setting-item">
+          <strong>Output Directory:</strong> {settings.outputDirectory}
+        </div>
+        <FolderSelection />
       </div>
-      <div className="setting-item">
-        <strong>Output Directory:</strong> {settings.outputDirectory}
+      <div className="settings-container">
+        <div className="container-header">Customizations</div>
+
+        <div className="setting-item">
+          Toggle showing image in fullscreen view
+        </div>
       </div>
-      <FolderSelection />
     </div>
   );
 }

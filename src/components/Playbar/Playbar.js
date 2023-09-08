@@ -6,6 +6,7 @@ import PlayButton from './PlayButton/PlayButton';
 import NextButton from './NextButton/NextButton';
 import VolumeControl from './VolumeControl/VolumeControl'; // ! I don't know if I like this name
 import PlaybackTimer from './PlaybackTimer/PlaybackTimer';
+import Queue from './Queue/Queue';
 
 import SlowDownButtonSVG from './SlowDownButtonSVG';
 import SpeedupButtonSVG from './SpeedupButtonSVG';
@@ -67,14 +68,18 @@ function Playbar({ toggleFullscreen }) {
         </div>
         <PlaybackTimer />
       </div>
-      <VolumeControl />
-      <div
-        className="fullscreen-button"
-        onClick={() => {
-          toggleFullscreen();
-        }}
-      >
-        +
+
+      <div className="playbar-right-side">
+        <Queue />
+        <VolumeControl />
+        <div
+          className="fullscreen-button"
+          onClick={() => {
+            toggleFullscreen();
+          }}
+        >
+          +
+        </div>
       </div>
     </div>
   );

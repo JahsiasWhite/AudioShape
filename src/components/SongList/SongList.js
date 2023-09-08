@@ -12,7 +12,7 @@ import PlusButtonSVG from './add-svgrepo-com.svg';
 
 import { useAudioPlayer } from '../AudioContext';
 
-function SongList({ handleSongLoad }) {
+function SongList({ handleSongLoad, handleSongEdit }) {
   const { initialSongLoad, handleSongSelect, visibleSongs, currentSongIndex } =
     useAudioPlayer();
 
@@ -148,7 +148,7 @@ function SongList({ handleSongLoad }) {
                     <img
                       className="dropdown-button"
                       src={DownArrowSVG}
-                      onClick={() => handleToggleDropdown(index)}
+                      onClick={() => handleSongEdit(index)}
                     ></img>
                   </div>
                   {/* {openIndex === index && <DropdownMenu isOpen={true} />} */}

@@ -1,0 +1,11 @@
+.audio-plugin {
+  width: 80%;
+  height: 80%;
+  margin: auto;
+
+  background-color: peru;
+}
+
+.audio-plugin div {
+  border: 1px blue solid;
+}

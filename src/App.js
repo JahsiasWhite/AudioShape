@@ -21,15 +21,16 @@ import ErrorMessages from './components/ErrorMessages/ErrorMessages';
 import { AudioProvider } from './components/AudioContext'; // So we can talk to the editor directly, NO PROP DRILLING YAY!!
 
 function App() {
-  // const [currentSongIndex, setCurrentSongIndex] = useState(null);
+  const [selectedSongIndex, setSelectedSongIndex] = useState(null);
 
   const [loadedSongs, setLoadedSongs] = useState([]); // ? Can we use this as just visibleSongs ? Or should we have two objects?
   // const [visibleSongs, setVisibleSongs] = useState([]);
 
   // Update the current song when a song is selected
-  // const handleSongSelect = (songIndex) => {
-  //   setCurrentSongIndex(songIndex);
-  // };
+  const handleSongSelect = (songIndex) => {
+    setSelectedSongIndex(songIndex);
+    setCurrentSection('mixer');
+  };
 
   // Current showing content in 'main-content'
   const [currentSection, setCurrentSection] = useState('songs');
@@ -95,8 +96,9 @@ function App() {
             <div className="main-content">
               {currentSection === 'songs' ? (
                 <SongList
-                  // onSongSelect={handleSongSelect}
                   handleSongLoad={loadedSongs}
+                  handleSongEdit={handleSongSelect}
+
                   // songs={visibleSongs}
                 />
               ) : currentSection === 'playlists' ? (
@@ -108,7 +110,10 @@ function App() {
               ) : currentSection === 'settings' ? (
                 <Settings />
               ) : currentSection === 'mixer' ? (
-                <Mixer />
+                <Mixer
+                  selectedIndex={selectedSongIndex}
+                  setSelectedIndex={setSelectedSongIndex}
+                />
               ) : currentSection === 'youtube' ? (
                 <Youtube />
               ) : (

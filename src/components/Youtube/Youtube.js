@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 function YouTubeDownloader() {
   const [videoUrl, setVideoUrl] = useState('');
@@ -6,15 +6,16 @@ function YouTubeDownloader() {
 
   const handleDownload = () => {
     window.electron.ipcRenderer.sendMessage('DOWNLOAD_YOUTUBE_VID', videoUrl);
+    setDownloadStatus('Downloading');
 
-    window.electron.ipcRenderer.on('download-success', (event, message) => {
+    window.electron.ipcRenderer.on('download-success', (message) => {
       console.error('DOWNLOAD_SUCCESS', message);
-      setDownloadStatus('Success');
+      setDownloadStatus('Success: ' + message);
     });
 
-    window.electron.ipcRenderer.on('download-error', (event, error) => {
-      console.error('DOWNLOAD_ERROR', error);
-      setDownloadStatus('Error');
+    window.electron.ipcRenderer.on('download-error', (error) => {
+      console.error('DOWNLOAD_ERROR', typeof error, error);
+      setDownloadStatus('Error: ' + error);
     });
   };
 
