@@ -215,6 +215,9 @@ export const AudioProvider = ({ children }) => {
     const newLength = audioBuffer.duration * newSpeed;
     const newSampleCount = Math.ceil(newLength * audioBuffer.sampleRate);
 
+    // Gets how much faster the new song is
+    const speedupMultiplier = audioBuffer.duration / newLength;
+
     const newBuffer = audioContext.createBuffer(
       audioBuffer.numberOfChannels,
       newSampleCount,
@@ -240,7 +243,7 @@ export const AudioProvider = ({ children }) => {
 
     source.buffer = newBuffer;
     source.connect(audioContext.destination); // Connect the node to the destination so we can hear the sound
-    source.index = index === undefined ? currentSongIndex : index;
+    source.index = filePath;
 
     // TODO: This doesnt work for some reason
     /* Changes the volume */
@@ -250,13 +253,14 @@ export const AudioProvider = ({ children }) => {
     // console.error(gainNode.gain.value);
     // gainNode.connect(audioContext.destination);
 
+    // ! This is not working properly with the new edit mode
     /* If we're using auto-play speedup, the current song should be the one changing */
     /* We have to save a temporary local copy to play the audio and still have full functionality */
-    if (index === undefined) {
-      const wavBytes = createWavBytes(source);
-      window.electron.ipcRenderer.sendMessage('SAVE_TEMP_SONG', wavBytes);
-      return;
-    }
+    // if (index === undefined) {
+    //   const wavBytes = createWavBytes(source);
+    //   window.electron.ipcRenderer.sendMessage('SAVE_TEMP_SONG', wavBytes);
+    //   return;
+    // }
 
     source.start(0);
     setSampleSong(source);

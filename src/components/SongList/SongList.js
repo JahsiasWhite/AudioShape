@@ -137,7 +137,6 @@ function SongList({ handleSongLoad, handleSongEdit }) {
                     </div>
                     <div>{song.artist}</div>
                     <div>{song.album}</div>
-                    {/* <div>{song.duration}</div> */}
                   </div>
                   <div className="right-side">
                     <img
@@ -151,7 +150,6 @@ function SongList({ handleSongLoad, handleSongEdit }) {
                       onClick={() => handleSongEdit(index)}
                     ></img>
                   </div>
-                  {/* {openIndex === index && <DropdownMenu isOpen={true} />} */}
                 </li>
                 {openIndex === index && (
                   <DropdownMenu isOpen={true} index={index} />
