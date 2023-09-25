@@ -10,7 +10,8 @@ import { useAudioPlayer } from '../AudioContext';
 // DREADBOX INSPIRED
 
 const AudioPlugin = () => {
-  const { handleSpeedChange, handleSongExport } = useAudioPlayer();
+  const { handleSpeedChange, handleReverbChange, handleSongExport } =
+    useAudioPlayer();
 
   const [speedKnobValue, setSpeedKnobValue] = useState(50);
   const [reverbKnobValue, setReverbKnobValue] = useState(50);
@@ -65,9 +66,15 @@ const AudioPlugin = () => {
     handleSpeedChange(mappedValue);
   };
 
-  const mapValueToReverb = (newValue) => {};
+  const mapValueToReverb = (newValue) => {
+    handleReverbChange();
+  };
 
   const mapValueToDelay = (newValue) => {};
+
+  const saveSettings = () => {
+    console.error(speedKnobValue, reverbKnobValue, delayKnobValue);
+  };
 
   return (
     <div className="audio-plugin">
@@ -97,6 +104,14 @@ const AudioPlugin = () => {
       {/* <div className="module-container">
         <Knob customProps={testKnobStyles} />
       </div> */}
+      <div
+        className="save-button"
+        onClick={() => {
+          saveSettings();
+        }}
+      >
+        Save
+      </div>
       {/* <div
         className="export-button"
         onClick={() => {

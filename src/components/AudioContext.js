@@ -201,13 +201,13 @@ export const AudioProvider = ({ children }) => {
       setSlowDownIsEnabled(true);
       handleSpeedChange(1.2);
     }
-    return;
-    setSlowDownIsEnabled(!slowDownIsEnabled);
-    handleSpeedChange(1.2);
+    // return;
+    // setSlowDownIsEnabled(!slowDownIsEnabled);
+    // handleSpeedChange(1.2);
   };
 
   /**
-   * Changes the speed of the current song and starts playing a sample
+   * Changes the speed of the current song
    * @param {*} newSpeed
    */
   const handleSpeedChange = async (newSpeed, index) => {
@@ -285,6 +285,83 @@ export const AudioProvider = ({ children }) => {
     source.start(0);
     setSampleSong(source);
   };
+
+  const handleReverbChange = async () => {
+    /* Works as .start() but not for saving :( */
+    const audioContext = new (window.AudioContext ||
+      window.webkitAudioContext)();
+
+    // Load the current song's audio buffer
+    const response = await fetch(visibleSongs[currentSongIndex].file);
+    const audioData = await response.arrayBuffer();
+    const audioBuffer = await audioContext.decodeAudioData(audioData);
+    const audioSource = audioContext.createBufferSource();
+    audioSource.buffer = audioBuffer;
+
+    const impulseResponseURL = 'path/to/impulse-response.wav'; // Replace with the path to your impulse response file
+
+    // Start playing your audio source
+    audioSource.connect(audioContext.destination);
+
+    // Add reverb to the audio source
+    await addReverbToAudio(audioContext, audioSource, visibleSongs[0].file);
+
+    audioSource.start(0);
+
+    // const wavBytes = createWavBytes(audioSource);
+    // window.electron.ipcRenderer.sendMessage('SAVE_TEMP_SONG', wavBytes);
+    // getTempSong();
+    console.error('PLAYING');
+    /* */
+
+    // const testContext = new (window.AudioContext ||
+    //   window.webkitAudioContext)();
+    // const testSource = testContext.createBufferSource();
+    // const impulse = impulseResponse(testContext, 1, 1, 1);
+    // testSource.buffer = impulse;
+    // testSource.connect(testContext.destination);
+    // testSource.start(0);
+    // console.error(testSource);
+  };
+  async function addReverbToAudio(
+    audioContext,
+    audioSource,
+    impulseResponseURL
+  ) {
+    // Load the impulse response from a WAV file
+    const response = await fetch(impulseResponseURL);
+    const arrayBuffer = await response.arrayBuffer();
+    const impulseResponseBuffer = await audioContext.decodeAudioData(
+      arrayBuffer
+    );
+
+    // Create a ConvolverNode and set its buffer to the loaded impulse response
+    const convolver = audioContext.createConvolver();
+    convolver.buffer = impulseResponseBuffer;
+
+    // Connect your existing audio source to the ConvolverNode
+    audioSource.connect(convolver);
+
+    // Connect the ConvolverNode to the audio destination (speakers)
+    convolver.connect(audioContext.destination);
+    console.error('REVERB ADDED');
+  }
+  function impulseResponse(audioContext, duration, decay, reverse) {
+    var sampleRate = audioContext.sampleRate;
+    var length = sampleRate * duration;
+    var impulse = audioContext.createBuffer(2, length, sampleRate);
+    var impulseL = impulse.getChannelData(0);
+    var impulseR = impulse.getChannelData(1);
+
+    if (!decay) decay = 2.0;
+    for (var i = 0; i < length; i++) {
+      var n = reverse ? length - i : i;
+      impulseL[i] = (Math.random() * 2 - 1) * Math.pow(1 - n / length, decay);
+      impulseR[i] = (Math.random() * 2 - 1) * Math.pow(1 - n / length, decay);
+    }
+    return impulse;
+  }
+
   // useEffect(() => {
   //   console.error('HMM');
   //   // If these aren't enabled, we dont have a temp song so just leave
@@ -472,6 +549,7 @@ export const AudioProvider = ({ children }) => {
         playPreviousSong,
         playNextSong,
         handleSpeedChange,
+        handleReverbChange,
         toggleSpeedup,
         toggleSlowDown,
         speedupIsEnabled,
