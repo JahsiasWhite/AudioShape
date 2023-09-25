@@ -123,12 +123,12 @@ export const AudioProvider = ({ children }) => {
     }
 
     /* (Re)Initializes the current song */
-    initCurentSong();
+    initCurrentSong();
 
     setCurrentSong(currentSong);
   }, [currentSongIndex]);
 
-  const initCurentSong = () => {
+  const initCurrentSong = () => {
     currentSong.volume = volume;
     // currentSong.load(); // Load the new song's data
     currentSong.play();
@@ -153,7 +153,7 @@ export const AudioProvider = ({ children }) => {
     setVisibleSongs(songs);
   };
 
-  /* When a song is double-clicked */
+  /* When a song is double-clicked, change the current song to that one! */
   const handleSongSelect = (songIndex) => {
     setCurrentSongIndex(songIndex);
   };
@@ -167,12 +167,18 @@ export const AudioProvider = ({ children }) => {
       currentSong.removeEventListener('ended', onSongEnded);
     }
 
+    // They can't both be active
     if (slowDownIsEnabled) {
       setSlowDownIsEnabled(false);
     }
 
-    setSpeedupIsEnabled(!speedupIsEnabled);
-    handleSpeedChange(0.8);
+    if (speedupIsEnabled) {
+      setSpeedupIsEnabled(false);
+      handleSpeedChange(1);
+    } else {
+      setSpeedupIsEnabled(true);
+      handleSpeedChange(0.8);
+    }
   };
 
   /**
@@ -188,6 +194,14 @@ export const AudioProvider = ({ children }) => {
       setSpeedupIsEnabled(false);
     }
 
+    if (slowDownIsEnabled) {
+      setSlowDownIsEnabled(false);
+      handleSpeedChange(1);
+    } else {
+      setSlowDownIsEnabled(true);
+      handleSpeedChange(1.2);
+    }
+    return;
     setSlowDownIsEnabled(!slowDownIsEnabled);
     handleSpeedChange(1.2);
   };
@@ -217,7 +231,9 @@ export const AudioProvider = ({ children }) => {
 
     // Gets how much faster the new song is
     const speedupMultiplier = audioBuffer.duration / newLength;
+    console.error('CHANGING SPEED BY x', speedupMultiplier);
 
+    // Initialize the new buffer with the new sample count and duration
     const newBuffer = audioContext.createBuffer(
       audioBuffer.numberOfChannels,
       newSampleCount,
@@ -253,45 +269,55 @@ export const AudioProvider = ({ children }) => {
     // console.error(gainNode.gain.value);
     // gainNode.connect(audioContext.destination);
 
-    // ! This is not working properly with the new edit mode
     /* If we're using auto-play speedup, the current song should be the one changing */
     /* We have to save a temporary local copy to play the audio and still have full functionality */
-    // if (index === undefined) {
-    //   const wavBytes = createWavBytes(source);
-    //   window.electron.ipcRenderer.sendMessage('SAVE_TEMP_SONG', wavBytes);
-    //   return;
-    // }
+    if (index === undefined) {
+      const wavBytes = createWavBytes(source);
+      window.electron.ipcRenderer.sendMessage('SAVE_TEMP_SONG', wavBytes);
+      getTempSong();
+      return;
+    }
+
+    // ! I dont think this ever gets reached now, which isn't bad
+    return;
+    console.error('HERE I AM I GUESS');
 
     source.start(0);
     setSampleSong(source);
   };
-  useEffect(() => {
-    // If these aren't enabled, we dont have a temp song so just leave
-    if (!slowDownIsEnabled && !speedupIsEnabled) return;
+  // useEffect(() => {
+  //   console.error('HMM');
+  //   // If these aren't enabled, we dont have a temp song so just leave
+  //   if (!slowDownIsEnabled && !speedupIsEnabled) return;
 
-    window.electron.ipcRenderer.once('TEMP_SONG_SAVED', handleTempSongSaved);
+  //   // console.error('CALLING handleTempSongSaved');
+  //   // window.electron.ipcRenderer.once('TEMP_SONG_SAVED', handleTempSongSaved);
 
-    return () => {
-      console.error('HI');
-      // Clean up the event listener when the component unmounts
-      // window.electron.ipcRenderer.removeAllListeners('TEMP_SONG_SAVED');
-    };
-  }, [currentSongIndex]); // Uhhhh do i need this ? Or can it just be empty?
+  //   return () => {
+  //     console.error('HI');
+  //     // Clean up the event listener when the component unmounts
+  //     // window.electron.ipcRenderer.removeAllListeners('TEMP_SONG_SAVED');
+  //   };
+  // }, [currentSongIndex]); // Uhhhh do i need this ? Or can it just be empty?
 
   /**
    * Gets the updated temporary song
    */
-  useEffect(() => {
+  const getTempSong = () => {
     window.electron.ipcRenderer.once('TEMP_SONG_SAVED', handleTempSongSaved);
-  }, [speedupIsEnabled, slowDownIsEnabled]);
+  };
 
+  /**
+   * Saves the new temporary song from the server and sets it to the current song
+   * @param {*} outputPath
+   */
   const handleTempSongSaved = (outputPath) => {
-    if (currentSongIndex === null) return;
+    // This function gets called twice for some odd reason, need to just fix that, then I don't need this
+    // if (currentSongIndex === null) return;
 
-    console.error('CHANGING SRC', currentSongIndex, outputPath);
     currentSong.src = outputPath;
 
-    initCurentSong();
+    initCurrentSong();
     setCurrentSong(currentSong);
 
     /* Cleanup old file */
@@ -299,7 +325,7 @@ export const AudioProvider = ({ children }) => {
   };
 
   /**
-   * Helper to stop the sample song
+   * Safely stops the sample song
    */
   const stopSampleAudio = () => {
     if (sampleSong.stop) {
