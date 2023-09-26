@@ -9,6 +9,7 @@ const Playlists = ({ toggleSection }) => {
     createPlaylist,
     setPlaylists,
     setVisibleSongs,
+    setCurrentScreen,
   } = useAudioPlayer();
 
   const [newPlaylistName, setNewPlaylistName] = useState('');
@@ -25,7 +26,6 @@ const Playlists = ({ toggleSection }) => {
   }, []);
 
   const handlePlaylistClick = (playlist) => {
-    console.error(playlist.songs);
     let newSongCollection = [];
     for (let i = 0; i < playlist.songs.length; i++) {
       const songName = playlist.songs[i];
@@ -37,6 +37,9 @@ const Playlists = ({ toggleSection }) => {
     }
 
     setVisibleSongs(newSongCollection);
+
+    // ! Todo, probably want to clean this up
+    setCurrentScreen(playlist.name);
     toggleSection('songs');
   };
 
@@ -66,6 +69,12 @@ const Playlists = ({ toggleSection }) => {
     setNewPlaylistName('');
   };
 
+  const getPlaylistImage = () => {
+    console.error(loadedSongs);
+
+    console.error(playlists);
+  };
+
   return (
     <div className="playlists-container">
       <h2>Playlists</h2>
@@ -80,15 +89,6 @@ const Playlists = ({ toggleSection }) => {
       </div>
 
       <div className="playlist-cards">
-        {/* <div className="playlist-card create-playlist">
-          <input
-            type="text"
-            placeholder="Enter playlist name"
-            value={newPlaylistName}
-            onChange={(e) => setNewPlaylistName(e.target.value)}
-          />
-          <button onClick={handleCreatePlaylistClick}>Create a Playlist</button>
-        </div> */}
         {playlists.map((playlist, index) => (
           <div
             key={index}

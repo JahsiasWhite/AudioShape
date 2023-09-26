@@ -1,5 +1,5 @@
-function SpotifyButton({ toggleSection }) {
-  return <div onClick={() => toggleSection('spotify')}>Spotify</div>;
+function SpotifyButton() {
+  return <div>Spotify</div>;
 }
 
 export default SpotifyButton;

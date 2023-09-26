@@ -1,5 +1,5 @@
-function YoutubeButton({ toggleSection }) {
-  return <div onClick={() => toggleSection('youtube')}>Youtube</div>;
+function YoutubeButton() {
+  return <div>Youtube</div>;
 }
 
 export default YoutubeButton;

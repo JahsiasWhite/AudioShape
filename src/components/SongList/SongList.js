@@ -13,8 +13,13 @@ import PlusButtonSVG from './add-svgrepo-com.svg';
 import { useAudioPlayer } from '../AudioContext';
 
 function SongList({ handleSongLoad, handleSongEdit }) {
-  const { initialSongLoad, handleSongSelect, visibleSongs, currentSongIndex } =
-    useAudioPlayer();
+  const {
+    initialSongLoad,
+    handleSongSelect,
+    visibleSongs,
+    currentSongIndex,
+    currentScreen,
+  } = useAudioPlayer();
 
   // FULL LIST OF SONGS, TODO: Remove? TOO MUCH DATA?
   // const [visibleSongs, setVisibleSongs] = useState([]);
@@ -92,7 +97,7 @@ function SongList({ handleSongLoad, handleSongEdit }) {
 
   return (
     <div className="song-list-container">
-      <div className="song-list-header">Songs</div>
+      <div className="song-list-header">{currentScreen}</div>
       {isLoading ? (
         <p>Loading...</p>
       ) : visibleSongs.length === 0 ? (
@@ -102,6 +107,7 @@ function SongList({ handleSongLoad, handleSongEdit }) {
         </div>
       ) : (
         <div>
+          <div className="num-songs">{visibleSongs.length} songs</div>
           <ul className="song-list">
             {visibleSongs.map((song, index) => (
               <div className="song" key={index}>

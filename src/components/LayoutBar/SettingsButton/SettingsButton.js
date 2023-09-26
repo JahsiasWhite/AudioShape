@@ -1,8 +1,8 @@
 import SettingsVG from './Settings.svg';
 
-function SettingsButton({ toggleSection }) {
+function SettingsButton() {
   return (
-    <div className="button-container" onClick={() => toggleSection('settings')}>
+    <div className="button-container">
       <img className="icon" src={SettingsVG}></img>Settings
     </div>
   );

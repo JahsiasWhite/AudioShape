@@ -1,11 +1,8 @@
 import PlaylistSVG from './Playlist.svg';
 
-function PlaylistButton({ toggleSection }) {
+function PlaylistButton() {
   return (
-    <div
-      className="button-container"
-      onClick={() => toggleSection('playlists')}
-    >
+    <div className="button-container">
       <img className="icon" src={PlaylistSVG}></img>Playlists
     </div>
   );

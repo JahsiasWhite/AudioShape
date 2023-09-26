@@ -1,9 +1,8 @@
-import './HomeButton.css';
 import HomeSVG from './home.svg';
 
-function HomeButton({ toggleSection }) {
+function HomeButton() {
   return (
-    <div className="button-container" onClick={() => toggleSection('allSongs')}>
+    <div className="button-container">
       <img className="force" src={HomeSVG}></img>Home
     </div>
   );

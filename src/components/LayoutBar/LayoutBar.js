@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './layoutBar.css';
 
 import HomeButton from './HomeButton/HomeButton';
@@ -13,25 +13,48 @@ import { useAudioPlayer } from '../AudioContext';
 
 function LayoutBar({ toggleSection }) {
   const { setVisibleSongs, loadedSongs } = useAudioPlayer();
+
+  /* Keeps track of which 'tab' we are currently viewing */
+  const [currentSection, setCurrentSection] = useState('');
+
   /* We have to do this here which is kinda annoying but I dont know how to call the context in App.js */
   const modifiedToggleSection = (section) => {
     if (section === 'allSongs') {
       setVisibleSongs(loadedSongs); // Home should reset the view to show all loaded songs
     }
+
+    setCurrentSection(section);
+
     // Call the original toggleSection with the modified section
     toggleSection(section);
   };
 
+  const sections = [
+    'allSongs',
+    'mixer',
+    'playlists',
+    'artists',
+    'youtube',
+    'settings',
+  ];
+
   return (
     <div className="layout-bar">
       <div className="centered-content">
-        <HomeButton toggleSection={modifiedToggleSection} />
-        <MixerButton toggleSection={modifiedToggleSection} />
-        <PlaylistButton toggleSection={modifiedToggleSection} />
-        <ArtistButton toggleSection={modifiedToggleSection} />
-        {/* <SpotifyButton toggleSection={modifiedToggleSection} /> */}
-        <YoutubeButton toggleSection={modifiedToggleSection} />
-        <SettingsButton toggleSection={modifiedToggleSection} />
+        {sections.map((section) => (
+          <div
+            key={section}
+            onClick={() => modifiedToggleSection(section)}
+            className={currentSection === section ? 'highlighted' : ''}
+          >
+            {section === 'allSongs' && <HomeButton />}
+            {section === 'mixer' && <MixerButton />}
+            {section === 'playlists' && <PlaylistButton />}
+            {section === 'artists' && <ArtistButton />}
+            {section === 'youtube' && <YoutubeButton />}
+            {section === 'settings' && <SettingsButton />}
+          </div>
+        ))}
       </div>
     </div>
   );

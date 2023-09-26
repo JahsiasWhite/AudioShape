@@ -5,12 +5,13 @@ const AudioContext = createContext();
 export const useAudioPlayer = () => useContext(AudioContext);
 
 export const AudioProvider = ({ children }) => {
+  /* General songs */
   const [loadedSongs, setLoadedSongs] = useState([]);
   const [visibleSongs, setVisibleSongs] = useState([]);
 
+  /* Current song info */
   const [currentSong, setCurrentSong] = useState(new Audio()); // Current playing audio object
   const [currentSongIndex, setCurrentSongIndex] = useState(null);
-  const [isRandomMode, setIsRandomMode] = useState(false);
 
   /* Playlists */
   const [playlists, setPlaylists] = useState([]);
@@ -18,12 +19,19 @@ export const AudioProvider = ({ children }) => {
   /* Sample song */
   const [sampleSong, setSampleSong] = useState(new Audio());
 
+  /* Settings */
   const [volume, setVolume] = useState(1); // Initial volume is 100%
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [isRandomMode, setIsRandomMode] = useState(false);
 
+  /* Effects */
   const [speedupIsEnabled, setSpeedupIsEnabled] = useState(false);
   const [slowDownIsEnabled, setSlowDownIsEnabled] = useState(false);
+
+  /* Navigation */
+  // ! Todo, should this be moved out of here? Is it in this context's scope?
+  const [currentScreen, setCurrentScreen] = useState('All Songs');
 
   const playAudio = () => {
     currentSong.play();
@@ -72,7 +80,10 @@ export const AudioProvider = ({ children }) => {
 
   useEffect(() => {
     if (isMuted) {
+      setVolume(0);
     } else {
+      // Change to set to old value
+      setVolume(1);
     }
   }, [isMuted]);
 
@@ -534,6 +545,8 @@ export const AudioProvider = ({ children }) => {
         initialSongLoad,
         loadedSongs,
         visibleSongs,
+        currentScreen,
+        setCurrentScreen,
         setVisibleSongs,
         currentSong,
         currentSongIndex,
