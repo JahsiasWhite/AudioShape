@@ -43,7 +43,15 @@
 }
 
 p {
-  margin-top: 20%;
+  margin-top: 11%;
+}
+
+.knob-details {
+  margin-top: 9%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 23%;
 }
 
 .export-button {

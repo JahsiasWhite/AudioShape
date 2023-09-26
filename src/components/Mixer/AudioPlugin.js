@@ -82,7 +82,11 @@ const AudioPlugin = () => {
         <div className="header">SPEED</div>
         <div className="speed-body">
           <Knob customProps={speedKnobStyles} onChange={mapValueToSpeed} />
-          <p>MULTIPLIER</p>
+          <div className="knob-details">
+            <div>x.5</div>
+            <div>x10</div>
+          </div>
+          <p>MULTIPLIER: {speedKnobValue}</p>
         </div>
       </div>
 
