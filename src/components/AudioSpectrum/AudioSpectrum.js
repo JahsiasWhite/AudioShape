@@ -63,7 +63,7 @@ const AudioSpectrum = ({ song }) => {
     renderFrame();
 
     // Append the canvas to your component
-    const container = document.getElementById('canvas-container'); // Replace with the actual container element where you want to append the canvas
+    const container = document.getElementById('canvas-container');
     container.appendChild(canvas);
 
     return () => {

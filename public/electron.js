@@ -406,6 +406,11 @@ app.on('ready', function () {
         playlists[playlistIndex].songs.push(songName);
       }
 
+      // Check if the playlist already has an image. If not, add one from the song!
+      console.error(songs);
+      // const song = songs[songName];
+      // playlists[playlistIndex].image = song.image;
+
       // Save the updated playlists data back to the file
       fs.writeFileSync(playlistsFilePath, JSON.stringify(playlists, null, 2));
 
@@ -435,7 +440,7 @@ app.on('ready', function () {
         directory: songDirectory, // Update with your desired directory
         filename: `${videoTitle}.mp4`,
       };
-      console.error('DOWNLAODING ', videoTitle);
+      console.error('DOWNLAODING ', songDirectory);
       // Start the download
       ytdl(videoUrl, downloadOptions)
         .pipe(

@@ -234,6 +234,10 @@ export const AudioProvider = ({ children }) => {
 
     if (filePath === null) return;
 
+    // ! The below crashes sometimes, saying: Cannot read properties of undefined (reading 'file')
+    // Should prob add error handling here, but I think the real issue stems from using curSongIndex which fcks up when on different screens with diff visible songs
+    // Need to use the song key to determine what is playing
+
     // Load the current song's audio buffer
     const response = await fetch(visibleSongs[filePath].file);
     const audioData = await response.arrayBuffer();

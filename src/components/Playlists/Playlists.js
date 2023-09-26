@@ -18,8 +18,10 @@ const Playlists = ({ toggleSection }) => {
    * Gets the playlists when the component first loads
    */
   useEffect(() => {
+    // Calls to the server to get the playlists
     window.electron.ipcRenderer.sendMessage('GET_PLAYLISTS');
 
+    // Response from the server
     window.electron.ipcRenderer.on('GRAB_PLAYLISTS', (playlists) => {
       setPlaylists(playlists);
     });
@@ -70,9 +72,14 @@ const Playlists = ({ toggleSection }) => {
   };
 
   const getPlaylistImage = () => {
-    console.error(loadedSongs);
+    // console.error(loadedSongs);
+    // console.error(playlists);
 
-    console.error(playlists);
+    playlists.forEach((playlist) => {
+      console.error(playlist);
+    });
+
+    // ! Should just have playlist.image, need to have add this when we add a new song to the playlist on the server side
   };
 
   return (
@@ -93,11 +100,18 @@ const Playlists = ({ toggleSection }) => {
           <div
             key={index}
             className="playlist-card"
-            onDoubleClick={() => handlePlaylistClick(playlist)}
+            onClick={() => handlePlaylistClick(playlist)}
           >
-            <h3>{playlist.name}</h3>
-            <p>Songs: {playlist.songs.length}</p>
-            <button onClick={() => deletePlaylist(playlist)}>Delete</button>
+            <div
+              className="delete-button"
+              onClick={() => deletePlaylist(playlist)}
+            >
+              X
+            </div>
+            <div className="playlist-card-details">
+              <h3>{playlist.name}</h3>
+              <p>Songs: {playlist.songs.length}</p>
+            </div>
           </div>
         ))}
       </div>

@@ -12,7 +12,7 @@ import SettingsButton from './SettingsButton/SettingsButton';
 import { useAudioPlayer } from '../AudioContext';
 
 function LayoutBar({ toggleSection }) {
-  const { setVisibleSongs, loadedSongs } = useAudioPlayer();
+  const { setVisibleSongs, loadedSongs, setCurrentScreen } = useAudioPlayer();
 
   /* Keeps track of which 'tab' we are currently viewing */
   const [currentSection, setCurrentSection] = useState('');
@@ -21,6 +21,7 @@ function LayoutBar({ toggleSection }) {
   const modifiedToggleSection = (section) => {
     if (section === 'allSongs') {
       setVisibleSongs(loadedSongs); // Home should reset the view to show all loaded songs
+      setCurrentScreen('All Songs');
     }
 
     setCurrentSection(section);

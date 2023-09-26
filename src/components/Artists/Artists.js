@@ -4,7 +4,7 @@ import './Artists.css';
 import { useAudioPlayer } from '../AudioContext';
 
 function Artists({ songs, toggleSection }) {
-  const { setVisibleSongs } = useAudioPlayer();
+  const { setVisibleSongs, setCurrentScreen } = useAudioPlayer();
 
   /**
    * Finds all artists in the given song list. Matches each artist to each song they have as well
@@ -17,11 +17,20 @@ function Artists({ songs, toggleSection }) {
     if (songs === undefined) return [];
 
     const artists = {}; // Grouped songs by artist
+    let artistImg = '';
+
+    // Loops through every song and adds them to their respective artist
     songs.forEach((song) => {
+      // Add the song to the artist
       if (!artists[song.artist]) {
         artists[song.artist] = [];
       }
       artists[song.artist].push(song);
+
+      // Check if the artist's image is not set and the current song has an image
+      if (!artists[song.artist].image && song.albumImage) {
+        artists[song.artist].image = song.albumImage;
+      }
     });
     return artists;
   }
@@ -35,6 +44,7 @@ function Artists({ songs, toggleSection }) {
   const handleArtistClick = (artist) => {
     setVisibleSongs(artistsBySongs[artist]);
     toggleSection('songs');
+    setCurrentScreen(artist);
   };
 
   const artistsBySongs = groupSongsByArtists(songs);
@@ -49,9 +59,16 @@ function Artists({ songs, toggleSection }) {
             <div
               key={artist}
               className="playlist-card"
-              onDoubleClick={() => handleArtistClick(artist)}
+              onClick={() => handleArtistClick(artist)}
             >
-              {artist}
+              {artistsBySongs[artist].image && (
+                <img
+                  className="artist-image"
+                  src={artistsBySongs[artist].image}
+                  alt={`${artist} image`}
+                />
+              )}
+              <div className="artist-name">{artist}</div>
             </div>
           ))}
         </div>

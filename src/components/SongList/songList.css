@@ -58,6 +58,10 @@
   position: relative;
 }
 
+.list-item:hover {
+  background-color: rgba(1, 1, 1, 0.2);
+}
+
 .list-image {
   height: 70px;
   width: 70px;
@@ -78,10 +82,9 @@
 }
 
 .highlighted {
-  color: rgb(88, 192, 88);
-
   border-radius: 5px;
-  background-color: rgba(1, 1, 1, 0.4);
+  color: rgb(88, 192, 88);
+  background-color: rgba(1, 1, 1, 0.5);
 }
 
 .right-side {
