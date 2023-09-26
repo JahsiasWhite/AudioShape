@@ -32,7 +32,7 @@
   background-color: var(--color-button);
 }
 
-.highlighted {
+.tab-selected {
   background-color: var(--color-button);
 }
 

@@ -529,6 +529,7 @@ app.on('ready', function () {
     // Create a new playlist object
     const newPlaylist = {
       name: playlistName,
+      image: '',
       songs: [],
     };
 

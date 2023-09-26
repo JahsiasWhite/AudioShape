@@ -52,7 +52,7 @@
 
 .list-item {
   padding: 10px;
-  border-bottom: 1px solid #ccc;
+  /* border-bottom: 1px solid #ccc; */
   display: flex;
   align-items: center;
   position: relative;
@@ -72,12 +72,16 @@
 .song-title {
   font-size: 25px;
 }
+
 .header-color {
   color: white;
 }
 
 .highlighted {
   color: rgb(88, 192, 88);
+
+  border-radius: 5px;
+  background-color: rgba(1, 1, 1, 0.4);
 }
 
 .right-side {

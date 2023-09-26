@@ -43,13 +43,15 @@
 }
 
 .playlist-menu button:hover {
-  background-color: #0056a9; /* Darker color on hover */
+  background-color: #0056a9;
 }
 
 .playlist-menu ul {
   list-style: none;
   padding: 0;
-  overflow-y: scroll;
+  overflow-y: auto;
+  margin-top: 30px;
+  height: 80%;
 }
 
 .playlist-menu li {

@@ -49,7 +49,6 @@ export const AudioProvider = ({ children }) => {
 
   const changeVolume = (newVolume) => {
     setVolume(newVolume);
-    currentSong.volume = newVolume;
   };
 
   const playPreviousSong = () => {
@@ -82,10 +81,15 @@ export const AudioProvider = ({ children }) => {
     if (isMuted) {
       setVolume(0);
     } else {
-      // Change to set to old value
+      // TODO: set to previous value
       setVolume(1);
     }
   }, [isMuted]);
+
+  /* When the volume changes, edit the audio object to reflect the change */
+  useEffect(() => {
+    currentSong.volume = volume;
+  }, [volume]);
 
   /**
    * Toggles shuffle

@@ -45,7 +45,7 @@ function LayoutBar({ toggleSection }) {
           <div
             key={section}
             onClick={() => modifiedToggleSection(section)}
-            className={currentSection === section ? 'highlighted' : ''}
+            className={currentSection === section ? 'tab-selected' : ''}
           >
             {section === 'allSongs' && <HomeButton />}
             {section === 'mixer' && <MixerButton />}

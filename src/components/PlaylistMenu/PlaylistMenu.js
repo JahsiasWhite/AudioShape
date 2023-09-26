@@ -40,12 +40,13 @@ function PlaylistMenu({ song, closePlaylistMenu }) {
    * Figures out which playlists the current song is in
    */
   useEffect(() => {
-    if (playlists === []) return;
+    if (playlists.length === 0) return;
 
     // Initialize selectedPlaylists based on whether the song is already in each playlist
     const initialSelected = playlists.map((playlist) =>
       playlist.songs.includes(song.title)
     );
+
     setSelectedPlaylists(initialSelected);
   }, [playlists]);
 

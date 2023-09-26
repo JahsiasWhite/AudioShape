@@ -134,9 +134,7 @@ function SongList({ handleSongLoad, handleSongEdit }) {
                   <div className="song-details">
                     <div
                       className={`song-title ${
-                        currentSongIndex === index
-                          ? 'highlighted'
-                          : 'header-color'
+                        currentSongIndex === index ? '' : 'header-color'
                       }`}
                     >
                       {song.title}

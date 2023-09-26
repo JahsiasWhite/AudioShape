@@ -23,14 +23,20 @@ function VolumeControl() {
     changeVolume(newVolume / 100); // Convert to a range between 0 and 1
   };
 
-  /* On load, get and set current volume */
+  /* When the mute button is toggled */
+  // useEffect(() => {
+  //   if (isMuted) {
+  //     setLocalVolume(0);
+  //   } else {
+  //     console.error(volume);
+  //     setLocalVolume(volume * 100); // Convert from the 0-1 range
+  //   }
+  // }, [isMuted]);
+
+  /* Update the input slider when the volume changes */
   useEffect(() => {
-    if (isMuted) {
-      setLocalVolume(0);
-    } else {
-      setLocalVolume(volume * 100); // Convert from the 0-1 range
-    }
-  }, [isMuted]);
+    setLocalVolume(volume * 100);
+  }, [volume]);
 
   return (
     <div className="volume-control">
