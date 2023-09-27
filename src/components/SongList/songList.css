@@ -56,6 +56,7 @@
   display: flex;
   align-items: center;
   position: relative;
+  border-radius: 5px;
 }
 
 .list-item:hover {
@@ -82,7 +83,6 @@
 }
 
 .highlighted {
-  border-radius: 5px;
   color: rgb(88, 192, 88);
   background-color: rgba(1, 1, 1, 0.5);
 }
@@ -90,7 +90,7 @@
 .right-side {
   display: flex;
   flex: auto;
-  justify-content: end;
+  justify-content: flex-end;
   align-items: center;
 }
 

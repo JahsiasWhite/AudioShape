@@ -10,6 +10,7 @@ import Queue from './Queue/Queue';
 
 import SlowDownButtonSVG from './SlowDownButtonSVG';
 import SpeedupButtonSVG from './SpeedupButtonSVG';
+import FullscreenSVG from './Fullscreen.svg';
 
 import { useAudioPlayer } from '../AudioContext';
 
@@ -71,15 +72,14 @@ function Playbar({ toggleFullscreen }) {
 
       <div className="playbar-right-side">
         <Queue />
-        <VolumeControl />
-        <div
+        <img
           className="fullscreen-button"
+          src={FullscreenSVG}
           onClick={() => {
             toggleFullscreen();
           }}
-        >
-          +
-        </div>
+        ></img>
+        <VolumeControl />
       </div>
     </div>
   );

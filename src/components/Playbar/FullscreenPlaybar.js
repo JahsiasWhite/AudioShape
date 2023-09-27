@@ -60,30 +60,6 @@ function FullscreenPlaybar({ toggleFullscreen }) {
         playbarVisible ? 'fullscreen-playbar-show' : ''
       }`}
     >
-      {/* <div className="current-song">
-         TODO Clean this up? 
-        {visibleSongs[currentSongIndex] &&
-          visibleSongs[currentSongIndex].albumImage && (
-            <img
-              className="playbar-image"
-              src={visibleSongs[currentSongIndex].albumImage}
-              alt={`${visibleSongs[currentSongIndex].album} cover`}
-            />
-          )}
-        <div className="song-details">
-          <span id="song-title">
-            {visibleSongs[currentSongIndex]
-              ? visibleSongs[currentSongIndex].title
-              : 'No song playing'}
-          </span>
-          <span id="artist">
-            {visibleSongs[currentSongIndex]
-              ? visibleSongs[currentSongIndex].artist
-              : ''}
-          </span>
-        </div>
-      </div> */}
-
       <div className="playbar-controls">
         <div className="buttons-container">
           <SlowDownButtonSVG

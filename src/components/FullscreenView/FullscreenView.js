@@ -13,7 +13,6 @@ const FullscreenView = ({ toggleFullscreen }) => {
 
   // Need to know if the current song has a video or not
   const isMP4 = song && song.file.endsWith('.mp4');
-  console.error(isMP4);
 
   return (
     <div className="fullscreen-view">

@@ -67,7 +67,7 @@
 
 .delete-button {
   position: relative;
-  text-align: end;
+  /* text-align: end; */
   display: none;
   cursor: pointer;
   border-radius: 5px;

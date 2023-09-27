@@ -41,6 +41,11 @@ TODO:
 
 999 Easy file/song sharing
 
+BUGS:
+
+1.  Playlists with 0 songs show all songs
+2.  Can't enter fullscreen multiple times
+
 ## Launching
 
 npm run all

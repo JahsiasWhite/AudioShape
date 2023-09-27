@@ -9,7 +9,7 @@
 
 .playbar-right-side {
   display: flex;
-  justify-content: end;
+  justify-content: flex-end;
   width: 20%;
 }
 
@@ -114,4 +114,11 @@ input[type='range']::-webkit-slider-thumb {
   /* cursor: ew-resize; */
   background: transparent;
   box-shadow: -80px 0 0 80px rgb(88, 192, 88);
+}
+
+.fullscreen-button {
+  margin-right: 10px;
+  margin-top: 5px;
+  height: 20px;
+  width: 20px;
 }

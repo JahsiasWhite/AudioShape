@@ -1,4 +1,5 @@
 .queue {
+  margin-right: 10px;
 }
 
 .queue-popup {
@@ -51,4 +52,10 @@
 
 .current-song-queue {
   margin-bottom: 30px;
+}
+
+.queue-button {
+  width: 25px;
+  height: 25px;
+  cursor: pointer;
 }

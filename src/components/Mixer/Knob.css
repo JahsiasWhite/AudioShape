@@ -19,7 +19,7 @@
   border-radius: 50%;
   border: 1px solid #222;
   /* border-bottom: 5px solid #222; */
-  background-image: radial-gradient(100% 70%, #666 6%, #333 90%);
+  /* background-image: radial-gradient(100% 70%, #666 6%, #333 90%); */
   box-shadow: 0 5px 15px 2px black, 0 0 5px 3px black, 0 0 0 12px #444;
 }
 .knob.inner {

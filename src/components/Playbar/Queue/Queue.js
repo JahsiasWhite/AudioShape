@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import './Queue.css';
 import { useAudioPlayer } from '../../AudioContext';
 
+import QueueSVG from './queue.svg';
+
 const Queue = () => {
-  const { visibleSongs, currentSongIndex, playlists, handleSongSelect } =
-    useAudioPlayer();
+  const { visibleSongs, currentSongIndex, handleSongSelect } = useAudioPlayer();
   const [isVisible, setIsVisible] = useState(false);
 
-  const handleOpen = () => {
-    setIsVisible(true);
+  const toggleShowing = () => {
+    setIsVisible(!isVisible);
   };
 
   const handleClose = () => {
@@ -21,7 +22,11 @@ const Queue = () => {
 
   return (
     <div className="queue">
-      <h2 onClick={handleOpen}>QUEUE</h2>
+      <img
+        className="queue-button"
+        src={QueueSVG}
+        onClick={toggleShowing}
+      ></img>
       <div className={`queue-popup ${isVisible ? 'showing' : ''}`}>
         <div onClick={handleClose} className="close-menu">
           X
