@@ -8,6 +8,8 @@ function YouTubeDownloader() {
   const [downloadStatus, setDownloadStatus] = useState(null);
 
   const handleDownload = () => {
+    if (videoUrl === '') return;
+
     window.electron.ipcRenderer.sendMessage('DOWNLOAD_YOUTUBE_VID', videoUrl);
     setDownloadStatus('Downloading');
 
@@ -22,7 +24,7 @@ function YouTubeDownloader() {
 
   return (
     <div className="youtube-downloader-container">
-      <h2>YouTube Video Downloader</h2>
+      <h2 className="youtube-downloader-title">YouTube Video Downloader</h2>
       <div className="input-container">
         <input
           type="text"

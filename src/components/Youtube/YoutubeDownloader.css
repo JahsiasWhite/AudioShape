@@ -8,12 +8,13 @@
   border-radius: 5px;
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
   text-align: center;
+  margin-top: 20px;
 }
 
-h2 {
+.youtube-downloader-title {
+  color: var(--color-main);
   font-size: 24px;
   margin-bottom: 20px;
-  /* color: #333; */
 }
 
 .input-container {
@@ -32,7 +33,7 @@ h2 {
 .download-button {
   margin-left: 10px;
   padding: 10px 20px;
-  background-color: #007bff;
+  background-color: var(--color-button-secondary);
   color: #fff;
   border: none;
   border-radius: 5px;
@@ -48,5 +49,5 @@ h2 {
 .download-status {
   margin-top: 20px;
   font-size: 16px;
-  color: #333;
+  color: var(--color-main);
 }

@@ -111,7 +111,7 @@ app.on('ready', function () {
     }
 
     // Get all songs in the given directory as well as all subdirectories
-    const audios = await glob(correctedPath + '/**/*.{mp3,wav,ogg}');
+    const audios = await glob(correctedPath + '/**/*.{mp3,wav,ogg,mp4}');
     const imageFiles = await glob(correctedPath + '/**/*.{jpg,jpeg,png}');
 
     // Make sure we have at least one song in the directory

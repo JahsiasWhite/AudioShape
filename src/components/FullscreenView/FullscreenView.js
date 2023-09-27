@@ -11,6 +11,10 @@ const FullscreenView = ({ toggleFullscreen }) => {
   const { visibleSongs, currentSongIndex, currentSong } = useAudioPlayer();
   const song = visibleSongs[currentSongIndex];
 
+  // Need to know if the current song has a video or not
+  const isMP4 = song && song.file.endsWith('.mp4');
+  console.error(isMP4);
+
   return (
     <div className="fullscreen-view">
       {song && song.albumImage && (
@@ -27,7 +31,26 @@ const FullscreenView = ({ toggleFullscreen }) => {
           <div>{song.album}</div>{' '}
         </div>
       )}
-      <AudioSpectrum song={currentSong} />
+
+      {isMP4 ? (
+        // If it's an MP4, show the video element
+        <video
+          className="song-video"
+          autoPlay
+          controls={false}
+          muted={true} // Mute the video
+          ref={(videoRef) => {
+            if (videoRef) {
+              videoRef.currentTime = currentSong.currentTime; // Set the video's currentTime
+            }
+          }}
+        >
+          <source src={song.file} type="video/mp4" />
+          Your device doesn't support video streaming
+        </video>
+      ) : (
+        <AudioSpectrum song={currentSong} />
+      )}
 
       <FullscreenPlaybar toggleFullscreen={toggleFullscreen} />
     </div>

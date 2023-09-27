@@ -2,6 +2,7 @@
   position: fixed;
   width: 100vw;
   height: 100vh;
+  background-color: black;
 }
 
 .song-image {
@@ -13,9 +14,21 @@
   z-index: 1;
 }
 
+.song-video {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0;
+}
+
 .fullscreen-song-details {
   position: fixed;
   font-size: 40px;
   left: 33%;
   top: 20%;
+  z-index: 1;
+
+  color: var(--color-text);
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000,
+    1px 1px 0 #000;
 }
