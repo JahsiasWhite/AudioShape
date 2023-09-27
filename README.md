@@ -6,8 +6,10 @@ Traditional music player with additional customizations and song editing.
 
 The most exciting feature is the song editing! Seamlessly edit the song you are listening to and keep the settings saved for all future songs. For example, are you a big fan of listening to sped up songs? Simply use the preset (or create your own preset) to have the currently plaing song become its sped-up version. If you're just listening to your playlist, the next song will also be sped up! Like how the song sounds? Export it to keep it saved forever.
 
-Don't have any local songs? No problem! Music player also includes the ability to download songs directly from Youtube by providing the song's url.
+Don't have any local songs? No problem! Music Player also includes the ability to download songs directly from Youtube by providing the song's url.
 <br>SOON: Have a Spotify account? Download your songs or playlists or even stream directly from your account!
+
+Music Player also has an extensive full-screen mode. Sit back and watch the audio spectrum of the current song. Listening to an MP4? Full-screen mode even lets you watch the video along with it!
 
 WIP
 
