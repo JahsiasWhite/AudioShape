@@ -13,8 +13,6 @@ Music Player also has an extensive full-screen mode. Sit back and watch the audi
 
 WIP
 
-Lots to fix up
-
 TODO:
 
 1. I think there's some over lap of 'npm i'. Pretty sure react-scripts is in both, probably much more

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './YoutubeDownloader.css';
 
+import LoadingSpinner from '../LoadingSpinner/LoadingSpinner';
+
 // TODO: Videos with the char '|' in the title don't download. Prob issue with the package but maybe I can fix this
 
 function YouTubeDownloader() {
@@ -37,7 +39,13 @@ function YouTubeDownloader() {
           Download
         </button>
       </div>
-      {downloadStatus && <p className="download-status">{downloadStatus}</p>}
+      {downloadStatus === 'Downloading' ? (
+        <div className="center-content">
+          <LoadingSpinner />
+        </div>
+      ) : (
+        downloadStatus && <p className="download-status">{downloadStatus}</p>
+      )}
     </div>
   );
 }
