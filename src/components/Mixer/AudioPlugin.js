@@ -85,7 +85,7 @@ const AudioPlugin = () => {
   const mapValueToDelay = (newValue) => {};
 
   const saveSettings = () => {
-    console.error(speedKnobValue, reverbKnobValue, delayKnobValue);
+    console.error(multiplier, reverbKnobValue, delayKnobValue);
   };
 
   const resetSong = () => {
@@ -93,14 +93,13 @@ const AudioPlugin = () => {
   };
 
   /* When editing a song, we want it to stay */
-  useEffect(() => {
-    setIsLooping(true);
+  // useEffect(() => {
+  //   setIsLooping(true);
 
-    return () => {
-      setIsLooping(false);
-      console.error('SETING TO FALSE');
-    };
-  }, []);
+  //   return () => {
+  //     setIsLooping(false);
+  //   };
+  // }, []);
 
   return (
     <div className="audio-plugin">
@@ -135,7 +134,7 @@ const AudioPlugin = () => {
       <div className="plugin-button-container">
         Save
         <div
-          className="save-button"
+          className="synth-button"
           onClick={() => {
             saveSettings();
           }}
@@ -144,20 +143,21 @@ const AudioPlugin = () => {
       <div className="plugin-button-container">
         Reset
         <div
-          className="reset-button"
+          className="synth-button"
           onClick={() => {
             resetSong();
           }}
         ></div>
       </div>
-      {/* <div
-        className="export-button"
-        onClick={() => {
-          handleSongExport();
-        }}
-      >
+      <div className="plugin-button-container">
         Export
-      </div> */}
+        <div
+          className="synth-button"
+          onClick={() => {
+            handleSongExport();
+          }}
+        ></div>
+      </div>
     </div>
   );
 };

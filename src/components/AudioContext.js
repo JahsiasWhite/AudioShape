@@ -22,9 +22,6 @@ export const AudioProvider = ({ children }) => {
   /* Playlists */
   const [playlists, setPlaylists] = useState([]);
 
-  /* Sample song */
-  const [sampleSong, setSampleSong] = useState(new Audio());
-
   /* Settings */
   const [volume, setVolume] = useState(1); // Initial volume is 100%
   const [isPlaying, setIsPlaying] = useState(false);
@@ -43,15 +40,11 @@ export const AudioProvider = ({ children }) => {
   const playAudio = () => {
     currentSong.play();
     setIsPlaying(true);
-
-    stopSampleAudio();
   };
 
   const pauseAudio = () => {
     currentSong.pause();
     setIsPlaying(false);
-
-    stopSampleAudio();
   };
 
   const changeVolume = (newVolume) => {
@@ -128,9 +121,6 @@ export const AudioProvider = ({ children }) => {
     // ? Can we do something here so if this is null, we never would even end up here
     if (currentSongIndex === null) return;
 
-    /* Stop playing the sample audio before playing the new song */
-    stopSampleAudio();
-
     /* If speed up is enabled, edit the song first and then play */
     if (speedupIsEnabled) {
       handleSpeedChange(DEFAULT_SPEEDUP);
@@ -155,11 +145,6 @@ export const AudioProvider = ({ children }) => {
     currentSong.play();
     setIsPlaying(true);
 
-    // currentSong.addEventListener('ended', () => {
-    //   console.error('REMOVING LISTENER');
-    //   // Automatically play the next song when the current song ends
-    //   playNextSong();
-    // });
     currentSong.addEventListener('ended', onSongEnded);
   };
 
@@ -181,7 +166,6 @@ export const AudioProvider = ({ children }) => {
   const onSongEnded = () => {
     // If we are looping the song, restart the current song
     // ! Broken because this function gets created before isLooping is set
-    console.error('HIIII');
     if (isLooping) {
       restartCurrentSong();
       return;
@@ -249,93 +233,6 @@ export const AudioProvider = ({ children }) => {
     // setSlowDownIsEnabled(!slowDownIsEnabled);
     // handleSpeedChange(1.2);
   };
-
-  /**
-   * Changes the speed of the current song
-   * @param {*} newSpeed
-   */
-  // const handleSpeedChange = async (newSpeed, index) => {
-  //   handleSpeedChangeWithTone(newSpeed, index);
-  //   return;
-
-  //   const audioContext = new (window.AudioContext ||
-  //     window.webkitAudioContext)();
-
-  //   /* index is only given when using sample audio, if auto-speedup play is enabled, the path should just be the current playing song */
-  //   let filePath = index === undefined ? currentSongIndex : index;
-
-  //   if (filePath === null) return;
-
-  //   // ! The below crashes sometimes, saying: Cannot read properties of undefined (reading 'file')
-  //   // Should prob add error handling here, but I think the real issue stems from using curSongIndex which fcks up when on different screens with diff visible songs
-  //   // Need to use the song key to determine what is playing
-
-  //   // Load the current song's audio buffer
-  //   const response = await fetch(visibleSongs[filePath].file);
-  //   const audioData = await response.arrayBuffer();
-  //   const audioBuffer = await audioContext.decodeAudioData(audioData);
-
-  //   // Create a new audio buffer with increased playback speed
-  //   // .5 === 2x speed, 2 === .5x speed
-  //   const newLength = audioBuffer.duration * newSpeed;
-  //   const newSampleCount = Math.ceil(newLength * audioBuffer.sampleRate);
-
-  //   // Gets how much faster the new song is
-  //   const speedupMultiplier = audioBuffer.duration / newLength;
-  //   console.error('CHANGING SPEED BY x', speedupMultiplier);
-
-  //   // Initialize the new buffer with the new sample count and duration
-  //   const newBuffer = audioContext.createBuffer(
-  //     audioBuffer.numberOfChannels,
-  //     newSampleCount,
-  //     audioBuffer.sampleRate
-  //   );
-
-  //   /* Copies the audio data to the new buffer */
-  //   for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
-  //     const oldData = audioBuffer.getChannelData(channel);
-  //     const newData = newBuffer.getChannelData(channel);
-
-  //     for (let i = 0; i < newBuffer.length; i++) {
-  //       const oldIndex = Math.floor(i / newSpeed);
-  //       newData[i] = oldData[oldIndex] || 0;
-  //     }
-  //   }
-
-  //   // Stop the current sample song to get ready to play the new one
-  //   pauseAudio();
-
-  //   // Create a new audio source node with the modified buffer
-  //   const source = audioContext.createBufferSource();
-
-  //   source.buffer = newBuffer;
-  //   source.connect(audioContext.destination); // Connect the node to the destination so we can hear the sound
-  //   source.index = filePath;
-
-  //   // TODO: This doesnt work for some reason
-  //   /* Changes the volume */
-  //   // const gainNode = audioContext.createGain();
-  //   // gainNode.gain.value = 0.1; // Set the volume to half
-  //   // source.connect(gainNode);
-  //   // console.error(gainNode.gain.value);
-  //   // gainNode.connect(audioContext.destination);
-
-  //   /* If we're using auto-play speedup, the current song should be the one changing */
-  //   /* We have to save a temporary local copy to play the audio and still have full functionality */
-  //   if (index === undefined) {
-  //     const wavBytes = createWavBytes(source);
-  //     window.electron.ipcRenderer.sendMessage('SAVE_TEMP_SONG', wavBytes);
-  //     getTempSong();
-  //     return;
-  //   }
-
-  //   // ! I dont think this ever gets reached now, which isn't bad
-  //   return;
-  //   console.error('HERE I AM I GUESS');
-
-  //   source.start(0);
-  //   setSampleSong(source);
-  // };
 
   /**
    * Gets the current song's audio data from the file system
@@ -413,100 +310,6 @@ export const AudioProvider = ({ children }) => {
     getTempSong();
   }
 
-  // const handleReverbChange = async () => {
-  //   handleReverbChangeWithTone();
-  //   return;
-
-  //   /* Works as .start() but not for saving :( */
-  //   const audioContext = new (window.AudioContext ||
-  //     window.webkitAudioContext)();
-
-  //   // Load the current song's audio buffer
-  //   const response = await fetch(visibleSongs[currentSongIndex].file);
-  //   const audioData = await response.arrayBuffer();
-  //   const audioBuffer = await audioContext.decodeAudioData(audioData);
-  //   const audioSource = audioContext.createBufferSource();
-  //   audioSource.buffer = audioBuffer;
-
-  //   const impulseResponseURL = 'path/to/impulse-response.wav'; // Replace with the path to your impulse response file
-
-  //   // Start playing your audio source
-  //   audioSource.connect(audioContext.destination);
-
-  //   // Add reverb to the audio source
-  //   await addReverbToAudio(audioContext, audioSource, visibleSongs[0].file);
-
-  //   audioSource.start(0);
-
-  //   // const wavBytes = createWavBytes(audioSource);
-  //   // window.electron.ipcRenderer.sendMessage('SAVE_TEMP_SONG', wavBytes);
-  //   // getTempSong();
-  //   console.error('PLAYING');
-  //   /* */
-
-  //   // const testContext = new (window.AudioContext ||
-  //   //   window.webkitAudioContext)();
-  //   // const testSource = testContext.createBufferSource();
-  //   // const impulse = impulseResponse(testContext, 1, 1, 1);
-  //   // testSource.buffer = impulse;
-  //   // testSource.connect(testContext.destination);
-  //   // testSource.start(0);
-  //   // console.error(testSource);
-  // };
-  // async function addReverbToAudio(
-  //   audioContext,
-  //   audioSource,
-  //   impulseResponseURL
-  // ) {
-  //   // Load the impulse response from a WAV file
-  //   const response = await fetch(impulseResponseURL);
-  //   const arrayBuffer = await response.arrayBuffer();
-  //   const impulseResponseBuffer = await audioContext.decodeAudioData(
-  //     arrayBuffer
-  //   );
-
-  //   // Create a ConvolverNode and set its buffer to the loaded impulse response
-  //   const convolver = audioContext.createConvolver();
-  //   convolver.buffer = impulseResponseBuffer;
-
-  //   // Connect your existing audio source to the ConvolverNode
-  //   audioSource.connect(convolver);
-
-  //   // Connect the ConvolverNode to the audio destination (speakers)
-  //   convolver.connect(audioContext.destination);
-  //   console.error('REVERB ADDED');
-  // }
-  // function impulseResponse(audioContext, duration, decay, reverse) {
-  //   var sampleRate = audioContext.sampleRate;
-  //   var length = sampleRate * duration;
-  //   var impulse = audioContext.createBuffer(2, length, sampleRate);
-  //   var impulseL = impulse.getChannelData(0);
-  //   var impulseR = impulse.getChannelData(1);
-
-  //   if (!decay) decay = 2.0;
-  //   for (var i = 0; i < length; i++) {
-  //     var n = reverse ? length - i : i;
-  //     impulseL[i] = (Math.random() * 2 - 1) * Math.pow(1 - n / length, decay);
-  //     impulseR[i] = (Math.random() * 2 - 1) * Math.pow(1 - n / length, decay);
-  //   }
-  //   return impulse;
-  // }
-
-  // useEffect(() => {
-  //   console.error('HMM');
-  //   // If these aren't enabled, we dont have a temp song so just leave
-  //   if (!slowDownIsEnabled && !speedupIsEnabled) return;
-
-  //   // console.error('CALLING handleTempSongSaved');
-  //   // window.electron.ipcRenderer.once('TEMP_SONG_SAVED', handleTempSongSaved);
-
-  //   return () => {
-  //     console.error('HI');
-  //     // Clean up the event listener when the component unmounts
-  //     // window.electron.ipcRenderer.removeAllListeners('TEMP_SONG_SAVED');
-  //   };
-  // }, [currentSongIndex]); // Uhhhh do i need this ? Or can it just be empty?
-
   /**
    * Gets the updated temporary song
    */
@@ -532,27 +335,12 @@ export const AudioProvider = ({ children }) => {
   };
 
   /**
-   * Safely stops the sample song
-   */
-  const stopSampleAudio = () => {
-    if (sampleSong.stop) {
-      sampleSong.stop();
-    }
-  };
-
-  /**
    * Sends the edited audio to the server to be saved to the file system
    */
-  function handleSongExport(inputSong) {
-    inputSong = sampleSong;
+  async function handleSongExport() {
+    const audioBuffer = await getCurrentAudioBuffer();
 
-    const wavBytes = createWavBytes(inputSong);
-
-    window.electron.ipcRenderer.sendMessage(
-      'SAVE_SONG',
-      wavBytes,
-      visibleSongs[inputSong.index].file // ! MAKE INPUTSONG
-    );
+    downloadAudio(audioBuffer);
   }
 
   function createWavBytes(inputSong) {
@@ -670,7 +458,6 @@ export const AudioProvider = ({ children }) => {
         setVisibleSongs,
         currentSong,
         currentSongIndex,
-        sampleSong,
         handleSongSelect,
         isPlaying,
         playAudio,

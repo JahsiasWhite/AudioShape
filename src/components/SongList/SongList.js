@@ -4,7 +4,6 @@ import './songList.css';
 
 import FolderSelection from '../FolderSelection/FolderSelection';
 import ContextMenu from './ContextMenu/ContextMenu';
-import DropdownMenu from './DropdownMenu/DropdownMenu';
 import PlaylistMenu from '../PlaylistMenu/PlaylistMenu';
 
 import DownArrowSVG from './down-arrow.svg';
@@ -72,16 +71,6 @@ function SongList({ handleSongLoad, handleSongEdit }) {
   };
   const hideContextMenu = () => {
     setIsContextMenuActive(false);
-  };
-
-  /* Toggles the dropdown menu */
-  const [openIndex, setOpenIndex] = useState(null); // Index of the open dropdown
-  const handleToggleDropdown = (index) => {
-    if (openIndex === index) {
-      setOpenIndex(null); // Close the dropdown if already open
-    } else {
-      setOpenIndex(index); // Open the dropdown
-    }
   };
 
   const [playlistMenuIndex, setPlaylistMenuOpen] = useState(-1);
@@ -155,9 +144,6 @@ function SongList({ handleSongLoad, handleSongEdit }) {
                     ></img>
                   </div>
                 </li>
-                {openIndex === index && (
-                  <DropdownMenu isOpen={true} index={index} />
-                )}
               </div>
             ))}
           </ul>
