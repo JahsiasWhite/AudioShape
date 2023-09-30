@@ -10,10 +10,12 @@ import { useAudioPlayer } from '../AudioContext';
 // DREADBOX INSPIRED
 
 const AudioPlugin = () => {
-  const { handleSpeedChange, handleReverbChange, handleSongExport } =
+  const { handleSpeedChange, handleReverbChange, resetCurrentSong } =
     useAudioPlayer();
 
   const [speedKnobValue, setSpeedKnobValue] = useState(50);
+  const [multiplier, setMultiplier] = useState(1);
+
   const [reverbKnobValue, setReverbKnobValue] = useState(50);
   const [delayKnobValue, setDelayKnobValue] = useState(50);
 
@@ -53,7 +55,7 @@ const AudioPlugin = () => {
    */
   const mapValueToSpeed = (newValue) => {
     // Our desired range
-    const slowdownRange = [2, 0.1];
+    const slowdownRange = [0.1, 2];
 
     // Use linear interpolation to map the newValue to the desired range
     const mappedValue =
@@ -62,8 +64,13 @@ const AudioPlugin = () => {
         (slowdownRange[1] - slowdownRange[0]) +
       slowdownRange[0];
 
+    // Round mappedValue to one decimal place
+    const roundedMappedValue = parseFloat(mappedValue.toFixed(1));
+
     setSpeedKnobValue(newValue);
-    handleSpeedChange(mappedValue);
+    setMultiplier(roundedMappedValue);
+
+    handleSpeedChange(roundedMappedValue);
   };
 
   const mapValueToReverb = (newValue) => {
@@ -76,20 +83,23 @@ const AudioPlugin = () => {
     console.error(speedKnobValue, reverbKnobValue, delayKnobValue);
   };
 
+  const resetSong = () => {
+    resetCurrentSong();
+  };
+
   return (
     <div className="audio-plugin">
       <div className="module-container">
         <div className="header">SPEED</div>
         <div className="speed-body">
           <Knob customProps={speedKnobStyles} onChange={mapValueToSpeed} />
-          <div className="knob-details">
+          {/* <div className="knob-details">
             <div>x.5</div>
             <div>x10</div>
-          </div>
-          <p>MULTIPLIER: {speedKnobValue}</p>
+          </div> */}
+          <p>MULTIPLIER: {multiplier}</p>
         </div>
       </div>
-
       <div className="module-container">
         <div className="header">REVERB</div>
         <div className="speed-body">
@@ -97,7 +107,6 @@ const AudioPlugin = () => {
           <p>LEVEL</p>
         </div>
       </div>
-
       <div className="module-container">
         <div className="header">DELAY</div>
         <div className="speed-body">
@@ -108,13 +117,23 @@ const AudioPlugin = () => {
       {/* <div className="module-container">
         <Knob customProps={testKnobStyles} />
       </div> */}
-      <div
-        className="save-button"
-        onClick={() => {
-          saveSettings();
-        }}
-      >
+      <div className="plugin-button-container">
         Save
+        <div
+          className="save-button"
+          onClick={() => {
+            saveSettings();
+          }}
+        ></div>
+      </div>
+      <div className="plugin-button-container">
+        Reset
+        <div
+          className="reset-button"
+          onClick={() => {
+            resetSong();
+          }}
+        ></div>
       </div>
       {/* <div
         className="export-button"

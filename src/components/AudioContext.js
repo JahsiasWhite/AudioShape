@@ -7,6 +7,9 @@ const AudioContext = createContext();
 
 export const useAudioPlayer = () => useContext(AudioContext);
 
+const DEFAULT_SPEEDUP = 1.2;
+const DEFAULT_SLOWDOWN = 0.8;
+
 export const AudioProvider = ({ children }) => {
   /* General songs */
   const [loadedSongs, setLoadedSongs] = useState([]);
@@ -129,11 +132,10 @@ export const AudioProvider = ({ children }) => {
 
     /* If speed up is enabled, edit the song first and then play */
     if (speedupIsEnabled) {
-      // sppedup
-      handleSpeedChange(0.8);
+      handleSpeedChange(DEFAULT_SPEEDUP);
       return;
     } else if (slowDownIsEnabled) {
-      handleSpeedChange(1.2);
+      handleSpeedChange(DEFAULT_SLOWDOWN);
       return;
     } else {
       const newSong = visibleSongs[currentSongIndex];
@@ -158,6 +160,12 @@ export const AudioProvider = ({ children }) => {
     //   playNextSong();
     // });
     currentSong.addEventListener('ended', onSongEnded);
+  };
+
+  const resetCurrentSong = () => {
+    // TODO: Do this in a not horrible way
+    playNextSong();
+    playPreviousSong();
   };
 
   const onSongEnded = () => {
@@ -195,7 +203,7 @@ export const AudioProvider = ({ children }) => {
       handleSpeedChange(1);
     } else {
       setSpeedupIsEnabled(true);
-      handleSpeedChange(0.8);
+      handleSpeedChange(DEFAULT_SPEEDUP);
     }
   };
 
@@ -217,7 +225,7 @@ export const AudioProvider = ({ children }) => {
       handleSpeedChange(1);
     } else {
       setSlowDownIsEnabled(true);
-      handleSpeedChange(1.2);
+      handleSpeedChange(DEFAULT_SLOWDOWN);
     }
     // return;
     // setSlowDownIsEnabled(!slowDownIsEnabled);
@@ -311,19 +319,30 @@ export const AudioProvider = ({ children }) => {
   //   setSampleSong(source);
   // };
 
-  const handleSpeedChange = async (newSpeed, index) => {
+  /**
+   * Gets the current song's audio data from the file system
+   * @param {*} audioContext
+   * @returns
+   */
+  const getCurrentAudioBuffer = async () => {
+    let filePath = currentSongIndex;
+    // let filePath = index === undefined ? currentSongIndex : index;
+    if (filePath === null) return;
+
     const audioContext = new (window.AudioContext ||
       window.webkitAudioContext)();
 
-    console.error(index);
-    let filePath = currentSongIndex;
-    // let filePath = index === undefined ? currentSongIndex : index;
-    // if (filePath === null) return;
-
-    // Load the current song's audio buffer
     const response = await fetch(visibleSongs[filePath].file);
+    // const response = await fetch(currentSong.src);
     const audioData = await response.arrayBuffer();
     const audioBuffer = await audioContext.decodeAudioData(audioData);
+
+    return audioBuffer;
+  };
+
+  const handleSpeedChange = async (newSpeed, index) => {
+    // Load the current song's audio buffer
+    const audioBuffer = await getCurrentAudioBuffer();
 
     const renderedBuffer = await renderAudioWithSpeedChange(
       audioBuffer,
@@ -345,14 +364,8 @@ export const AudioProvider = ({ children }) => {
   }
 
   const handleReverbChange = async () => {
-    // Create an audio source (e.g., a Player)
-    const audioContext = new (window.AudioContext ||
-      window.webkitAudioContext)();
-
     // Load the current song's audio buffer
-    const response = await fetch(visibleSongs[currentSongIndex].file);
-    const audioData = await response.arrayBuffer();
-    const audioBuffer = await audioContext.decodeAudioData(audioData);
+    const audioBuffer = await getCurrentAudioBuffer();
 
     const renderedBuffer = await renderAudioWithReverb(audioBuffer);
     downloadAudio(renderedBuffer);
@@ -631,6 +644,7 @@ export const AudioProvider = ({ children }) => {
     <AudioContext.Provider
       value={{
         initialSongLoad,
+        resetCurrentSong,
         loadedSongs,
         visibleSongs,
         currentScreen,
