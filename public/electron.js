@@ -123,7 +123,7 @@ app.on('ready', function () {
 
     /* Get all songs */
     let count = 0; // This is so we know when we ran out of files to parse and can return
-    songs = []; // ? Reset songs here?
+    songs = {}; // ? Reset songs here?
     audios.map((file) => {
       metadata
         .parseFile(file)
@@ -132,6 +132,10 @@ app.on('ready', function () {
           let artist = data.common.artist;
           let album = data.common.album;
           let duration = data.format.duration;
+
+          // Unique key, ! TODO: Should I do this different? Is this function costly?
+          // Maybe do somehashing instead of this crude...
+          let key = duration;
 
           // To avoid empty fields, if the file doesn't have the appropriate metadata, the file's name is used as the title, and the album and artist are set to "Unknown".
           if (
@@ -163,14 +167,24 @@ app.on('ready', function () {
             }
           }
 
-          songs.push({
+          // songs.push({
+          //   id: key,
+          //   file: file,
+          //   title: title,
+          //   artist: artist,
+          //   album: album,
+          //   duration: duration,
+          //   albumImage: savedImage, // Init image
+          // });
+          songs[key] = {
+            id: key,
             file: file,
             title: title,
             artist: artist,
             album: album,
             duration: duration,
             albumImage: savedImage, // Init image
-          });
+          };
 
           // So we know when to end :)
           // Either this or more async + try blocks

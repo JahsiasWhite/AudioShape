@@ -16,7 +16,7 @@ function SongList({ handleSongLoad, handleSongEdit }) {
     initialSongLoad,
     handleSongSelect,
     visibleSongs,
-    currentSongIndex,
+    currentSongId,
     currentScreen,
   } = useAudioPlayer();
 
@@ -32,12 +32,21 @@ function SongList({ handleSongLoad, handleSongEdit }) {
    */
   useEffect(() => {
     /* TODO: This means we've been here before, I should fix this logic so it never ends up here in the first place */
-    if (visibleSongs.length > 0) {
+    // if (visibleSongs.length > 0) {
+    //   setIsLoading(false);
+    // }
+
+    // //  ! Only change loading state if there are visible songs
+    // else if (isLoading && handleSongLoad.length > 0) {
+    //   setIsLoading(false);
+    //   initialSongLoad(handleSongLoad);
+    // }
+    if (Object.keys(visibleSongs).length > 0) {
       setIsLoading(false);
+      return;
     }
 
-    //  ! Only change loading state if there are visible songs
-    else if (isLoading && handleSongLoad.length > 0) {
+    if (isLoading && Object.keys(handleSongLoad).length > 0) {
       setIsLoading(false);
       initialSongLoad(handleSongLoad);
     }
@@ -96,51 +105,55 @@ function SongList({ handleSongLoad, handleSongEdit }) {
         </div>
       ) : (
         <div>
-          <div className="num-songs">{visibleSongs.length} songs</div>
+          <div className="num-songs">
+            {Object.keys(visibleSongs).length} songs
+          </div>
           <ul className="song-list">
-            {visibleSongs.map((song, index) => (
-              <div className="song" key={index}>
+            {Object.keys(visibleSongs).map((key) => (
+              <div className="song" key={key}>
                 <li
-                  key={index} // TODO Fix this to be more appropriate/an actual unique key, when the page changes to artists for example, the indices are all messed up
+                  key={key} // TODO Fix this to be more appropriate/an actual unique key, when the page changes to artists for example, the indices are all messed up
                   onDoubleClick={() => {
-                    handleSongSelect(index);
+                    handleSongSelect(visibleSongs[key].id);
                   }}
                   onClick={() => {
                     setIsContextMenuActive(false); // Hide the 'right-click' menu when we left-click
                   }}
                   onContextMenu={handleContextMenu} // Open context menu when we right-click
                   className={`list-item ${
-                    currentSongIndex === index ? 'highlighted' : ''
+                    currentSongId === visibleSongs[key].id ? 'highlighted' : ''
                   }`}
                 >
-                  {song.albumImage && (
+                  {visibleSongs[key].albumImage && (
                     <img
                       className="list-image"
-                      src={song.albumImage}
-                      alt={`${song.album} cover`}
+                      src={visibleSongs[key].albumImage}
+                      alt={`${visibleSongs[key].album} cover`}
                     />
                   )}
                   <div className="song-details">
                     <div
                       className={`song-title ${
-                        currentSongIndex === index ? '' : 'header-color'
+                        currentSongId === visibleSongs[key].id
+                          ? ''
+                          : 'header-color'
                       }`}
                     >
-                      {song.title}
+                      {visibleSongs[key].title}
                     </div>
-                    <div>{song.artist}</div>
-                    <div>{song.album}</div>
+                    <div>{visibleSongs[key].artist}</div>
+                    <div>{visibleSongs[key].album}</div>
                   </div>
                   <div className="right-side">
                     <img
                       className="plus-sign"
                       src={PlusButtonSVG}
-                      onClick={() => handlePlaylistEdit(index)}
+                      onClick={() => handlePlaylistEdit(visibleSongs[key].id)}
                     ></img>
                     <img
                       className="dropdown-button"
                       src={DownArrowSVG}
-                      onClick={() => handleSongEdit(index)}
+                      onClick={() => handleSongEdit(visibleSongs[key].id)}
                     ></img>
                   </div>
                 </li>
@@ -157,7 +170,7 @@ function SongList({ handleSongLoad, handleSongEdit }) {
             />
           )}
           {/* Render the PlaylistMenu when playlistMenuIndex has a real index */}
-          {playlistMenuIndex >= 0 && (
+          {playlistMenuIndex != -1 && (
             <PlaylistMenu
               song={visibleSongs[playlistMenuIndex]}
               closePlaylistMenu={closePlaylistMenu}

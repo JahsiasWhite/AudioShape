@@ -12,12 +12,13 @@ const DEFAULT_SLOWDOWN = 0.8;
 
 export const AudioProvider = ({ children }) => {
   /* General songs */
-  const [loadedSongs, setLoadedSongs] = useState([]);
-  const [visibleSongs, setVisibleSongs] = useState([]);
+  const [loadedSongs, setLoadedSongs] = useState({});
+  const [visibleSongs, setVisibleSongs] = useState({}); // ! TODO, I think this would work better as an array
 
   /* Current song info */
   const [currentSong, setCurrentSong] = useState(new Audio()); // Current playing audio object
   const [currentSongIndex, setCurrentSongIndex] = useState(null);
+  const [currentSongId, setCurrentSongId] = useState(null);
 
   /* Playlists */
   const [playlists, setPlaylists] = useState([]);
@@ -57,8 +58,13 @@ export const AudioProvider = ({ children }) => {
     }
 
     const previousIndex =
-      (currentSongIndex - 1 + visibleSongs.length) % visibleSongs.length;
+      (currentSongIndex - 1 + Object.keys(visibleSongs).length) %
+      Object.keys(visibleSongs).length;
     setCurrentSongIndex(previousIndex);
+
+    const songArray = Object.values(visibleSongs);
+    const nextSongId = songArray[previousIndex].id;
+    setCurrentSongId(nextSongId);
   };
 
   const playNextSong = () => {
@@ -66,8 +72,13 @@ export const AudioProvider = ({ children }) => {
       currentSong.removeEventListener('ended', onSongEnded);
     }
 
-    const nextIndex = (currentSongIndex + 1) % visibleSongs.length;
+    const nextIndex = (currentSongIndex + 1) % Object.keys(visibleSongs).length;
     setCurrentSongIndex(nextIndex);
+
+    // ! TODO: More modular, and I don't really like this
+    const songArray = Object.values(visibleSongs); // REALLY? I only need one, not the whole thing
+    const nextSongId = songArray[nextIndex].id;
+    setCurrentSongId(nextSongId);
   };
 
   /**
@@ -119,7 +130,7 @@ export const AudioProvider = ({ children }) => {
   // Essentially create the new song :)
   useEffect(() => {
     // ? Can we do something here so if this is null, we never would even end up here
-    if (currentSongIndex === null) return;
+    if (currentSongId === null) return;
 
     /* If speed up is enabled, edit the song first and then play */
     if (speedupIsEnabled) {
@@ -129,7 +140,7 @@ export const AudioProvider = ({ children }) => {
       handleSpeedChange(DEFAULT_SLOWDOWN);
       return;
     } else {
-      const newSong = visibleSongs[currentSongIndex];
+      const newSong = visibleSongs[currentSongId];
       currentSong.src = newSong.file;
     }
 
@@ -137,7 +148,7 @@ export const AudioProvider = ({ children }) => {
     initCurrentSong();
 
     setCurrentSong(currentSong);
-  }, [currentSongIndex]);
+  }, [currentSongId]);
 
   const initCurrentSong = () => {
     currentSong.volume = volume;
@@ -177,13 +188,21 @@ export const AudioProvider = ({ children }) => {
 
   /* When the songs first load, we want all songs to be shown */
   const initialSongLoad = (songs) => {
+    // ! IS THIS FUNCTION USED? I THINK IT MIGHT JUST BE REDUNDANT
     setLoadedSongs(songs);
     setVisibleSongs(songs);
   };
 
   /* When a song is double-clicked, change the current song to that one! */
-  const handleSongSelect = (songIndex) => {
-    setCurrentSongIndex(songIndex);
+  const handleSongSelect = (songId) => {
+    // setCurrentSongIndex(songIndex);
+    setCurrentSongId(songId);
+
+    // ! TODO: Don't love this
+    const index = Object.keys(visibleSongs).findIndex(
+      (key) => visibleSongs[key].id === songId
+    );
+    setCurrentSongIndex(index);
   };
 
   /**
@@ -240,7 +259,7 @@ export const AudioProvider = ({ children }) => {
    * @returns
    */
   const getCurrentAudioBuffer = async () => {
-    let filePath = currentSongIndex;
+    let filePath = currentSongId;
     // let filePath = index === undefined ? currentSongIndex : index;
     if (filePath === null) return;
 
@@ -458,6 +477,7 @@ export const AudioProvider = ({ children }) => {
         setVisibleSongs,
         currentSong,
         currentSongIndex,
+        currentSongId,
         handleSongSelect,
         isPlaying,
         playAudio,

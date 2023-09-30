@@ -4,7 +4,7 @@ import './Artists.css';
 import { useAudioPlayer } from '../AudioContext';
 
 function Artists({ songs, toggleSection }) {
-  const { setVisibleSongs, setCurrentScreen } = useAudioPlayer();
+  const { setVisibleSongs, setCurrentScreen, visibleSongs } = useAudioPlayer();
 
   /**
    * Finds all artists in the given song list. Matches each artist to each song they have as well
@@ -20,7 +20,7 @@ function Artists({ songs, toggleSection }) {
     let artistImg = '';
 
     // Loops through every song and adds them to their respective artist
-    songs.forEach((song) => {
+    Object.values(songs).forEach((song) => {
       // Add the song to the artist
       if (!artists[song.artist]) {
         artists[song.artist] = [];
@@ -32,6 +32,8 @@ function Artists({ songs, toggleSection }) {
         artists[song.artist].image = song.albumImage;
       }
     });
+
+    console.error(artists);
     return artists;
   }
 
@@ -42,7 +44,19 @@ function Artists({ songs, toggleSection }) {
    * @param {*} artist
    */
   const handleArtistClick = (artist) => {
-    setVisibleSongs(artistsBySongs[artist]);
+    /* Have to change this from an array to an object :( */
+    let newVisibleSongs = { ...artistsBySongs[artist] };
+    delete newVisibleSongs['image'];
+    // Create an empty object for songs by id
+    const songsById = {};
+    // Iterate over the properties of songsWithoutImage and add them to songsById
+    for (const key in newVisibleSongs) {
+      if (newVisibleSongs.hasOwnProperty(key)) {
+        songsById[newVisibleSongs[key].id] = newVisibleSongs[key];
+      }
+    }
+    setVisibleSongs(songsById);
+
     toggleSection('songs');
     setCurrentScreen(artist);
   };

@@ -17,7 +17,7 @@ import { useAudioPlayer } from '../AudioContext';
 function Playbar({ toggleFullscreen }) {
   const {
     visibleSongs,
-    currentSongIndex,
+    currentSongId,
     toggleSpeedup,
     speedupIsEnabled,
     toggleSlowDown,
@@ -28,23 +28,23 @@ function Playbar({ toggleFullscreen }) {
     <div className="playbar">
       <div className="current-song">
         {/* TODO Clean this up? */}
-        {visibleSongs[currentSongIndex] &&
-          visibleSongs[currentSongIndex].albumImage && (
+        {visibleSongs[currentSongId] &&
+          visibleSongs[currentSongId].albumImage && (
             <img
               className="playbar-image"
-              src={visibleSongs[currentSongIndex].albumImage}
-              alt={`${visibleSongs[currentSongIndex].album} cover`}
+              src={visibleSongs[currentSongId].albumImage}
+              alt={`${visibleSongs[currentSongId].album} cover`}
             />
           )}
         <div className="song-details">
           <span id="song-title">
-            {visibleSongs[currentSongIndex]
-              ? visibleSongs[currentSongIndex].title
+            {visibleSongs[currentSongId]
+              ? visibleSongs[currentSongId].title
               : 'No song playing'}
           </span>
           <span id="artist">
-            {visibleSongs[currentSongIndex]
-              ? visibleSongs[currentSongIndex].artist
+            {visibleSongs[currentSongId]
+              ? visibleSongs[currentSongId].artist
               : ''}
           </span>
         </div>

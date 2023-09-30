@@ -28,15 +28,19 @@ const Playlists = ({ toggleSection }) => {
   }, []);
 
   const handlePlaylistClick = (playlist) => {
-    let newSongCollection = [];
+    let newSongCollection = {};
     for (let i = 0; i < playlist.songs.length; i++) {
       const songName = playlist.songs[i];
-      //TODO ! Make loadedSongs {} instead of [] so we dont have to loop...
-      for (let j = 0; j < loadedSongs.length; j++) {
-        if (loadedSongs[j].title === songName)
-          newSongCollection.push(loadedSongs[j]);
-      }
+      //TODO ! Make this not a loop, the id is randomly generated though
+      // for (let j = 0; j < loadedSongs.length; j++) {
+      //   if (loadedSongs[j].title === songName)
+      //     newSongCollection.push(loadedSongs[j]);
+      // }
+      // newSongCollection.push(loadedSongs[songName]);
+      newSongCollection[songName] = loadedSongs[songName];
     }
+
+    console.error(playlist, newSongCollection);
 
     setVisibleSongs(newSongCollection);
 
@@ -49,7 +53,10 @@ const Playlists = ({ toggleSection }) => {
    * Deletes the given playlist from the user's playlists
    * @param {*} playlistToDelete
    */
-  const deletePlaylist = (playlistToDelete) => {
+  const deletePlaylist = (playlistToDelete, event) => {
+    // Prevent the click event from propagating to the parent element
+    event.stopPropagation();
+
     // Send a message to the main process to delete the playlist
     window.electron.ipcRenderer.sendMessage(
       'DELETE_PLAYLIST',
@@ -104,7 +111,7 @@ const Playlists = ({ toggleSection }) => {
           >
             <div
               className="delete-button"
-              onClick={() => deletePlaylist(playlist)}
+              onClick={(event) => deletePlaylist(playlist, event)}
             >
               X
             </div>

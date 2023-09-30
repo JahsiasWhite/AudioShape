@@ -23,7 +23,7 @@ import { AudioProvider } from './components/AudioContext'; // So we can talk to 
 function App() {
   const [selectedSongIndex, setSelectedSongIndex] = useState(null);
 
-  const [loadedSongs, setLoadedSongs] = useState([]); // ? Can we use this as just visibleSongs ? Or should we have two objects?
+  const [loadedSongs, setLoadedSongs] = useState({}); // ? Can we use this as just visibleSongs ? Or should we have two objects?
   // const [visibleSongs, setVisibleSongs] = useState([]);
 
   // Update the current song when a song is selected
@@ -44,18 +44,6 @@ function App() {
     setCurrentSection(section);
   };
 
-  /* When the songs first load, we want all songs to be shown */
-  // const handleSongLoad = (songs) => {
-  //   setLoadedSongs(songs);
-  //   setVisibleSongs(songs);
-  // };
-
-  // const handleArtistSelect = (artist, songs) => {
-  //   // setSelectedArtist(artist);
-  //   setCurrentSection('songs');
-  //   setVisibleSongs(songs);
-  // };
-
   /**
    * When the app first loads, we make a call to the server to grab the songs. It will pull any songs if a
    * previous directory was given in the past. Once the server is donw processing, it sends the songs back
@@ -66,9 +54,9 @@ function App() {
     window.electron.ipcRenderer.sendMessage('GET_SONGS', '');
 
     // ! GET_SONGS loads from the dir, while GRAB_SONGS gets songs to show on the frontend
-    window.electron.ipcRenderer.on('GRAB_SONGS', (mp3Files) => {
+    window.electron.ipcRenderer.on('GRAB_SONGS', (retrievedSongs) => {
       // handleSongLoad(mp3Files);
-      setLoadedSongs(mp3Files);
+      setLoadedSongs(retrievedSongs); // ! should I actually call initialSongLoad?
     });
   }, []);
 

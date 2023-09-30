@@ -44,17 +44,18 @@ function PlaylistMenu({ song, closePlaylistMenu }) {
 
     // Initialize selectedPlaylists based on whether the song is already in each playlist
     const initialSelected = playlists.map((playlist) =>
-      playlist.songs.includes(song.title)
+      playlist.songs.includes(song.id)
     );
 
     setSelectedPlaylists(initialSelected);
   }, [playlists]);
 
   const addSongToPlaylist = (playlist, index) => {
+    console.error('ADDING SONG TO PLAYLIST ', song);
     window.electron.ipcRenderer.sendMessage(
       'TOGGLE_SONG_TO_PLAYLIST',
       playlist.name,
-      song.title
+      song.id
     );
   };
 
