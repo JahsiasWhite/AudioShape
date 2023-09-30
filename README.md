@@ -36,6 +36,7 @@ TODO:
 15. Shuffle
 16. Resturcture styles, does creating all of these extra folders take up a lot of storage??
 17. Add gif support for fullscreen mode
+18. Start creating the new song before the current ends on auto play so the user doesnt have to wait for it to render
 
 999 Easy file/song sharing
 
