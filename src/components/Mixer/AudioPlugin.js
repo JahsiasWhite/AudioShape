@@ -1,5 +1,5 @@
 // ! I think this component is being recreated way too many times
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import './AudioPlugin.css';
 
@@ -10,8 +10,12 @@ import { useAudioPlayer } from '../AudioContext';
 // DREADBOX INSPIRED
 
 const AudioPlugin = () => {
-  const { handleSpeedChange, handleReverbChange, resetCurrentSong } =
-    useAudioPlayer();
+  const {
+    handleSpeedChange,
+    handleReverbChange,
+    resetCurrentSong,
+    setIsLooping,
+  } = useAudioPlayer();
 
   const [speedKnobValue, setSpeedKnobValue] = useState(50);
   const [multiplier, setMultiplier] = useState(1);
@@ -19,6 +23,7 @@ const AudioPlugin = () => {
   const [reverbKnobValue, setReverbKnobValue] = useState(50);
   const [delayKnobValue, setDelayKnobValue] = useState(50);
 
+  /* Styles for the different knobs */
   const speedKnobStyles = {
     size: 75,
     numTicks: 25,
@@ -86,6 +91,16 @@ const AudioPlugin = () => {
   const resetSong = () => {
     resetCurrentSong();
   };
+
+  /* When editing a song, we want it to stay */
+  useEffect(() => {
+    setIsLooping(true);
+
+    return () => {
+      setIsLooping(false);
+      console.error('SETING TO FALSE');
+    };
+  }, []);
 
   return (
     <div className="audio-plugin">

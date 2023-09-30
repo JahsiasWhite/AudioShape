@@ -30,6 +30,7 @@ export const AudioProvider = ({ children }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isRandomMode, setIsRandomMode] = useState(false);
+  const [isLooping, setIsLooping] = useState(false);
 
   /* Effects */
   const [speedupIsEnabled, setSpeedupIsEnabled] = useState(false);
@@ -162,13 +163,30 @@ export const AudioProvider = ({ children }) => {
     currentSong.addEventListener('ended', onSongEnded);
   };
 
+  const restartCurrentSong = () => {
+    // currentSong.pause();
+    currentSong.currentTime = 0;
+    currentSong.play();
+  };
+
+  /**
+   * Resets the current song's effects to the default and restarts it
+   */
   const resetCurrentSong = () => {
-    // TODO: Do this in a not horrible way
-    playNextSong();
-    playPreviousSong();
+    // Reset the effects here as well
+
+    restartCurrentSong();
   };
 
   const onSongEnded = () => {
+    // If we are looping the song, restart the current song
+    // ! Broken because this function gets created before isLooping is set
+    console.error('HIIII');
+    if (isLooping) {
+      restartCurrentSong();
+      return;
+    }
+
     // Automatically play the next song when the current song ends
     playNextSong();
   };
@@ -673,6 +691,7 @@ export const AudioProvider = ({ children }) => {
         playlists,
         setPlaylists,
         createPlaylist,
+        setIsLooping,
       }}
     >
       {children}

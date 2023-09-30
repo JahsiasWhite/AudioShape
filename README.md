@@ -48,3 +48,26 @@ BUGS:
 ## Launching
 
 npm run all
+
+#### EFFECTS TO ADD
+
+Equalizer (Tone.EQ3): Tone.js provides an EQ3 module that allows you to control the low, mid, and high-frequency bands of an audio signal. This can be used to shape the tonal balance of your audio.
+const eq = new Tone.EQ3(-12, -6, -3).toDestination();
+
+Filter (Tone.Filter): You can use filters to remove or emphasize certain frequencies in your audio. Tone.js offers various filter types, including lowpass, highpass, bandpass, and more.
+const filter = new Tone.Filter(200, 'lowpass').toDestination();
+
+Delay (Tone.FeedbackDelay): Delay effects create echoes or repeats of the audio signal. You can adjust parameters like delay time and feedback to control the delay effect.
+const delay = new Tone.FeedbackDelay('8n', 0.5).toDestination();
+
+Compressor (Tone.Compressor): Compressors are used to control the dynamic range of audio signals, making loud sounds quieter and quiet sounds louder.
+const compressor = new Tone.Compressor(-30, 3).toDestination();
+
+Distortion (Tone.Distortion): Distortion effects add harmonics and alter the timbre of an audio signal. You can control parameters like distortion type and amount.
+const distortion = new Tone.Distortion(0.4).toDestination();
+
+Chorus (Tone.Chorus): Chorus effects create a thicker and richer sound by modulating the pitch of the audio signal.
+const chorus = new Tone.Chorus(4, 2.5, 0.5).toDestination();
+
+Bitcrusher (Tone.BitCrusher): Bitcrushing is a lo-fi effect that reduces the bit depth of an audio signal.
+const bitcrusher = new Tone.BitCrusher(4).toDestination();
