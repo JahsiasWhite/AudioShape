@@ -13,6 +13,7 @@ const AudioPlugin = () => {
   const {
     handleSpeedChange,
     handleReverbChange,
+    addEffect,
     resetCurrentSong,
     setIsLooping,
   } = useAudioPlayer();
@@ -77,13 +78,15 @@ const AudioPlugin = () => {
     setSpeedKnobValue(newValue);
     setMultiplier(roundedMappedValue);
 
-    handleSpeedChange(roundedMappedValue);
+    // handleSpeedChange(roundedMappedValue);
+    addEffect('speed', roundedMappedValue);
   };
 
   const toggleReverb = (newValue) => {
     setIsReverbActive(!isReverbActive);
 
-    handleReverbChange();
+    // handleReverbChange();
+    addEffect('reverb', !isReverbActive);
   };
 
   const mapValueToDelay = (newValue) => {};

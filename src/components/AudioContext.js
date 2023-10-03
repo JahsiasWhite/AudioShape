@@ -219,6 +219,7 @@ export const AudioProvider = ({ children }) => {
       setSlowDownIsEnabled(false);
     }
 
+    fileLocation = visibleSongs[currentSongId].file; // TODO: Make this a function, set default fileLocation
     if (speedupIsEnabled) {
       setSpeedupIsEnabled(false);
       handleSpeedChange(1);
@@ -241,6 +242,7 @@ export const AudioProvider = ({ children }) => {
       setSpeedupIsEnabled(false);
     }
 
+    fileLocation = visibleSongs[currentSongId].file;
     if (slowDownIsEnabled) {
       setSlowDownIsEnabled(false);
       handleSpeedChange(1);
@@ -253,21 +255,68 @@ export const AudioProvider = ({ children }) => {
     // handleSpeedChange(1.2);
   };
 
+  const runEffect = (effect, value) => {
+    if (effect === 'speed') {
+      handleSpeedChange(value);
+    }
+    if (effect === 'reverb') {
+      handleReverbChange();
+    }
+  };
+
+  const [effects, setEffects] = useState({}); // TODO: make a map instead?
+  var fileLocation;
+  const addEffect = (currentEffect, value) => {
+    // Add our effects to the list
+    // Check if the effect was turned off
+    if (value === 1 || value === false) {
+      delete effects[currentEffect];
+      fileLocation = visibleSongs[currentSongId].file;
+
+      // ! Have to add all other effects back now
+      const otherEffect = Object.keys(effects);
+      if (otherEffect[0] === undefined) {
+        // play original song
+      } else {
+        // loop through all other effects
+        runEffect(otherEffect[0], effects[otherEffect[0]]);
+      }
+
+      return;
+    } else {
+      effects[currentEffect] = value;
+    }
+    setEffects(effects);
+
+    // Check if there are multiple effects
+    const hasMultipleEffects = Object.keys(effects).length > 1;
+
+    if (hasMultipleEffects) {
+      // If multiple effects, modify the temp file location
+      fileLocation = currentSong.src;
+    } else {
+      // If only one effect, modify the default file location
+      fileLocation = visibleSongs[currentSongId].file;
+    }
+
+    runEffect(currentEffect, value);
+  };
+
   /**
    * Gets the current song's audio data from the file system
    * @param {*} audioContext
    * @returns
    */
   const getCurrentAudioBuffer = async () => {
-    let filePath = currentSongId;
+    // let filePath = currentSongId;
     // let filePath = index === undefined ? currentSongIndex : index;
-    if (filePath === null) return;
-
+    // if (filePath === null) return;
     const audioContext = new (window.AudioContext ||
       window.webkitAudioContext)();
 
     // const response = await fetch(visibleSongs[filePath].file);
-    const response = await fetch(currentSong.src);
+    // const response = await fetch(currentSong.src);
+    const response = await fetch(fileLocation);
     const audioData = await response.arrayBuffer();
     const audioBuffer = await audioContext.decodeAudioData(audioData);
 
@@ -490,6 +539,7 @@ export const AudioProvider = ({ children }) => {
         playNextSong,
         handleSpeedChange,
         handleReverbChange,
+        addEffect,
         toggleSpeedup,
         toggleSlowDown,
         speedupIsEnabled,
