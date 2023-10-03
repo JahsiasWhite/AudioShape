@@ -3,8 +3,6 @@ import React, { useState, useEffect } from 'react';
 import './Knob.css';
 
 const Knob = ({ customProps, onChange }) => {
-  const [knobValue, setKnobValue] = useState(null);
-
   /**
    * This is required so we don't send back 100 inputs when the user drags the knob around. We only want to send the last one
    * @param {*} func
@@ -52,28 +50,15 @@ const Knob = ({ customProps, onChange }) => {
       /* User is currently dragging */
       const moveHandler = (e) => {
         this.currentDeg = this.getDeg(e.clientX, e.clientY, pts);
-        if (this.currentDeg === this.startAngle) this.currentDeg--;
-        // let newValue = Math.floor(
-        //   this.convertRange(
-        //     this.startAngle,
-        //     this.endAngle,
-        //     this.props.min,
-        //     this.props.max,
-        //     this.currentDeg
-        //   )
-        // );
-        this.setState({ deg: this.currentDeg });
 
-        // this.props.onChange(newValue); TODO FIX, Maybe the value isn't recorded without this?
-        // console.error('NEW VALU EI S', newValue);
-        // setKnobValue(newValue);
-        // handleChange(newValue);
+        if (this.currentDeg === this.startAngle) this.currentDeg--;
+
+        this.setState({ deg: this.currentDeg });
       };
 
       /* User has stopped dragging */
       const endHandler = () => {
         // Add a delay before triggering the change to account for a brief stop in dragging
-        // setTimeout(() => {
         const newValue = Math.floor(
           this.convertRange(
             this.startAngle,
@@ -83,8 +68,6 @@ const Knob = ({ customProps, onChange }) => {
             this.currentDeg
           )
         );
-        //   handleChange(newValue);
-        // }, 300); // Adjust the delay as needed
         handleChange(newValue);
 
         document.removeEventListener('mousemove', moveHandler);
@@ -191,18 +174,6 @@ const Knob = ({ customProps, onChange }) => {
       );
     }
   }
-  // Knob.defaultProps = {
-  //   size: 150,
-  //   min: 10,
-  //   max: 30,
-  //   numTicks: 0,
-  //   degrees: 270,
-  //   value: 0,
-  // };
-
-  // useEffect(() => {
-  //   console.error(customProps, knobValue);
-  // }, [knobValue]);
 
   return (
     <Knob

@@ -8,8 +8,8 @@ import FullscreenPlaybar from '../Playbar/FullscreenPlaybar.js';
 import { useAudioPlayer } from '../AudioContext';
 
 const FullscreenView = ({ toggleFullscreen }) => {
-  const { visibleSongs, currentSongIndex, currentSong } = useAudioPlayer(); // TODO: Do I have to import currentSong
-  const song = visibleSongs[currentSongIndex];
+  const { visibleSongs, currentSongId, currentSong } = useAudioPlayer(); // TODO: Do I have to import currentSong
+  const song = visibleSongs[currentSongId];
 
   // Need to know if the current song has a video or not
   const isMP4 = song && song.file.endsWith('.mp4');

@@ -266,8 +266,8 @@ export const AudioProvider = ({ children }) => {
     const audioContext = new (window.AudioContext ||
       window.webkitAudioContext)();
 
-    const response = await fetch(visibleSongs[filePath].file);
-    // const response = await fetch(currentSong.src);
+    // const response = await fetch(visibleSongs[filePath].file);
+    const response = await fetch(currentSong.src);
     const audioData = await response.arrayBuffer();
     const audioBuffer = await audioContext.decodeAudioData(audioData);
 

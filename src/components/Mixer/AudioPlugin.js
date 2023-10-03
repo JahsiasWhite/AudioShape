@@ -21,6 +21,8 @@ const AudioPlugin = () => {
   const [multiplier, setMultiplier] = useState(1);
 
   const [reverbKnobValue, setReverbKnobValue] = useState(50);
+  const [isReverbActive, setIsReverbActive] = useState(false);
+
   const [delayKnobValue, setDelayKnobValue] = useState(50);
 
   /* Styles for the different knobs */
@@ -53,9 +55,9 @@ const AudioPlugin = () => {
   };
 
   /**
-   * Default speedup is 0.8, default slowdown is 1.2
+   * Default speedup is 1.2, default slowdown is .8
    *
-   * Here, we will let the range be from .1 to 2. Where '2' is the slowest, and '.1' is the fastest
+   * Here, we will let the range be from .1 to 2. Where '2' is the fasted, and '.1' is the slowest
    * @param {*} newValue - The value coming from the knob
    */
   const mapValueToSpeed = (newValue) => {
@@ -78,7 +80,9 @@ const AudioPlugin = () => {
     handleSpeedChange(roundedMappedValue);
   };
 
-  const mapValueToReverb = (newValue) => {
+  const toggleReverb = (newValue) => {
+    setIsReverbActive(!isReverbActive);
+
     handleReverbChange();
   };
 
@@ -117,9 +121,16 @@ const AudioPlugin = () => {
       <div className="module-container">
         <div className="header">REVERB</div>
         <div className="speed-body">
-          <Knob customProps={reverbKnobStyles} onChange={mapValueToReverb} />
+          <Knob customProps={reverbKnobStyles} onChange={mapValueToDelay} />
           <p>LEVEL</p>
         </div>
+      </div>
+      <div className="plugin-button-container">
+        Reverb
+        <div
+          className={`synth-button ${isReverbActive ? 'button-active' : ''}`}
+          onClick={toggleReverb}
+        ></div>
       </div>
       <div className="module-container">
         <div className="header">DELAY</div>

@@ -33,7 +33,6 @@ function Artists({ songs, toggleSection }) {
       }
     });
 
-    console.error(artists);
     return artists;
   }
 
