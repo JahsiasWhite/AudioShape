@@ -13,7 +13,7 @@ function FolderSelection() {
 
   return (
     <label htmlFor="folderInput">
-      Choose Song Directory
+      <b>Choose Song Directory</b>
       <input
         id="folderInput"
         type="file"

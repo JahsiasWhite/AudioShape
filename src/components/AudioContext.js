@@ -38,6 +38,16 @@ export const AudioProvider = ({ children }) => {
   // ! Todo, should this be moved out of here? Is it in this context's scope?
   const [currentScreen, setCurrentScreen] = useState('All Songs');
 
+  /*
+
+██████   █████  ███████ ██  ██████      ██████  ██████  ███    ██ ████████ ██████   ██████  ██      
+██   ██ ██   ██ ██      ██ ██          ██      ██    ██ ████   ██    ██    ██   ██ ██    ██ ██      
+██████  ███████ ███████ ██ ██          ██      ██    ██ ██ ██  ██    ██    ██████  ██    ██ ██      
+██   ██ ██   ██      ██ ██ ██          ██      ██    ██ ██  ██ ██    ██    ██   ██ ██    ██ ██      
+██████  ██   ██ ███████ ██  ██████      ██████  ██████  ██   ████    ██    ██   ██  ██████  ███████ 
+
+  */
+
   const playAudio = () => {
     currentSong.play();
     setIsPlaying(true);
@@ -132,6 +142,9 @@ export const AudioProvider = ({ children }) => {
     // ? Can we do something here so if this is null, we never would even end up here
     if (currentSongId === null) return;
 
+    /* Update the new file location */
+    fileLocation = visibleSongs[currentSongId].file;
+
     /* If speed up is enabled, edit the song first and then play */
     if (speedupIsEnabled) {
       handleSpeedChange(DEFAULT_SPEEDUP);
@@ -205,6 +218,16 @@ export const AudioProvider = ({ children }) => {
     setCurrentSongIndex(index);
   };
 
+  /*
+
+███████ ███████ ███████ ███████  ██████ ████████ ███████ 
+██      ██      ██      ██      ██         ██    ██      
+█████   █████   █████   █████   ██         ██    ███████ 
+██      ██      ██      ██      ██         ██         ██ 
+███████ ██      ██      ███████  ██████    ██    ███████   
+
+  */
+
   /**
    * Toggles whether the current and all future songs will be sped up
    */
@@ -220,6 +243,7 @@ export const AudioProvider = ({ children }) => {
     }
 
     fileLocation = visibleSongs[currentSongId].file; // TODO: Make this a function, set default fileLocation
+
     if (speedupIsEnabled) {
       setSpeedupIsEnabled(false);
       handleSpeedChange(1);
@@ -243,6 +267,7 @@ export const AudioProvider = ({ children }) => {
     }
 
     fileLocation = visibleSongs[currentSongId].file;
+
     if (slowDownIsEnabled) {
       setSlowDownIsEnabled(false);
       handleSpeedChange(1);
@@ -255,6 +280,11 @@ export const AudioProvider = ({ children }) => {
     // handleSpeedChange(1.2);
   };
 
+  /**
+   * Applies the given effect to the current song
+   * @param {*} effect
+   * @param {*} value
+   */
   const runEffect = (effect, value) => {
     if (effect === 'speed') {
       handleSpeedChange(value);
@@ -262,19 +292,30 @@ export const AudioProvider = ({ children }) => {
     if (effect === 'reverb') {
       handleReverbChange();
     }
+    if (effect === 'reverbWetness') {
+      handleReverbChange(value);
+    }
+    if (effect === 'delay') {
+      handleDelayChange(value);
+    }
+    if (effect === 'bitCrusher') {
+      handleBitcrusherChange(value);
+    }
   };
 
-  const [effects, setEffects] = useState({}); // TODO: make a map instead?
+  const [effects, setEffects] = useState({});
   var fileLocation;
   const addEffect = (currentEffect, value) => {
     // Add our effects to the list
     // Check if the effect was turned off
+    // TODO: Get the actual defaults, kinda fcking up with reverb wetness rn
     if (value === 1 || value === false) {
       delete effects[currentEffect];
       fileLocation = visibleSongs[currentSongId].file;
 
-      // ! Have to add all other effects back now
+      // TODO ! Have to add all other effects back now
       const otherEffect = Object.keys(effects);
+      console.error(otherEffect);
       if (otherEffect[0] === undefined) {
         // play original song
       } else {
@@ -323,6 +364,11 @@ export const AudioProvider = ({ children }) => {
     return audioBuffer;
   };
 
+  /**
+   * Changes the current song's speed and saves the new, edited song so it can be played
+   * @param {*} newSpeed
+   * @param {*} index
+   */
   const handleSpeedChange = async (newSpeed, index) => {
     // Load the current song's audio buffer
     const audioBuffer = await getCurrentAudioBuffer();
@@ -346,22 +392,96 @@ export const AudioProvider = ({ children }) => {
     }, duration);
   }
 
-  const handleReverbChange = async () => {
+  const handleReverbChange = async (wetValue) => {
     // Load the current song's audio buffer
     const audioBuffer = await getCurrentAudioBuffer();
 
-    const renderedBuffer = await renderAudioWithReverb(audioBuffer);
+    const renderedBuffer = await renderAudioWithReverb(audioBuffer, wetValue);
+
     downloadAudio(renderedBuffer);
   };
-  function applyReverb(audioBuffer) {
+  function applyReverb(audioBuffer, wetValue) {
     const reverb = new Tone.Reverb().toDestination();
     const player = new Tone.Player(audioBuffer).connect(reverb);
+
+    // Default is one, only have to change it if the user changes it though
+    // Scale of 0-1
+    if (wetValue) {
+      reverb.wet.value = wetValue;
+    }
+
     return player;
   }
-  async function renderAudioWithReverb(audioBuffer) {
+  async function renderAudioWithReverb(audioBuffer, wetValue) {
     const duration = audioBuffer.duration;
     return await Tone.Offline(async ({ transport }) => {
-      const source = applyReverb(audioBuffer);
+      const source = applyReverb(audioBuffer, wetValue);
+      source.start();
+    }, duration);
+  }
+
+  const handleDelayChange = async (delayValue) => {
+    // Load the current song's audio buffer
+    const audioBuffer = await getCurrentAudioBuffer();
+
+    // Add the effect
+    const renderedBuffer = await renderAudioWithDelay(audioBuffer, delayValue);
+
+    // Save the new song
+    downloadAudio(renderedBuffer);
+  };
+
+  function applyDelay(audioBuffer, delayTime, feedback) {
+    const delay = new Tone.FeedbackDelay({
+      delayTime: 1, // Adjust this value to set the delay time (in seconds)
+      feedback: 0.5, // Adjust this value to set the feedback amount (0 to 1). Determines how much is fedback, 1 indicates full feedback (infinitely recycled) and 0 meens no feedback (only original audio is heard)
+    }).toDestination();
+
+    const player = new Tone.Player(audioBuffer).connect(delay);
+
+    return player;
+  }
+
+  // TODO: Can this be more generic?
+  async function renderAudioWithDelay(audioBuffer, delayValue) {
+    const duration = audioBuffer.duration;
+    return await Tone.Offline(async ({ transport }) => {
+      const source = applyDelay(audioBuffer, delayValue);
+      source.start();
+    }, duration);
+  }
+
+  const handleBitcrusherChange = async (bitCrusherValue) => {
+    // Load the current song's audio buffer
+    const audioBuffer = await getCurrentAudioBuffer();
+
+    // Add the effect
+    const renderedBuffer = await renderAudioWithBitCrusher(
+      audioBuffer,
+      bitCrusherValue
+    );
+
+    console.error('WITH BITCRUSHER ', renderedBuffer);
+    // Save the new song
+    downloadAudio(renderedBuffer);
+  };
+
+  function applyBitCrusher(audioBuffer, bits, frequency) {
+    const bitCrusher = new Tone.BitCrusher({
+      bits: 2, // Number of bits to reduce the audio to (e.g., 4 bits for a lo-fi effect) ! 16 is CD quality
+      // frequency: 1000, // Sample rate reduction frequency (controls the downsampling effect) ! I THINK 44,100 is the typical frequency
+    }).toDestination();
+
+    const player = new Tone.Player(audioBuffer).connect(bitCrusher);
+
+    return player;
+  }
+
+  // TODO: Can this be more generic?
+  async function renderAudioWithBitCrusher(audioBuffer, bitCrusherValue) {
+    const duration = audioBuffer.duration;
+    return await Tone.Offline(async ({ transport }) => {
+      const source = applyBitCrusher(audioBuffer, bitCrusherValue);
       source.start();
     }, duration);
   }
@@ -377,6 +497,16 @@ export const AudioProvider = ({ children }) => {
     window.electron.ipcRenderer.sendMessage('SAVE_TEMP_SONG', wavBytes);
     getTempSong();
   }
+
+  /*
+
+███████  █████  ██    ██ ██ ███    ██  ██████  
+██      ██   ██ ██    ██ ██ ████   ██ ██       
+███████ ███████ ██    ██ ██ ██ ██  ██ ██   ███ 
+     ██ ██   ██  ██  ██  ██ ██  ██ ██ ██    ██ 
+███████ ██   ██   ████   ██ ██   ████  ██████  
+
+  */
 
   /**
    * Gets the updated temporary song
@@ -537,8 +667,6 @@ export const AudioProvider = ({ children }) => {
         toggleMute,
         playPreviousSong,
         playNextSong,
-        handleSpeedChange,
-        handleReverbChange,
         addEffect,
         toggleSpeedup,
         toggleSlowDown,

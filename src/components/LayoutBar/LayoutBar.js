@@ -15,7 +15,7 @@ function LayoutBar({ toggleSection }) {
   const { setVisibleSongs, loadedSongs, setCurrentScreen } = useAudioPlayer();
 
   /* Keeps track of which 'tab' we are currently viewing */
-  const [currentSection, setCurrentSection] = useState('');
+  const [currentSection, setCurrentSection] = useState('allSongs');
 
   /* We have to do this here which is kinda annoying but I dont know how to call the context in App.js */
   const modifiedToggleSection = (section) => {

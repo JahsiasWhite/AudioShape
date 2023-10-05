@@ -10,21 +10,20 @@ import { useAudioPlayer } from '../AudioContext';
 // DREADBOX INSPIRED
 
 const AudioPlugin = () => {
-  const {
-    handleSpeedChange,
-    handleReverbChange,
-    addEffect,
-    resetCurrentSong,
-    setIsLooping,
-  } = useAudioPlayer();
+  const { addEffect, resetCurrentSong, setIsLooping } = useAudioPlayer();
 
   const [speedKnobValue, setSpeedKnobValue] = useState(50);
   const [multiplier, setMultiplier] = useState(1);
 
-  const [reverbKnobValue, setReverbKnobValue] = useState(50);
+  const [reverbKnobValue, setReverbKnobValue] = useState(100);
+  // const [wetValue, setWetValue] = useState(1);
   const [isReverbActive, setIsReverbActive] = useState(false);
 
-  const [delayKnobValue, setDelayKnobValue] = useState(50);
+  const [delayKnobValue, setDelayKnobValue] = useState(0);
+  const [delayValue, setDelayValue] = useState(0);
+
+  const [bitCrusherKnobValue, setBitCrusherKnobValue] = useState(0);
+  const [bitCrusherValue, setBitCrusherValue] = useState(0);
 
   /* Styles for the different knobs */
   const speedKnobStyles = {
@@ -54,6 +53,28 @@ const AudioPlugin = () => {
     value: delayKnobValue,
     color: true,
   };
+  const bitCrusherKnobStyles = {
+    size: 75,
+    numTicks: 25,
+    degrees: 260,
+    min: 1,
+    max: 100,
+    value: bitCrusherKnobValue,
+    color: true,
+  };
+
+  const interpolateValue = (range, value, knobValues) => {
+    // Use linear interpolation to map the newValue to the desired range
+    const mappedValue =
+      ((value - knobValues.min) / (knobValues.max - knobValues.min)) *
+        (range[1] - range[0]) +
+      range[0];
+
+    // Round to two decimal places
+    const roundedMappedValue = parseFloat(mappedValue.toFixed(2));
+
+    return roundedMappedValue;
+  };
 
   /**
    * Default speedup is 1.2, default slowdown is .8
@@ -63,33 +84,53 @@ const AudioPlugin = () => {
    */
   const mapValueToSpeed = (newValue) => {
     // Our desired range
-    const slowdownRange = [0.1, 2];
+    const speedRange = [0.1, 2];
 
-    // Use linear interpolation to map the newValue to the desired range
-    const mappedValue =
-      ((newValue - speedKnobStyles.min) /
-        (speedKnobStyles.max - speedKnobStyles.min)) *
-        (slowdownRange[1] - slowdownRange[0]) +
-      slowdownRange[0];
-
-    // Round mappedValue to one decimal place
-    const roundedMappedValue = parseFloat(mappedValue.toFixed(1));
+    // Get the correct value from the knob
+    const mappedValue = interpolateValue(speedRange, newValue, speedKnobStyles);
 
     setSpeedKnobValue(newValue);
-    setMultiplier(roundedMappedValue);
+    setMultiplier(mappedValue);
 
-    // handleSpeedChange(roundedMappedValue);
-    addEffect('speed', roundedMappedValue);
+    addEffect('speed', mappedValue);
   };
 
-  const toggleReverb = (newValue) => {
+  const toggleReverb = () => {
     setIsReverbActive(!isReverbActive);
 
     // handleReverbChange();
     addEffect('reverb', !isReverbActive);
   };
 
-  const mapValueToDelay = (newValue) => {};
+  const mapValueToReverbWetness = (newValue) => {
+    // Our desired range
+    const reverbRange = [0, 1];
+
+    const mappedValue = interpolateValue(
+      reverbRange,
+      newValue,
+      reverbKnobStyles
+    );
+
+    setReverbKnobValue(newValue);
+    // setWetValue(mappedValue);
+
+    addEffect('reverbWetness', mappedValue);
+  };
+
+  const mapValueToDelay = (newValue) => {
+    setDelayKnobValue(newValue);
+    setDelayValue(newValue);
+
+    addEffect('delay', newValue);
+  };
+
+  const mapValueToBitCrusher = (newValue) => {
+    setBitCrusherKnobValue(newValue);
+    setBitCrusherValue(newValue);
+
+    addEffect('bitCrusher', newValue);
+  };
 
   const saveSettings = () => {
     console.error(multiplier, reverbKnobValue, delayKnobValue);
@@ -110,67 +151,83 @@ const AudioPlugin = () => {
 
   return (
     <div className="audio-plugin">
-      <div className="module-container">
-        <div className="header">SPEED</div>
-        <div className="speed-body">
-          <Knob customProps={speedKnobStyles} onChange={mapValueToSpeed} />
-          {/* <div className="knob-details">
-            <div>x.5</div>
-            <div>x10</div>
-          </div> */}
-          <p>MULTIPLIER: {multiplier}</p>
+      <div className="plugin-settings-container">
+        <div className="plugin-button-container">
+          Save
+          <div
+            className="synth-button"
+            onClick={() => {
+              saveSettings();
+            }}
+          ></div>
+        </div>
+        <div className="plugin-button-container">
+          Reset
+          <div
+            className="synth-button"
+            onClick={() => {
+              resetSong();
+            }}
+          ></div>
+        </div>
+        <div className="plugin-button-container">
+          Export
+          <div
+            className="synth-button"
+            onClick={() => {
+              handleSongExport();
+            }}
+          ></div>
         </div>
       </div>
-      <div className="module-container">
-        <div className="header">REVERB</div>
-        <div className="speed-body">
-          <Knob customProps={reverbKnobStyles} onChange={mapValueToDelay} />
-          <p>LEVEL</p>
+
+      <div className="modifiers-container">
+        <div className="module-container">
+          <div className="header">SPEED</div>
+          <div className="speed-body">
+            <Knob customProps={speedKnobStyles} onChange={mapValueToSpeed} />
+            <p>MULTIPLIER: {multiplier}x</p>
+          </div>
         </div>
-      </div>
-      <div className="plugin-button-container">
-        Reverb
-        <div
-          className={`synth-button ${isReverbActive ? 'button-active' : ''}`}
-          onClick={toggleReverb}
-        ></div>
-      </div>
-      <div className="module-container">
-        <div className="header">DELAY</div>
-        <div className="speed-body">
-          <Knob customProps={delayKnobStyles} onChange={mapValueToDelay} />
-          <p>TIME</p>
+        <div className="module-container">
+          <div className="header">
+            <div className="plugin-button-container header-button">
+              <div
+                className={`synth-button  ${
+                  isReverbActive ? 'button-active' : ''
+                }`}
+                onClick={toggleReverb}
+              ></div>
+            </div>
+            <div>REVERB</div>
+          </div>
+          <div
+            className={`speed-body ${isReverbActive ? '' : 'inactive-module'}`}
+          >
+            <Knob
+              customProps={reverbKnobStyles}
+              onChange={mapValueToReverbWetness}
+            />
+            <p>WET: {reverbKnobValue}%</p>
+          </div>
         </div>
-      </div>
-      {/* <div className="module-container">
-        <Knob customProps={testKnobStyles} />
-      </div> */}
-      <div className="plugin-button-container">
-        Save
-        <div
-          className="synth-button"
-          onClick={() => {
-            saveSettings();
-          }}
-        ></div>
-      </div>
-      <div className="plugin-button-container">
-        Reset
-        <div
-          className="synth-button"
-          onClick={() => {
-            resetSong();
-          }}
-        ></div>
-      </div>
-      <div className="plugin-button-container">
-        Export
-        <div
-          className="synth-button"
-          onClick={() => {
-            handleSongExport();
-          }}
-        ></div>
+        <div className="module-container">
+          <div className="header">DELAY</div>
+          <div className="speed-body">
+            <Knob customProps={delayKnobStyles} onChange={mapValueToDelay} />
+            <p>DELAY: {delayValue}s</p>
+          </div>
+        </div>
+        <div className="module-container">
+          <div className="header">BIT CRUSHER</div>
+          <div className="speed-body">
+            <Knob
+              customProps={bitCrusherKnobStyles}
+              onChange={mapValueToBitCrusher}
+            />
+            <p>CRUSH: {bitCrusherValue}</p>
+          </div>
+        </div>
       </div>
     </div>
   );
