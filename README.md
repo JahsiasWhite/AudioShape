@@ -71,3 +71,25 @@ const chorus = new Tone.Chorus(4, 2.5, 0.5).toDestination();
 
 Bitcrusher (Tone.BitCrusher): Bitcrushing is a lo-fi effect that reduces the bit depth of an audio signal.
 const bitcrusher = new Tone.BitCrusher(4).toDestination();
+
+// COMBOS ?????
+
+Reverb + Delay: Combine reverb and delay effects to create lush, atmospheric soundscapes. Reverb adds space and depth to your audio, while delay introduces echoes and repeats.
+
+Distortion + Filter: Apply distortion to your audio source to add grit and harmonic richness, and then use a filter to shape the tone by emphasizing or attenuating specific frequency ranges.
+
+Phaser + Flanger: Phaser and flanger effects modulate the phase of the audio signal to create sweeping, swirling, and jet-like sounds. These effects are great for adding motion and character to your audio.
+
+Chorus + Tremolo: Chorus adds depth and thickness to your sound by creating multiple slightly detuned copies of the original audio. Pair it with tremolo for rhythmic volume modulation, adding a pulsating or "wobbly" quality to your audio.
+
+Bit Crusher + Sample Rate Reducer: Create lo-fi and retro effects by reducing the bit depth and sample rate of your audio. These effects can make your audio sound like it's coming from old video games or vintage equipment.
+
+Pitch Shift + Time Stretch: Pitch shift allows you to change the pitch of your audio, while time stretch alters the playback speed while maintaining pitch. Combining these effects can create surreal and otherworldly sounds.
+
+Compressor + Limiter: Use a compressor to control dynamic range and even out the volume of your audio, and then add a limiter to prevent clipping and ensure a consistent output level.
+
+Auto-Pan + Auto-Wah: Auto-pan automatically pans the audio between the left and right channels, creating a stereo motion effect. Auto-wah adds dynamic filtering based on the audio's amplitude, creating expressive "wah-wah" effects.
+
+Ring Modulator + Frequency Shifter: These effects can introduce dissonance and unusual harmonic content to your audio. They are often used for experimental and avant-garde sound design.
+
+Granular Synthesis + Modulation: Explore granular synthesis to break audio into tiny grains and manipulate them in various ways. Combine it with modulation effects like LFOs to create evolving and evolving textures.

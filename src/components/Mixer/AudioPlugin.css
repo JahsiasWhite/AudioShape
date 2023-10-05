@@ -47,7 +47,7 @@
 }
 
 p {
-  margin-top: 50px;
+  margin-top: 15%;
 }
 
 .knob-details {
@@ -129,6 +129,7 @@ p {
   flex: 1;
   height: 120%;
   flex-wrap: wrap;
+  row-gap: 40px;
 }
 
 .inactive-module {

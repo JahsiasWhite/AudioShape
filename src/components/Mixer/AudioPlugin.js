@@ -9,6 +9,15 @@ import { useAudioPlayer } from '../AudioContext';
 
 // DREADBOX INSPIRED
 
+// DEFAULT VALUES
+const initialKnobValues = {
+  speedKnobValue: 50,
+  reverbKnobValue: 100,
+  delayKnobValue: 0,
+  bitCrusherKnobValue: 16,
+  pitchShiftKnobValue: 0,
+};
+
 const AudioPlugin = () => {
   const { addEffect, resetCurrentSong, setIsLooping } = useAudioPlayer();
 
@@ -17,13 +26,16 @@ const AudioPlugin = () => {
 
   const [reverbKnobValue, setReverbKnobValue] = useState(100);
   // const [wetValue, setWetValue] = useState(1);
-  const [isReverbActive, setIsReverbActive] = useState(false);
+  const [reverbIsActive, setreverbIsActive] = useState(false);
 
   const [delayKnobValue, setDelayKnobValue] = useState(0);
   const [delayValue, setDelayValue] = useState(0);
 
-  const [bitCrusherKnobValue, setBitCrusherKnobValue] = useState(0);
+  const [bitCrusherKnobValue, setBitCrusherKnobValue] = useState(16);
   const [bitCrusherValue, setBitCrusherValue] = useState(0);
+
+  const [pitchShiftKnobValue, setPitchShiftKnobValue] = useState(0);
+  const [pitchShiftValue, setPitchShiftValue] = useState(0);
 
   /* Styles for the different knobs */
   const speedKnobStyles = {
@@ -55,11 +67,20 @@ const AudioPlugin = () => {
   };
   const bitCrusherKnobStyles = {
     size: 75,
-    numTicks: 25,
+    numTicks: 16,
     degrees: 260,
     min: 1,
-    max: 100,
+    max: 16,
     value: bitCrusherKnobValue,
+    color: true,
+  };
+  const pitchShiftKnobStyles = {
+    size: 75,
+    numTicks: 25,
+    degrees: 260,
+    min: -23,
+    max: 24,
+    value: pitchShiftKnobValue,
     color: true,
   };
 
@@ -96,10 +117,10 @@ const AudioPlugin = () => {
   };
 
   const toggleReverb = () => {
-    setIsReverbActive(!isReverbActive);
+    setreverbIsActive(!reverbIsActive);
 
     // handleReverbChange();
-    addEffect('reverb', !isReverbActive);
+    addEffect('reverb', !reverbIsActive);
   };
 
   const mapValueToReverbWetness = (newValue) => {
@@ -119,24 +140,72 @@ const AudioPlugin = () => {
   };
 
   const mapValueToDelay = (newValue) => {
-    setDelayKnobValue(newValue);
-    setDelayValue(newValue);
+    // Our desired range
+    const delayRange = [0, 5];
 
-    addEffect('delay', newValue);
+    const mappedValue = interpolateValue(delayRange, newValue, delayKnobStyles);
+
+    setDelayKnobValue(newValue);
+    setDelayValue(mappedValue);
+
+    addEffect('delay', mappedValue);
   };
 
   const mapValueToBitCrusher = (newValue) => {
+    // IDK why I need this
+    if (newValue === 0) {
+      newValue = 1;
+    }
+
     setBitCrusherKnobValue(newValue);
-    setBitCrusherValue(newValue);
+    // setBitCrusherValue(newValue);
 
     addEffect('bitCrusher', newValue);
   };
 
+  const mapValueToPitchShift = (newValue) => {
+    setPitchShiftKnobValue(newValue);
+    // setPitchShiftValue(mappedValue);
+
+    addEffect('pitchShift', newValue);
+  };
+
   const saveSettings = () => {
-    console.error(multiplier, reverbKnobValue, delayKnobValue);
+    let modifiers = {};
+
+    if (bitCrusherKnobValue !== initialKnobValues.bitCrusherKnobValue) {
+      modifiers.bitValue = bitCrusherKnobValue;
+    }
+    if (delayValue !== initialKnobValues.delayKnobValue) {
+      modifiers.delay = delayValue;
+    }
+    if (pitchShiftKnobValue !== initialKnobValues.pitchShiftKnobValue) {
+      modifiers.pitchShift = pitchShiftKnobValue;
+    }
+    if (reverbIsActive) {
+      modifiers.reverbActive = reverbIsActive;
+    }
+    if (reverbKnobValue !== initialKnobValues.reverbKnobValue) {
+      modifiers.reverbWetness = reverbKnobValue;
+    }
+    if (multiplier !== 1) {
+      modifiers.multiplier = multiplier;
+    }
+
+    // ! DO I NEED ALL OF THIS ACTUALLY? CAN I JUST USE EFFECTS IN AUDIO CONTEXT?
+    console.error(modifiers);
   };
 
   const resetSong = () => {
+    // Reset knob values to their initial values
+    setSpeedKnobValue(initialKnobValues.speedKnobValue);
+    setMultiplier(1);
+    setReverbKnobValue(initialKnobValues.reverbKnobValue);
+    setDelayKnobValue(initialKnobValues.delayKnobValue);
+    setDelayValue(0);
+    setBitCrusherKnobValue(initialKnobValues.bitCrusherKnobValue);
+    setPitchShiftKnobValue(initialKnobValues.pitchShiftKnobValue);
+
     resetCurrentSong();
   };
 
@@ -152,6 +221,15 @@ const AudioPlugin = () => {
   return (
     <div className="audio-plugin">
       <div className="plugin-settings-container">
+        <div className="plugin-button-container">
+          Export
+          <div
+            className="synth-button"
+            onClick={() => {
+              handleSongExport();
+            }}
+          ></div>
+        </div>
         <div className="plugin-button-container">
           Save
           <div
@@ -170,15 +248,6 @@ const AudioPlugin = () => {
             }}
           ></div>
         </div>
-        <div className="plugin-button-container">
-          Export
-          <div
-            className="synth-button"
-            onClick={() => {
-              handleSongExport();
-            }}
-          ></div>
-        </div>
       </div>
 
       <div className="modifiers-container">
@@ -194,7 +263,7 @@ const AudioPlugin = () => {
             <div className="plugin-button-container header-button">
               <div
                 className={`synth-button  ${
-                  isReverbActive ? 'button-active' : ''
+                  reverbIsActive ? 'button-active' : ''
                 }`}
                 onClick={toggleReverb}
               ></div>
@@ -202,7 +271,7 @@ const AudioPlugin = () => {
             <div>REVERB</div>
           </div>
           <div
-            className={`speed-body ${isReverbActive ? '' : 'inactive-module'}`}
+            className={`speed-body ${reverbIsActive ? '' : 'inactive-module'}`}
           >
             <Knob
               customProps={reverbKnobStyles}
@@ -225,7 +294,17 @@ const AudioPlugin = () => {
               customProps={bitCrusherKnobStyles}
               onChange={mapValueToBitCrusher}
             />
-            <p>CRUSH: {bitCrusherValue}</p>
+            <p>CRUSH: {bitCrusherKnobValue} bit</p>
+          </div>
+        </div>
+        <div className="module-container">
+          <div className="header">PITCH SHIFT</div>
+          <div className="speed-body">
+            <Knob
+              customProps={pitchShiftKnobStyles}
+              onChange={mapValueToPitchShift}
+            />
+            <p>SHIFT: {pitchShiftKnobValue}</p>
           </div>
         </div>
       </div>

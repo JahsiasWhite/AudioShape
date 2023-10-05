@@ -183,6 +183,7 @@ export const AudioProvider = ({ children }) => {
    */
   const resetCurrentSong = () => {
     // Reset the effects here as well
+    currentSong.src = visibleSongs[currentSongId].file;
 
     restartCurrentSong();
   };
@@ -285,22 +286,44 @@ export const AudioProvider = ({ children }) => {
    * @param {*} effect
    * @param {*} value
    */
-  const runEffect = (effect, value) => {
+  const runEffect = async (effect, value) => {
+    // TODO: Does this one really have to be different
     if (effect === 'speed') {
       handleSpeedChange(value);
+      return;
     }
-    if (effect === 'reverb') {
-      handleReverbChange();
+
+    // Find the current function for the corresponding effect
+    let effectFunction;
+    switch (effect) {
+      case 'reverb':
+      case 'reverbWetness':
+        effectFunction = applyReverb;
+        break;
+      case 'delay':
+        effectFunction = applyDelay;
+        break;
+      case 'bitCrusher':
+        effectFunction = applyBitCrusher;
+        break;
+      case 'pitchShift':
+        effectFunction = applyPitchShift;
+        break;
+      default:
+        console.error(`Unknown effect: ${effect}`);
+        return;
     }
-    if (effect === 'reverbWetness') {
-      handleReverbChange(value);
-    }
-    if (effect === 'delay') {
-      handleDelayChange(value);
-    }
-    if (effect === 'bitCrusher') {
-      handleBitcrusherChange(value);
-    }
+
+    // Get our new audio data
+    const audioBuffer = await getCurrentAudioBuffer();
+    const renderedBuffer = await renderAudioWithEffect(
+      audioBuffer,
+      effectFunction,
+      value
+    );
+
+    // Save the new song
+    downloadAudio(renderedBuffer);
   };
 
   const [effects, setEffects] = useState({});
@@ -366,6 +389,7 @@ export const AudioProvider = ({ children }) => {
 
   /**
    * Changes the current song's speed and saves the new, edited song so it can be played
+   * Speed has to be rendered differently than the other effects because 'duration' must be changed
    * @param {*} newSpeed
    * @param {*} index
    */
@@ -377,6 +401,7 @@ export const AudioProvider = ({ children }) => {
       audioBuffer,
       newSpeed
     );
+
     downloadAudio(renderedBuffer);
   };
   function applySpeedChange(audioBuffer, speedChange) {
@@ -392,48 +417,46 @@ export const AudioProvider = ({ children }) => {
     }, duration);
   }
 
-  const handleReverbChange = async (wetValue) => {
-    // Load the current song's audio buffer
-    const audioBuffer = await getCurrentAudioBuffer();
-
-    const renderedBuffer = await renderAudioWithReverb(audioBuffer, wetValue);
-
-    downloadAudio(renderedBuffer);
-  };
-  function applyReverb(audioBuffer, wetValue) {
-    const reverb = new Tone.Reverb().toDestination();
-    const player = new Tone.Player(audioBuffer).connect(reverb);
-
-    // Default is one, only have to change it if the user changes it though
-    // Scale of 0-1
-    if (wetValue) {
-      reverb.wet.value = wetValue;
-    }
-
-    return player;
-  }
-  async function renderAudioWithReverb(audioBuffer, wetValue) {
+  async function renderAudioWithEffect(
+    audioBuffer,
+    effectFunction,
+    effectParams
+  ) {
     const duration = audioBuffer.duration;
     return await Tone.Offline(async ({ transport }) => {
-      const source = applyReverb(audioBuffer, wetValue);
+      const source = effectFunction(audioBuffer, effectParams);
       source.start();
     }, duration);
   }
 
-  const handleDelayChange = async (delayValue) => {
-    // Load the current song's audio buffer
-    const audioBuffer = await getCurrentAudioBuffer();
+  function applyReverb(audioBuffer, wetValue) {
+    // const reverb = new Tone.Reverb().toDestination();
+    // const player = new Tone.Player(audioBuffer).connect(reverb);
 
-    // Add the effect
-    const renderedBuffer = await renderAudioWithDelay(audioBuffer, delayValue);
+    // // Default is one, only have to change it if the user changes it though
+    // // Scale of 0-1
+    // if (wetValue) {
+    //   reverb.wet.value = wetValue;
+    // }
 
-    // Save the new song
-    downloadAudio(renderedBuffer);
-  };
+    const reverbTest = new Tone.Freeverb(0.8, 8000).toDestination();
+    // console.error(
+    //   reverbTest.wet.value, // 0-1, determines how much the original signal is mixed with the reverb signal. 1 === 100%, 0 === 0% meaning it will be the original audio
+    //   reverbTest.roomSize.value, // 0-1, how expansive the reverb sounds. 1 === large room/long decay time.
+    //   reverbTest.dampening // 1000-10000, controls how quickly high-frequency content decays over time. The lower the value, the 'brighter' and more reflective it sounds. High values make the reverb sound darker and less reflective
+    // );
+
+    reverbTest.wet.value = 0.7;
+    reverbTest.roomSize.value = 0.8;
+    reverbTest.dampening = 8000;
+    const player = new Tone.Player(audioBuffer).connect(reverbTest);
+
+    return player;
+  }
 
   function applyDelay(audioBuffer, delayTime, feedback) {
     const delay = new Tone.FeedbackDelay({
-      delayTime: 1, // Adjust this value to set the delay time (in seconds)
+      delayTime: delayTime, // Adjust this value to set the delay time (in seconds)
       feedback: 0.5, // Adjust this value to set the feedback amount (0 to 1). Determines how much is fedback, 1 indicates full feedback (infinitely recycled) and 0 meens no feedback (only original audio is heard)
     }).toDestination();
 
@@ -442,33 +465,9 @@ export const AudioProvider = ({ children }) => {
     return player;
   }
 
-  // TODO: Can this be more generic?
-  async function renderAudioWithDelay(audioBuffer, delayValue) {
-    const duration = audioBuffer.duration;
-    return await Tone.Offline(async ({ transport }) => {
-      const source = applyDelay(audioBuffer, delayValue);
-      source.start();
-    }, duration);
-  }
-
-  const handleBitcrusherChange = async (bitCrusherValue) => {
-    // Load the current song's audio buffer
-    const audioBuffer = await getCurrentAudioBuffer();
-
-    // Add the effect
-    const renderedBuffer = await renderAudioWithBitCrusher(
-      audioBuffer,
-      bitCrusherValue
-    );
-
-    console.error('WITH BITCRUSHER ', renderedBuffer);
-    // Save the new song
-    downloadAudio(renderedBuffer);
-  };
-
   function applyBitCrusher(audioBuffer, bits, frequency) {
     const bitCrusher = new Tone.BitCrusher({
-      bits: 2, // Number of bits to reduce the audio to (e.g., 4 bits for a lo-fi effect) ! 16 is CD quality
+      bits: bits, // Number of bits to reduce the audio to (e.g., 4 bits for a lo-fi effect) ! 16 is CD quality
       // frequency: 1000, // Sample rate reduction frequency (controls the downsampling effect) ! I THINK 44,100 is the typical frequency
     }).toDestination();
 
@@ -477,13 +476,13 @@ export const AudioProvider = ({ children }) => {
     return player;
   }
 
-  // TODO: Can this be more generic?
-  async function renderAudioWithBitCrusher(audioBuffer, bitCrusherValue) {
-    const duration = audioBuffer.duration;
-    return await Tone.Offline(async ({ transport }) => {
-      const source = applyBitCrusher(audioBuffer, bitCrusherValue);
-      source.start();
-    }, duration);
+  function applyPitchShift(audioBuffer, pitch) {
+    const pitchShift = new Tone.PitchShift().toDestination();
+    pitchShift.pitch = pitch; // +12 === one octave up
+
+    const player = new Tone.Player(audioBuffer).connect(pitchShift);
+
+    return player;
   }
 
   async function downloadAudio(audioBuffer) {
