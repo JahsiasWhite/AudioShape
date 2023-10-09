@@ -41,6 +41,7 @@ function App() {
       // setVisibleSongs(loadedSongs);
       section = 'songs';
     }
+    console.error('SETTING TO ', section);
     setCurrentSection(section);
   };
 
@@ -86,7 +87,6 @@ function App() {
                 <SongList
                   handleSongLoad={loadedSongs}
                   handleSongEdit={handleSongSelect}
-
                   // songs={visibleSongs}
                 />
               ) : currentSection === 'playlists' ? (

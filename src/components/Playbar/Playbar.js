@@ -7,6 +7,7 @@ import NextButton from './NextButton/NextButton';
 import VolumeControl from './VolumeControl/VolumeControl'; // ! I don't know if I like this name
 import PlaybackTimer from './PlaybackTimer/PlaybackTimer';
 import Queue from './Queue/Queue';
+import SavedEffects from './SavedEffects/SavedEffects';
 
 import SlowDownButtonSVG from './SlowDownButtonSVG';
 import SpeedupButtonSVG from './SpeedupButtonSVG';
@@ -50,6 +51,7 @@ function Playbar({ toggleFullscreen }) {
         </div>
       </div>
       <div className="playbar-controls">
+        <SavedEffects />
         <div className="buttons-container">
           <SlowDownButtonSVG
             slowDownIsEnabled={slowDownIsEnabled}

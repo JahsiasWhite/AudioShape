@@ -37,6 +37,7 @@ TODO:
 16. Resturcture styles, does creating all of these extra folders take up a lot of storage??
 17. Add gif support for fullscreen mode
 18. Start creating the new song before the current ends on auto play so the user doesnt have to wait for it to render
+19. Add tailwindCSS, it should reduce a lot of the duplicate CSS
 
 999 Easy file/song sharing
 

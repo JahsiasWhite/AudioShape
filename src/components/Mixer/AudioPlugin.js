@@ -19,7 +19,8 @@ const initialKnobValues = {
 };
 
 const AudioPlugin = () => {
-  const { addEffect, resetCurrentSong, setIsLooping } = useAudioPlayer();
+  const { addEffect, resetCurrentSong, setIsLooping, saveEffects } =
+    useAudioPlayer();
 
   const [speedKnobValue, setSpeedKnobValue] = useState(50);
   const [multiplier, setMultiplier] = useState(1);
@@ -171,29 +172,7 @@ const AudioPlugin = () => {
   };
 
   const saveSettings = () => {
-    let modifiers = {};
-
-    if (bitCrusherKnobValue !== initialKnobValues.bitCrusherKnobValue) {
-      modifiers.bitValue = bitCrusherKnobValue;
-    }
-    if (delayValue !== initialKnobValues.delayKnobValue) {
-      modifiers.delay = delayValue;
-    }
-    if (pitchShiftKnobValue !== initialKnobValues.pitchShiftKnobValue) {
-      modifiers.pitchShift = pitchShiftKnobValue;
-    }
-    if (reverbIsActive) {
-      modifiers.reverbActive = reverbIsActive;
-    }
-    if (reverbKnobValue !== initialKnobValues.reverbKnobValue) {
-      modifiers.reverbWetness = reverbKnobValue;
-    }
-    if (multiplier !== 1) {
-      modifiers.multiplier = multiplier;
-    }
-
-    // ! DO I NEED ALL OF THIS ACTUALLY? CAN I JUST USE EFFECTS IN AUDIO CONTEXT?
-    console.error(modifiers);
+    saveEffects('test');
   };
 
   const resetSong = () => {

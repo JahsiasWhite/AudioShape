@@ -11,7 +11,7 @@ import PlusButtonSVG from './add-svgrepo-com.svg';
 
 import { useAudioPlayer } from '../AudioContext';
 
-function SongList({ handleSongLoad, handleSongEdit }) {
+function SongList({ handleSongLoad, handleSongEdit, toggleSection }) {
   const {
     initialSongLoad,
     handleSongSelect,

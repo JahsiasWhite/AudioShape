@@ -145,6 +145,11 @@ export const AudioProvider = ({ children }) => {
     /* Update the new file location */
     fileLocation = visibleSongs[currentSongId].file;
 
+    /* If effects are enabled, apply them to the new song */
+    if (effectsEnabled) {
+      applySavedEffects(currentEffectCombo);
+    }
+
     /* If speed up is enabled, edit the song first and then play */
     if (speedupIsEnabled) {
       handleSpeedChange(DEFAULT_SPEEDUP);
@@ -153,8 +158,7 @@ export const AudioProvider = ({ children }) => {
       handleSpeedChange(DEFAULT_SLOWDOWN);
       return;
     } else {
-      const newSong = visibleSongs[currentSongId];
-      currentSong.src = newSong.file;
+      currentSong.src = fileLocation;
     }
 
     /* (Re)Initializes the current song */
@@ -281,6 +285,11 @@ export const AudioProvider = ({ children }) => {
     // handleSpeedChange(1.2);
   };
 
+  const [effects, setEffects] = useState({});
+  const [savedEffects, setSavedEffects] = useState({});
+  const [effectsEnabled, setEffectsEnabled] = useState(false);
+  const [currentEffectCombo, setCurrentEffectCombo] = useState('');
+  var fileLocation; // TODO
   /**
    * Applies the given effect to the current song
    * @param {*} effect
@@ -326,8 +335,6 @@ export const AudioProvider = ({ children }) => {
     downloadAudio(renderedBuffer);
   };
 
-  const [effects, setEffects] = useState({});
-  var fileLocation;
   const addEffect = (currentEffect, value) => {
     // Add our effects to the list
     // Check if the effect was turned off
@@ -351,6 +358,7 @@ export const AudioProvider = ({ children }) => {
       effects[currentEffect] = value;
     }
     setEffects(effects);
+    console.error('EFFECTS ', effects);
 
     // Check if there are multiple effects
     const hasMultipleEffects = Object.keys(effects).length > 1;
@@ -364,6 +372,43 @@ export const AudioProvider = ({ children }) => {
     }
 
     runEffect(currentEffect, value);
+  };
+
+  const saveEffects = (comboName) => {
+    if (Object.keys(effects).length === 0) return;
+
+    savedEffects[comboName] = effects;
+    console.error('SAVING AS ', savedEffects[comboName]);
+    setSavedEffects(savedEffects);
+  };
+
+  const applySavedEffects = (comboName) => {
+    // TODO MAKE THIS NOT HARDCODED
+    // if (comboName === 'speedupIsEnabled') {
+    //   handleSpeedChange(DEFAULT_SPEEDUP);
+    //   return;
+    // } else if (comboName === 'slowdownIsEnabled') {
+    //   handleSpeedChange(DEFAULT_SLOWDOWN);
+    //   return;
+    // }
+
+    // TODO THIS IS REDUNDANT IN SOME CASES!
+    // fileLocation = visibleSongs[currentSongId].file;
+
+    if (savedEffects[comboName]) {
+      console.error(savedEffects[comboName]);
+      for (const effect in savedEffects[comboName]) {
+        const effectValue = savedEffects[comboName][effect];
+        console.error(effect, effectValue);
+        // console.error(fileLocation);
+        // runEffect(effect, effectValue);
+        addEffect(effect, effectValue);
+      }
+      setEffectsEnabled(true);
+      setCurrentEffectCombo(comboName); // TODO ALSO REDUNDANT
+    } else {
+      // NOT A COMBO
+    }
   };
 
   /**
@@ -667,6 +712,10 @@ export const AudioProvider = ({ children }) => {
         playPreviousSong,
         playNextSong,
         addEffect,
+        saveEffects,
+        savedEffects,
+        applySavedEffects,
+        currentEffectCombo,
         toggleSpeedup,
         toggleSlowDown,
         speedupIsEnabled,

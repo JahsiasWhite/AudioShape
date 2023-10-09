@@ -7,7 +7,7 @@ import { useAudioPlayer } from '../AudioContext';
 
 // The user can select which song they want to edit or just come in here and choose which song after
 function Mixer({ selectedIndex, setSelectedIndex }) {
-  const { visibleSongs } = useAudioPlayer();
+  const { visibleSongs, currentEffectCombo } = useAudioPlayer();
 
   const currentSong = visibleSongs[selectedIndex];
 
@@ -22,7 +22,10 @@ function Mixer({ selectedIndex, setSelectedIndex }) {
 
   return (
     <div className="mixer">
-      {currentSong && <div>{currentSong.title}</div>}
+      {/* {currentSong && <div>{currentSong.title}</div>} */}
+      {currentEffectCombo && (
+        <div>Current Effect Combo: {currentEffectCombo}</div>
+      )}
       <AudioPlugin />
     </div>
   );
