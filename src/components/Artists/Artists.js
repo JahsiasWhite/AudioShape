@@ -3,8 +3,8 @@ import './Artists.css';
 
 import { useAudioPlayer } from '../AudioContext';
 
-function Artists({ songs, toggleSection }) {
-  const { setVisibleSongs, setCurrentScreen, visibleSongs } = useAudioPlayer();
+function Artists({ toggleSection }) {
+  const { setVisibleSongs, setCurrentScreen, loadedSongs } = useAudioPlayer();
 
   /**
    * Finds all artists in the given song list. Matches each artist to each song they have as well
@@ -60,7 +60,7 @@ function Artists({ songs, toggleSection }) {
     setCurrentScreen(artist);
   };
 
-  const artistsBySongs = groupSongsByArtists(songs);
+  const artistsBySongs = groupSongsByArtists(loadedSongs);
   if (artistsBySongs.length === 0) return; // ? Is this happening?
 
   return (

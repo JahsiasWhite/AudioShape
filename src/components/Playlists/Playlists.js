@@ -40,8 +40,6 @@ const Playlists = ({ toggleSection }) => {
       newSongCollection[songName] = loadedSongs[songName];
     }
 
-    console.error(playlist, newSongCollection);
-
     setVisibleSongs(newSongCollection);
 
     // ! Todo, probably want to clean this up

@@ -11,56 +11,20 @@ import PlusButtonSVG from './add-svgrepo-com.svg';
 
 import { useAudioPlayer } from '../AudioContext';
 
-function SongList({ handleSongLoad, handleSongEdit, toggleSection }) {
-  const {
-    initialSongLoad,
-    handleSongSelect,
-    visibleSongs,
-    currentSongId,
-    currentScreen,
-  } = useAudioPlayer();
+function SongList({ handleSongEdit, toggleSection }) {
+  const { handleSongSelect, visibleSongs, currentSongId, currentScreen } =
+    useAudioPlayer();
 
-  // FULL LIST OF SONGS, TODO: Remove? TOO MUCH DATA?
-  // const [visibleSongs, setVisibleSongs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  /* For the audio editor drop down */
-  // const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   /**
    * Once songs are loaded in, we know we are done loading
    */
   useEffect(() => {
-    /* TODO: This means we've been here before, I should fix this logic so it never ends up here in the first place */
-    // if (visibleSongs.length > 0) {
-    //   setIsLoading(false);
-    // }
-
-    // //  ! Only change loading state if there are visible songs
-    // else if (isLoading && handleSongLoad.length > 0) {
-    //   setIsLoading(false);
-    //   initialSongLoad(handleSongLoad);
-    // }
-
-    // if (Object.keys(visibleSongs).length > 0) {
-    //   setIsLoading(false);
-    //   return;
-    // }
-
-    if (Object.keys(handleSongLoad).length > 0) {
+    if (Object.keys(visibleSongs).length > 0) {
       setIsLoading(false);
-      initialSongLoad(handleSongLoad);
     }
-  }, [handleSongLoad]);
-
-  /**
-   * Takes in all the songs we are supposed to see and updates the view
-   */
-  // useEffect(() => {
-  //   // If songs is the same as visible songs, dont do anything?
-  //   console.error('SONGS CHANGED< ', songs);
-  //   setVisibleSongs(songs);
-  // }, [songs]);
+  }, [visibleSongs]);
 
   /**
    * Stuff to handle right clicks... this should be in its own component

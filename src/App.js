@@ -23,7 +23,7 @@ import { AudioProvider } from './components/AudioContext'; // So we can talk to 
 function App() {
   const [selectedSongIndex, setSelectedSongIndex] = useState(null);
 
-  const [loadedSongs, setLoadedSongs] = useState({}); // ? Can we use this as just visibleSongs ? Or should we have two objects?
+  // const [loadedSongs, setLoadedSongs] = useState({}); // ? Can we use this as just visibleSongs ? Or should we have two objects?
   // const [visibleSongs, setVisibleSongs] = useState([]);
 
   // Update the current song when a song is selected
@@ -53,11 +53,12 @@ function App() {
     // Fetch initial songs when the component mounts
     window.electron.ipcRenderer.sendMessage('GET_SONGS', '');
 
-    // ! GET_SONGS loads from the dir, while GRAB_SONGS gets songs to show on the frontend
-    window.electron.ipcRenderer.on('GRAB_SONGS', (retrievedSongs) => {
-      // handleSongLoad(mp3Files);
-      setLoadedSongs(retrievedSongs); // ! should I actually call initialSongLoad?
-    });
+    // // ! GET_SONGS loads from the dir, while GRAB_SONGS gets songs to show on the frontend
+    // window.electron.ipcRenderer.on('GRAB_SONGS', (retrievedSongs) => {
+    //   // handleSongLoad(mp3Files);
+    //   console.error('SETTING NEW SONGS');
+    //   // setLoadedSongs(retrievedSongs); // ! should I actually call initialSongLoad?
+    // });
   }, []);
 
   /**
@@ -85,14 +86,14 @@ function App() {
               <div className="main-content">
                 {currentSection === 'songs' ? (
                   <SongList
-                    handleSongLoad={loadedSongs}
+                    // handleSongLoad={loadedSongs}
                     handleSongEdit={handleSongSelect}
                     // songs={visibleSongs}
                   />
                 ) : currentSection === 'playlists' ? (
                   <Playlists toggleSection={toggleSection} />
                 ) : currentSection === 'artists' ? (
-                  <Artists songs={loadedSongs} toggleSection={toggleSection} />
+                  <Artists toggleSection={toggleSection} />
                 ) : currentSection === 'spotify' ? (
                   <Spotify />
                 ) : currentSection === 'settings' ? (

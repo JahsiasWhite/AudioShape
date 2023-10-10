@@ -206,10 +206,13 @@ export const AudioProvider = ({ children }) => {
 
   /* When the songs first load, we want all songs to be shown */
   const initialSongLoad = (songs) => {
-    // ! IS THIS FUNCTION USED? I THINK IT MIGHT JUST BE REDUNDANT
     setLoadedSongs(songs);
     setVisibleSongs(songs);
   };
+
+  window.electron.ipcRenderer.on('GRAB_SONGS', (retrievedSongs) => {
+    initialSongLoad(retrievedSongs);
+  });
 
   /* When a song is double-clicked, change the current song to that one! */
   const handleSongSelect = (songId) => {
