@@ -29,8 +29,9 @@
 .middle-content {
   display: flex;
   flex-direction: row;
-  /* flex-grow: 1; */
+  flex-grow: 1;
   overflow: auto;
+  width: 100vw;
 }
 
 .playbar {
@@ -55,7 +56,7 @@
 }
 
 .main-content {
-  /* flex-grow: 1; */
+  flex-grow: 1;
   background-color: var(--color-secondary);
   overflow: overlay;
 
