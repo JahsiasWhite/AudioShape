@@ -92,12 +92,12 @@ app.on('ready', function () {
   /* IPC STUFF */
 
   ipcMain.on('GET_SONGS', async (event, folderPath) => {
-    folderPath = getParentDirectory(folderPath); // ! DOES THIS WORK?
+    folderPath = getParentDirectory(folderPath);
 
     let correctedPath = '';
     // If folderPath is empty, use the default path
     if (folderPath === '') {
-      const settingsPath = getSettingsPath();
+      const settingsPath = createSettingsPath();
 
       const settings = getSettings(settingsPath);
 
@@ -496,7 +496,11 @@ app.on('ready', function () {
    *
    */
 
-  function getSettingsPath() {
+  /**
+   * Creates the settings file and returns the location of it
+   * @returns
+   */
+  function createSettingsPath() {
     const settingsPath = path.join(
       app.getPath('userData'),
       'Data',
@@ -508,7 +512,7 @@ app.on('ready', function () {
   function getSettings(settingsPath) {
     // Optional parameter
     if (settingsPath === undefined) {
-      settingsPath = getSettingsPath();
+      settingsPath = createSettingsPath();
     }
 
     const settingsData = fs.readFileSync(settingsPath, 'utf-8');
@@ -623,12 +627,7 @@ app.on('ready', function () {
     const cutoffIndex = filePath.lastIndexOf('\\');
     const folderPath = filePath.substring(0, cutoffIndex);
 
-    const fixedFolderPath = folderPath.substring(
-      0,
-      folderPath.lastIndexOf('\\')
-    );
-
-    return fixedFolderPath;
+    return folderPath;
   }
 
   /**
@@ -637,7 +636,7 @@ app.on('ready', function () {
    * @param {String} newLibraryDirectory - Directory path
    */
   function updateLibraryDirectory(newLibraryDirectory) {
-    const settingsPath = getSettingsPath(); // TODO: Can I combine this function with getSettings?
+    const settingsPath = createSettingsPath(); // TODO: Can I combine this function with getSettings?
 
     try {
       const settings = getSettings(settingsPath);

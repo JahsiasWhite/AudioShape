@@ -41,13 +41,12 @@ function App() {
       // setVisibleSongs(loadedSongs);
       section = 'songs';
     }
-    console.error('SETTING TO ', section);
     setCurrentSection(section);
   };
 
   /**
    * When the app first loads, we make a call to the server to grab the songs. It will pull any songs if a
-   * previous directory was given in the past. Once the server is donw processing, it sends the songs back
+   * previous directory was given in the past. Once the server is done processing, it sends the songs back
    * here where they are saved.
    */
   useEffect(() => {

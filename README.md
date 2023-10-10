@@ -9,7 +9,7 @@ The most exciting feature is the song editing! Seamlessly edit the song you are 
 Don't have any local songs? No problem! Music Player also includes the ability to download songs directly from Youtube by providing the song's url.
 <br>SOON: Have a Spotify account? Download your songs or playlists or even stream directly from your account!
 
-Music Player also has an extensive full-screen mode. Sit back and watch the audio spectrum of the current song. Listening to an MP4? Full-screen mode even lets you watch the video along with it!
+Music Player also has an extensive full-screen mode. Sit back and watch the audio spectrum of the current song. Listening to an MP4? Full-screen mode even lets you watch the accompanied music video!
 
 WIP
 
@@ -35,6 +35,7 @@ TODO:
 14. Add gif support for fullscreen mode
 15. Start creating the new song before the current ends on auto play so the user doesnt have to wait for it to render
 16. Add tailwindCSS, it should reduce a lot of the duplicate CSS
+17. Changing the time when watching a music video only changes the audio, not the video with it
 
 999 Easy file/song sharing
 

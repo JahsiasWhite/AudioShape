@@ -13,12 +13,21 @@ function Settings() {
    * Gets the settings when the component first loads
    */
   useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = () => {
     window.electron.ipcRenderer.sendMessage('GET_SETTINGS');
 
-    window.electron.ipcRenderer.on('GET_SETTINGS', (settings) => {
-      setSettings(settings);
+    window.electron.ipcRenderer.on('GET_SETTINGS', (updatedSettings) => {
+      setSettings(updatedSettings);
     });
-  }, []);
+  };
+
+  // Handle settings update when the user interacts with FolderSelection
+  const handleSettingsUpdate = () => {
+    fetchSettings();
+  };
 
   return (
     <div className="settings">
@@ -31,7 +40,7 @@ function Settings() {
         <div className="setting-item">
           <strong>Output Directory:</strong> {settings.outputDirectory}
         </div>
-        <FolderSelection />
+        <FolderSelection onSettingsUpdate={handleSettingsUpdate} />
       </div>
       <div className="settings-container">
         <div className="container-header">Customizations</div>

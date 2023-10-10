@@ -41,12 +41,13 @@ function SongList({ handleSongLoad, handleSongEdit, toggleSection }) {
     //   setIsLoading(false);
     //   initialSongLoad(handleSongLoad);
     // }
-    if (Object.keys(visibleSongs).length > 0) {
-      setIsLoading(false);
-      return;
-    }
 
-    if (isLoading && Object.keys(handleSongLoad).length > 0) {
+    // if (Object.keys(visibleSongs).length > 0) {
+    //   setIsLoading(false);
+    //   return;
+    // }
+
+    if (Object.keys(handleSongLoad).length > 0) {
       setIsLoading(false);
       initialSongLoad(handleSongLoad);
     }
