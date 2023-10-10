@@ -172,11 +172,21 @@ const AudioPlugin = () => {
   };
 
   const saveSettings = () => {
-    saveEffects('test');
+    saveEffects('Effect1');
   };
 
   const resetSong = () => {
     // Reset knob values to their initial values
+    resetKnobValues();
+
+    // Restart the current playing song
+    resetCurrentSong();
+  };
+
+  /**
+   * This just resets the visual knob values, doesn't actually change anything
+   */
+  const resetKnobValues = () => {
     setSpeedKnobValue(initialKnobValues.speedKnobValue);
     setMultiplier(1);
     setReverbKnobValue(initialKnobValues.reverbKnobValue);
@@ -184,8 +194,6 @@ const AudioPlugin = () => {
     setDelayValue(0);
     setBitCrusherKnobValue(initialKnobValues.bitCrusherKnobValue);
     setPitchShiftKnobValue(initialKnobValues.pitchShiftKnobValue);
-
-    resetCurrentSong();
   };
 
   /* When editing a song, we want it to stay */

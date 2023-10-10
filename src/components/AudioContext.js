@@ -567,8 +567,10 @@ export const AudioProvider = ({ children }) => {
     // This function gets called twice for some odd reason, need to just fix that, then I don't need this
     // if (currentSongIndex === null) return;
 
+    /* Update the new file path */
     currentSong.src = outputPath;
 
+    /* Play the new temp song */
     initCurrentSong();
     setCurrentSong(currentSong);
 
