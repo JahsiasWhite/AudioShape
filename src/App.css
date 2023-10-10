@@ -25,10 +25,17 @@
   background-color: var(--color-main);
 }
 
+.middle-content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow: auto;
+}
+
 .playbar {
   width: 100%;
   background-color: inherit;
-  position: absolute;
+  /* position: absolute; */
   bottom: 0;
 }
 
@@ -38,12 +45,13 @@
 }
 
 .main-content {
-  flex-grow: 1;
+  /* flex-grow: 1; */
   background-color: var(--color-secondary);
   overflow: overlay;
 
-  height: auto;
-  padding-bottom: 100px;
+  height: 90%;
+  /* height: auto; */
+  /* padding-bottom: 100px; */
 
   scrollbar-width: thin;
   scrollbar-color: #ccc #f0f0f0;

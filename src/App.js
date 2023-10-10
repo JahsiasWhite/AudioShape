@@ -82,33 +82,35 @@ function App() {
         {!isFullscreen && (
           <div className="non-fullscreen">
             <LayoutBar toggleSection={toggleSection} />
-            <div className="main-content">
-              {currentSection === 'songs' ? (
-                <SongList
-                  handleSongLoad={loadedSongs}
-                  handleSongEdit={handleSongSelect}
-                  // songs={visibleSongs}
-                />
-              ) : currentSection === 'playlists' ? (
-                <Playlists toggleSection={toggleSection} />
-              ) : currentSection === 'artists' ? (
-                <Artists songs={loadedSongs} toggleSection={toggleSection} />
-              ) : currentSection === 'spotify' ? (
-                <Spotify />
-              ) : currentSection === 'settings' ? (
-                <Settings />
-              ) : currentSection === 'mixer' ? (
-                <Mixer
-                  selectedIndex={selectedSongIndex}
-                  setSelectedIndex={setSelectedSongIndex}
-                />
-              ) : currentSection === 'youtube' ? (
-                <Youtube />
-              ) : (
-                <div>NO SECTION FOUND</div>
-              )}
+            <div className="middle-content">
+              <div className="main-content">
+                {currentSection === 'songs' ? (
+                  <SongList
+                    handleSongLoad={loadedSongs}
+                    handleSongEdit={handleSongSelect}
+                    // songs={visibleSongs}
+                  />
+                ) : currentSection === 'playlists' ? (
+                  <Playlists toggleSection={toggleSection} />
+                ) : currentSection === 'artists' ? (
+                  <Artists songs={loadedSongs} toggleSection={toggleSection} />
+                ) : currentSection === 'spotify' ? (
+                  <Spotify />
+                ) : currentSection === 'settings' ? (
+                  <Settings />
+                ) : currentSection === 'mixer' ? (
+                  <Mixer
+                    selectedIndex={selectedSongIndex}
+                    setSelectedIndex={setSelectedSongIndex}
+                  />
+                ) : currentSection === 'youtube' ? (
+                  <Youtube />
+                ) : (
+                  <div>NO SECTION FOUND</div>
+                )}
+              </div>
+              <Playbar toggleFullscreen={enableFullscreen} />
             </div>
-            <Playbar toggleFullscreen={enableFullscreen} />
           </div>
         )}
 

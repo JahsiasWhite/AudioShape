@@ -2,7 +2,7 @@
 
 ! Warning, this is currently in beta version 0.2. Errors and glitches likely to occur !
 
-Traditional music player with additional customizations and song editing.
+Experience music like never before with our real-time streaming and editing music player.
 
 The most exciting feature is the song editing! Seamlessly edit the song you are listening to and keep the settings saved for all future songs. For example, are you a big fan of listening to sped up songs? Simply use the preset (or create your own preset) to have the currently plaing song become its sped-up version. If you're just listening to your playlist, the next song will also be sped up! Like how the song sounds? Export it to keep it saved forever.
 
