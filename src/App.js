@@ -81,8 +81,8 @@ function App() {
       <div className="app-container">
         {!isFullscreen && (
           <div className="non-fullscreen">
-            <LayoutBar toggleSection={toggleSection} />
             <div className="middle-content">
+              <LayoutBar toggleSection={toggleSection} />
               <div className="main-content">
                 {currentSection === 'songs' ? (
                   <SongList
@@ -109,8 +109,8 @@ function App() {
                   <div>NO SECTION FOUND</div>
                 )}
               </div>
-              <Playbar toggleFullscreen={enableFullscreen} />
             </div>
+            <Playbar toggleFullscreen={enableFullscreen} />
           </div>
         )}
 
