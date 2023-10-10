@@ -251,8 +251,6 @@ app.on('ready', function () {
    * Songs are created when we autoplay songs with custom settings, so they must be deleted when they are finished playing.
    */
   ipcMain.on('DELETE_TEMP_SONG', async (event) => {
-    console.log('CURRENT TEMP FILE IS ', temporaryFilePath);
-
     if (temporaryFilePath) {
       try {
         await fsPromises.unlink(temporaryFilePath);
