@@ -451,11 +451,18 @@ app.on('ready', function () {
       const settings = getSettings();
       const songDirectory = settings.libraryDirectory;
 
+      // Find the video format with both audio and video
+      const format = ytdl.chooseFormat(info.formats, {
+        filter: 'audioandvideo',
+        quality: 'highest',
+      });
+
       const downloadOptions = {
         directory: songDirectory, // Update with your desired directory
         filename: `${videoTitle}.mp4`,
+        quality: format.itag,
       };
-      console.error('DOWNLAODING ', songDirectory);
+      console.error('DOWNLAODING TO: ', songDirectory);
       // Start the download
       ytdl(videoUrl, downloadOptions)
         .pipe(
