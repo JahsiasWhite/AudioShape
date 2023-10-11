@@ -19,3 +19,7 @@
   overflow-y: auto;
   overflow-x: hidden;
 }
+
+.saved-effects-enabled {
+  background-color: var(--color-button) !important;
+}

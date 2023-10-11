@@ -37,10 +37,11 @@ function Settings() {
         <div className="setting-item">
           <strong>Song Directory:</strong> {settings.songDirectory}
         </div>
-        <div className="setting-item">
-          <strong>Output Directory:</strong> {settings.outputDirectory}
-        </div>
         <FolderSelection onSettingsUpdate={handleSettingsUpdate} />
+
+        <div className="setting-item">
+          <strong>Settings Directory:</strong> {settings.outputDirectory}
+        </div>
       </div>
       <div className="settings-container">
         <div className="container-header">Customizations</div>

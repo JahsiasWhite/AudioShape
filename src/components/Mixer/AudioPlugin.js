@@ -19,8 +19,13 @@ const initialKnobValues = {
 };
 
 const AudioPlugin = () => {
-  const { addEffect, resetCurrentSong, setIsLooping, saveEffects } =
-    useAudioPlayer();
+  const {
+    addEffect,
+    resetCurrentSong,
+    setIsLooping,
+    saveEffects,
+    effectsClickable,
+  } = useAudioPlayer();
 
   const [speedKnobValue, setSpeedKnobValue] = useState(50);
   const [multiplier, setMultiplier] = useState(1);
@@ -205,6 +210,10 @@ const AudioPlugin = () => {
   //   };
   // }, []);
 
+  useEffect(() => {
+    // console.error('CLICKABLE ? : ', effectsClickable);
+  }, [effectsClickable]);
+
   return (
     <div className="audio-plugin">
       <div className="plugin-settings-container">
@@ -237,7 +246,11 @@ const AudioPlugin = () => {
         </div>
       </div>
 
-      <div className="modifiers-container">
+      <div
+        className={`modifiers-container ${
+          !effectsClickable ? 'unclickable' : ''
+        }`}
+      >
         <div className="module-container">
           <div className="header">SPEED</div>
           <div className="speed-body">

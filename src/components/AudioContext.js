@@ -148,6 +148,7 @@ export const AudioProvider = ({ children }) => {
     /* If effects are enabled, apply them to the new song */
     if (effectsEnabled) {
       applySavedEffects(currentEffectCombo);
+      return;
     }
 
     /* If speed up is enabled, edit the song first and then play */
@@ -186,9 +187,13 @@ export const AudioProvider = ({ children }) => {
    * Resets the current song's effects to the default and restarts it
    */
   const resetCurrentSong = () => {
-    // Reset the effects here as well
+    // Reset the songs effects
+    setCurrentEffectCombo('');
+
+    // Change to the original file location
     currentSong.src = visibleSongs[currentSongId].file;
 
+    // Start playing the song from the beginning
     restartCurrentSong();
   };
 
@@ -338,7 +343,11 @@ export const AudioProvider = ({ children }) => {
     downloadAudio(renderedBuffer);
   };
 
-  const addEffect = (currentEffect, value) => {
+  const [effectsClickable, setEffectsClickable] = useState(true); // TODO: Can this be local to audioPlugin?
+  const addEffect = async (currentEffect, value, fL) => {
+    /* Make effects unclickable while the current song is being edited */
+    setEffectsClickable(false);
+
     // Add our effects to the list
     // Check if the effect was turned off
     // TODO: Get the actual defaults, kinda fcking up with reverb wetness rn
@@ -361,20 +370,23 @@ export const AudioProvider = ({ children }) => {
       effects[currentEffect] = value;
     }
     setEffects(effects);
-    console.error('EFFECTS ', effects);
 
-    // Check if there are multiple effects
-    const hasMultipleEffects = Object.keys(effects).length > 1;
+    /* Annoying check, this will run if we aren't coming from applySavedEffects. IE: just editing one at a time and not using saved effects */
+    if (fL === undefined) {
+      // Check if there are multiple effects
+      const hasMultipleEffects = Object.keys(effects).length > 1;
 
-    if (hasMultipleEffects) {
-      // If multiple effects, modify the temp file location
-      fileLocation = currentSong.src;
-    } else {
-      // If only one effect, modify the default file location
-      fileLocation = visibleSongs[currentSongId].file;
+      if (hasMultipleEffects) {
+        // If multiple effects, modify the temp file location
+        fileLocation = currentSong.src;
+      } else {
+        // If only one effect, modify the default file location
+        fileLocation = visibleSongs[currentSongId].file;
+      }
     }
 
-    runEffect(currentEffect, value);
+    await runEffect(currentEffect, value);
+    await getTempSong();
   };
 
   const saveEffects = (comboName) => {
@@ -385,7 +397,7 @@ export const AudioProvider = ({ children }) => {
     setSavedEffects(savedEffects);
   };
 
-  const applySavedEffects = (comboName) => {
+  const applySavedEffects = async (comboName) => {
     // TODO MAKE THIS NOT HARDCODED
     // if (comboName === 'speedupIsEnabled') {
     //   handleSpeedChange(DEFAULT_SPEEDUP);
@@ -395,18 +407,21 @@ export const AudioProvider = ({ children }) => {
     //   return;
     // }
 
-    // TODO THIS IS REDUNDANT IN SOME CASES!
-    // fileLocation = visibleSongs[currentSongId].file;
+    // The first effect will be applied to the original file
+    fileLocation = visibleSongs[currentSongId].file;
 
     if (savedEffects[comboName]) {
-      console.error(savedEffects[comboName]);
       for (const effect in savedEffects[comboName]) {
+        effectThreshold++;
+
         const effectValue = savedEffects[comboName][effect];
-        console.error(effect, effectValue);
+        // console.error(effect, effectValue);
         // console.error(fileLocation);
         // runEffect(effect, effectValue);
-        addEffect(effect, effectValue);
+        await addEffect(effect, effectValue, fileLocation); // TODO I dont like this, kinda sloppy
+        fileLocation = currentSong.src; // All subsequent effects will be applied to the temp file
       }
+
       setEffectsEnabled(true);
       setCurrentEffectCombo(comboName); // TODO ALSO REDUNDANT
     } else {
@@ -542,7 +557,7 @@ export const AudioProvider = ({ children }) => {
 
     const wavBytes = createWavBytes(player); // ! TODO: Just put the buffer in then we dont have to create a new player
     window.electron.ipcRenderer.sendMessage('SAVE_TEMP_SONG', wavBytes);
-    getTempSong();
+    // getTempSong();
   }
 
   /*
@@ -558,10 +573,23 @@ export const AudioProvider = ({ children }) => {
   /**
    * Gets the updated temporary song
    */
-  const getTempSong = () => {
-    window.electron.ipcRenderer.once('TEMP_SONG_SAVED', handleTempSongSaved);
+  // const getTempSong = () => {
+  //   window.electron.ipcRenderer.once('TEMP_SONG_SAVED', handleTempSongSaved);
+  // };
+
+  const getTempSong = async () => {
+    return new Promise((resolve) => {
+      window.electron.ipcRenderer.once(
+        'TEMP_SONG_SAVED',
+        async (outputPath) => {
+          await handleTempSongSaved(outputPath);
+          resolve();
+        }
+      );
+    });
   };
 
+  var effectThreshold = 0;
   /**
    * Saves the new temporary song from the server and sets it to the current song
    * @param {*} outputPath
@@ -573,9 +601,27 @@ export const AudioProvider = ({ children }) => {
     /* Update the new file path */
     currentSong.src = outputPath;
 
+    /* 
+      If effectThreshold == 0, we are just changing one effect at a time and thus can play the new song immediately.
+      If effectThreshold != 0, we are applying multiple effects at once (using an effect combo), so we only want to play the song when the last effect is added 
+    */
+    if (
+      effectThreshold === 0 ||
+      effectThreshold === Object.keys(effects).length
+    ) {
+      /* Start playing the new song */
+      initCurrentSong();
+      setCurrentSong(currentSong);
+
+      /* Make the effects clickable again */
+      setEffectsClickable(true);
+
+      effectThreshold = 0;
+    }
+
     /* Play the new temp song */
-    initCurrentSong();
-    setCurrentSong(currentSong);
+    // initCurrentSong();
+    // setCurrentSong(currentSong);
 
     /* Cleanup old file */
     window.electron.ipcRenderer.sendMessage('DELETE_TEMP_SONG');
@@ -721,6 +767,7 @@ export const AudioProvider = ({ children }) => {
         savedEffects,
         applySavedEffects,
         currentEffectCombo,
+        effectsClickable,
         toggleSpeedup,
         toggleSlowDown,
         speedupIsEnabled,

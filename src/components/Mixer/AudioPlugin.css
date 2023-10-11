@@ -136,3 +136,7 @@ p {
   pointer-events: none;
   opacity: 0.5;
 }
+
+.unclickable {
+  pointer-events: none;
+}

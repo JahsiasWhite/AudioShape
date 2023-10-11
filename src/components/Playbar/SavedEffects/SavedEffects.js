@@ -3,7 +3,8 @@ import './SavedEffects.css';
 import { useAudioPlayer } from '../../AudioContext';
 
 const SavedEffects = () => {
-  const { savedEffects, applySavedEffects } = useAudioPlayer();
+  const { savedEffects, applySavedEffects, currentEffectCombo } =
+    useAudioPlayer();
   const [isVisible, setIsVisible] = useState(false);
 
   const toggleShowing = () => {
@@ -21,7 +22,12 @@ const SavedEffects = () => {
   return (
     <div className="saved-effects">
       {/* Button to toggle visibility */}
-      <button className="saved-effects-button" onClick={toggleShowing}>
+      <button
+        className={`saved-effects-button ${
+          currentEffectCombo !== '' ? 'saved-effects-enabled' : ''
+        } `}
+        onClick={toggleShowing}
+      >
         Show Saved Effects
       </button>
 

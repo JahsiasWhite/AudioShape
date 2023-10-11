@@ -15,27 +15,27 @@ WIP
 
 TODO:
 
-1. implement testing
-2. Watch the library directory for file changes so we don't need a manual refresh
-3. Themes
-4. Using remotely - server & remote
-5. Caching?
-6. Easy support for creating own themes
-7. Addon support
+1. Loading screens/indicators on everything. (Applying current effect combo, changing songs, etc.)
+2. implement testing
+3. Watch the library directory for file changes so we don't need a manual refresh
+4. Themes
+5. Using remotely - server & remote
+6. Caching?
+7. Easy support for creating own themes
+8. Addon support
    - Lyrics
    - Themes?
    - Youtube?
    - Audio edit plugins
-8. Add ability to add image ! WILL WRITE TO THAT FILE THEN
-9. lazy loading
-10. Add a queue system
-11. Need to export to mp3, rn, exporting to WAV is creating audio files x10 as big as their original
-12. Shuffle
-13. Resturcture styles, does creating all of these extra folders take up a lot of storage??
-14. Add gif support for fullscreen mode
-15. Start creating the new song before the current ends on auto play so the user doesnt have to wait for it to render
-16. Add tailwindCSS, it should reduce a lot of the duplicate CSS
-17. Changing the time when watching a music video only changes the audio, not the video with it
+9. Add ability to add image ! WILL WRITE TO THAT FILE THEN
+10. lazy loading
+11. Add a queue system
+12. Need to export to mp3, rn, exporting to WAV is creating audio files x10 as big as their original
+13. Shuffle
+14. Resturcture styles, does creating all of these extra folders take up a lot of storage??
+15. Add gif support for fullscreen mode
+16. Start creating the new song before the current ends on auto play so the user doesnt have to wait for it to render
+17. Add tailwindCSS, it should reduce a lot of the duplicate CSS
 
 999 Easy file/song sharing
 
@@ -43,6 +43,9 @@ BUGS:
 
 1.  Playlists with 0 songs show all songs
 2.  Can't enter fullscreen multiple times
+3.  Changing the time when watching a music video only changes the audio, not the video with it
+4.  Force closing the program doesnt delete the temp song. This is expected but should it delete it when the program first starts?
+5.  Fixup all of the addEffect, runEffect stuff. Do they all have to be async?
 
 ## Launching
 
