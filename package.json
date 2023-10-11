@@ -20,6 +20,7 @@
     "wait-on": "^7.0.1"
   },
   "dependencies": {
+    "ffmpeg-static": "^5.2.0",
     "glob": "^10.3.3",
     "music-metadata": "^8.1.4",
     "node-fetch": "^3.3.2",

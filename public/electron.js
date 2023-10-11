@@ -9,6 +9,8 @@ const { v4: uuidv4 } = require('uuid');
 
 // For downloading youtube videos
 const ytdl = require('ytdl-core');
+const ffmpegPath = require('ffmpeg-static');
+const cp = require('child_process');
 
 const { glob, globSync, Glob } = require('glob');
 // const { fetch } = require('node-fetch');
@@ -440,58 +442,114 @@ app.on('ready', function () {
   /**
    * Downloads the youtube video from the specified url
    */
+  // TODO: ADD A Progress bar: https://github.com/fent/node-ytdl-core/blob/master/example/ffmpeg.js
   ipcMain.on('DOWNLOAD_YOUTUBE_VID', async (event, videoUrl) => {
     console.error('URL IS : ', videoUrl);
-    try {
-      // Get the youtube video title
-      const info = await ytdl.getInfo(videoUrl);
-      const videoTitle = info.videoDetails.title;
+    // try {
+    // Get the youtube video title
+    const info = await ytdl.getInfo(videoUrl);
+    const videoTitle = info.videoDetails.title;
 
-      // Get where we are saving the video to
-      const settings = getSettings();
-      const songDirectory = settings.libraryDirectory;
+    // Get where we are saving the video to
+    const settings = getSettings();
+    const songDirectory = settings.libraryDirectory;
 
-      // Find the video format with both audio and video
-      const format = ytdl.chooseFormat(info.formats, {
-        filter: 'audioandvideo',
-        quality: 'highest',
-      });
+    // Use ytdl to download the video and audio separately
+    // This is necessary because for higher quality videos, Youtube downloads the audio and video separately
+    const videoStream = ytdl(videoUrl, {
+      quality: 'highestvideo',
+    });
+    const audioStream = ytdl(videoUrl, {
+      quality: 'highestaudio',
+    });
 
-      const downloadOptions = {
-        directory: songDirectory, // Update with your desired directory
-        filename: `${videoTitle}.mp4`,
-        quality: format.itag,
-      };
-      console.error('DOWNLAODING TO: ', songDirectory);
-      // Start the download
-      ytdl(videoUrl, downloadOptions)
-        .pipe(
-          fs.createWriteStream(
-            path.join(downloadOptions.directory, downloadOptions.filename)
-          )
-        )
-        .on('finish', () => {
-          console.error('FINISHED DOWNLOADING');
-          mainWindow.webContents.send(
-            'download-success',
-            'Download completed!'
-          );
-        })
-        .on('error', (error) => {
-          console.error('Error downloading video', error.message);
-          mainWindow.webContents.send('download-error', error.message);
-        });
-    } catch (error) {
-      console.error('Error fetching video', error.message);
+    // Construct the output file path using the video title and song directory
+    const outputFilePath = path.join(songDirectory, `${videoTitle}.mp4`);
 
-      // maybe use error.name === 'SyntaxError' instead?
-      if (error.message === 'Invalid or unexpected token') {
-        // This error usually happens when the ytdl package is broken
-        console.error('ytdl package is most likely broken');
+    // Spawn FFmpeg process to combine video and audio
+    const ffmpegProcess = cp.spawn(
+      ffmpegPath,
+      [
+        // Remove ffmpeg's console spamming
+        '-loglevel',
+        '8',
+        '-hide_banner',
+        // Set inputs
+        '-i',
+        'pipe:4',
+        '-i',
+        'pipe:5',
+        // Map audio & video from streams
+        '-map',
+        '0:a',
+        '-map',
+        '1:v',
+        // Keep encoding
+        '-c:v',
+        'copy',
+        // Define output file
+        outputFilePath,
+      ],
+      {
+        windowsHide: true,
+        stdio: [
+          /* Standard: stdin, stdout, stderr */
+          'inherit',
+          'inherit',
+          'inherit',
+          /* Custom: pipe:3, pipe:4, pipe:5 */
+          'pipe',
+          'pipe',
+          'pipe',
+        ],
       }
+    );
 
-      mainWindow.webContents.send('download-error', error.message);
-    }
+    ffmpegProcess.on('close', (code) => {
+      console.log('CLOSING   ', code);
+      if (code === 0) {
+        console.log('Video downloaded and combined successfully');
+        mainWindow.webContents.send('download-success', 'Download completed!');
+      } else {
+        console.error(`FFmpeg process exited with code ${code}`);
+        mainWindow.webContents.send(
+          'download-error',
+          `FFmpeg process exited with code ${code}`
+        );
+      }
+    });
+    audioStream.pipe(ffmpegProcess.stdio[4]);
+    videoStream.pipe(ffmpegProcess.stdio[5]);
+
+    // Start the download
+    //   ytdl(videoUrl, downloadOptions)
+    //     .pipe(
+    //       fs.createWriteStream(
+    //         path.join(downloadOptions.directory, downloadOptions.filename)
+    //       )
+    //     )
+    //     .on('finish', () => {
+    //       console.error('FINISHED DOWNLOADING');
+    //       mainWindow.webContents.send(
+    //         'download-success',
+    //         'Download completed!'
+    //       );
+    //     })
+    //     .on('error', (error) => {
+    //       console.error('Error downloading video', error.message);
+    //       mainWindow.webContents.send('download-error', error.message);
+    //     });
+    // } catch (error) {
+    //   console.error('Error fetching video', error.message);
+
+    //   // maybe use error.name === 'SyntaxError' instead?
+    //   if (error.message === 'Invalid or unexpected token') {
+    //     // This error usually happens when the ytdl package is broken
+    //     console.error('ytdl package is most likely broken');
+    //   }
+
+    //   mainWindow.webContents.send('download-error', error.message);
+    // }
   });
 
   /**
