@@ -259,10 +259,12 @@ export const AudioProvider = ({ children }) => {
 
     if (speedupIsEnabled) {
       setSpeedupIsEnabled(false);
-      handleSpeedChange(1);
+      // handleSpeedChange(1);
+      addEffect('speed', 1);
     } else {
       setSpeedupIsEnabled(true);
-      handleSpeedChange(DEFAULT_SPEEDUP);
+      // handleSpeedChange(DEFAULT_SPEEDUP);
+      addEffect('speed', DEFAULT_SPEEDUP);
     }
   };
 
@@ -283,10 +285,12 @@ export const AudioProvider = ({ children }) => {
 
     if (slowDownIsEnabled) {
       setSlowDownIsEnabled(false);
-      handleSpeedChange(1);
+      // handleSpeedChange(1);
+      addEffect('speed', 1);
     } else {
       setSlowDownIsEnabled(true);
-      handleSpeedChange(DEFAULT_SLOWDOWN);
+      // handleSpeedChange(DEFAULT_SLOWDOWN);
+      addEffect('speed', DEFAULT_SLOWDOWN);
     }
     // return;
     // setSlowDownIsEnabled(!slowDownIsEnabled);
@@ -360,6 +364,16 @@ export const AudioProvider = ({ children }) => {
       console.error(otherEffect);
       if (otherEffect[0] === undefined) {
         // play original song
+        console.error('PLAYING ORIGINAL SONG');
+
+        // TODO I THINK THESE HAPPEN A FEW TIMES, MAKE IN OWN FUNCTION?
+        /* Start playing the new song */
+        currentSong.src = fileLocation;
+        initCurrentSong();
+        setCurrentSong(currentSong);
+
+        /* Make the effects clickable again */
+        setEffectsClickable(true);
       } else {
         // loop through all other effects
         runEffect(otherEffect[0], effects[otherEffect[0]]);
