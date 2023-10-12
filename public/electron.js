@@ -126,7 +126,109 @@ app.on('ready', function () {
     /* Get all songs */
     let count = 0; // This is so we know when we ran out of files to parse and can return
     songs = {}; // ? Reset songs here?
-    audios.map((file) => {
+
+    audios.forEach(async (file) => {
+      try {
+        const songData = await processSongMetadata(file, imageFiles);
+        songs[songData.id] = songData;
+
+        count++;
+        if (count === audios.length) {
+          mainWindow.webContents.send('GRAB_SONGS', songs);
+        }
+      } catch (error) {
+        console.error('ERROR AT', count, file, error);
+        mainWindow.webContents.send('ERROR_MESSAGE', {
+          title: 'Error',
+          description: error.message,
+        });
+      }
+    });
+
+    // audios.map((file) => {
+    //   metadata
+    //     .parseFile(file)
+    //     .then((data) => {
+
+    //       let title = data.common.title;
+    //       let artist = data.common.artist;
+    //       let album = data.common.album;
+    //       let duration = data.format.duration;
+
+    //       // Unique key, ! TODO: Should I do this different? Is this function costly?
+    //       // Maybe do somehashing instead of this crude...
+    //       let key = duration;
+
+    //       // To avoid empty fields, if the file doesn't have the appropriate metadata, the file's name is used as the title, and the album and artist are set to "Unknown".
+    //       if (
+    //         typeof data.common.title === 'undefined' ||
+    //         data.common.title.trim() === ''
+    //       ) {
+    //         title = path.basename(file).split('.').slice(0, -1).join('.');
+    //       }
+    //       if (
+    //         typeof data.common.album === 'undefined' ||
+    //         data.common.album.trim() === ''
+    //       ) {
+    //         album = 'Unknown Album';
+    //       }
+    //       if (
+    //         typeof data.common.artist === 'undefined' ||
+    //         data.common.artist.trim() === ''
+    //       ) {
+    //         artist = 'Unknown Artist';
+    //       }
+
+    //       /* Gets image for the song / album */
+    //       const albumDir = path.dirname(file);
+    //       let savedImage = undefined;
+    //       for (image in imageFiles) {
+    //         const imageDir = path.dirname(imageFiles[image]);
+    //         if (albumDir === imageDir) {
+    //           savedImage = imageFiles[image];
+    //         }
+    //       }
+
+    //       // songs.push({
+    //       //   id: key,
+    //       //   file: file,
+    //       //   title: title,
+    //       //   artist: artist,
+    //       //   album: album,
+    //       //   duration: duration,
+    //       //   albumImage: savedImage, // Init image
+    //       // });
+    //       songs[key] = {
+    //         id: key,
+    //         file: file,
+    //         title: title,
+    //         artist: artist,
+    //         album: album,
+    //         duration: duration,
+    //         albumImage: savedImage, // Init image
+    //       };
+
+    //       // So we know when to end :)
+    //       // Either this or more async + try blocks
+    //       count++;
+    //       if (count === audios.length) {
+    //         mainWindow.webContents.send('GRAB_SONGS', songs);
+    //       }
+    //     })
+    //     .catch((error) => {
+    //       console.error('ERROR AT ', count, file, error);
+    //       mainWindow.webContents.send('ERROR_MESSAGE', {
+    //         title: 'Error',
+    //         // description: `Unable to parse metadata of: ${file}`,
+    //         description: error.message,
+    //       });
+    //     });
+    // });
+  });
+
+  // Function to process song metadata
+  const processSongMetadata = (file, imageFiles) => {
+    return new Promise((resolve, reject) => {
       metadata
         .parseFile(file)
         .then((data) => {
@@ -135,11 +237,10 @@ app.on('ready', function () {
           let album = data.common.album;
           let duration = data.format.duration;
 
-          // Unique key, ! TODO: Should I do this different? Is this function costly?
-          // Maybe do somehashing instead of this crude...
+          // Unique key, consider using a more robust method
           let key = duration;
 
-          // To avoid empty fields, if the file doesn't have the appropriate metadata, the file's name is used as the title, and the album and artist are set to "Unknown".
+          // To avoid empty fields, if the file doesn't have the appropriate metadata, use defaults
           if (
             typeof data.common.title === 'undefined' ||
             data.common.title.trim() === ''
@@ -159,52 +260,34 @@ app.on('ready', function () {
             artist = 'Unknown Artist';
           }
 
-          /* Gets image for the song / album */
+          /* Gets image for the song/album */
           const albumDir = path.dirname(file);
           let savedImage = undefined;
-          for (image in imageFiles) {
+          for (const image in imageFiles) {
             const imageDir = path.dirname(imageFiles[image]);
             if (albumDir === imageDir) {
               savedImage = imageFiles[image];
+              break;
             }
           }
 
-          // songs.push({
-          //   id: key,
-          //   file: file,
-          //   title: title,
-          //   artist: artist,
-          //   album: album,
-          //   duration: duration,
-          //   albumImage: savedImage, // Init image
-          // });
-          songs[key] = {
+          const songData = {
             id: key,
             file: file,
             title: title,
             artist: artist,
             album: album,
             duration: duration,
-            albumImage: savedImage, // Init image
+            albumImage: savedImage, // Initialize image
           };
 
-          // So we know when to end :)
-          // Either this or more async + try blocks
-          count++;
-          if (count === audios.length) {
-            mainWindow.webContents.send('GRAB_SONGS', songs);
-          }
+          resolve(songData);
         })
         .catch((error) => {
-          console.error('ERROR AT ', count, file, error);
-          mainWindow.webContents.send('ERROR_MESSAGE', {
-            title: 'Error',
-            // description: `Unable to parse metadata of: ${file}`,
-            description: error.message,
-          });
+          reject(error);
         });
     });
-  });
+  };
 
   /**
    * Exports the given song to the same location it was copied from
@@ -505,11 +588,17 @@ app.on('ready', function () {
       }
     );
 
-    ffmpegProcess.on('close', (code) => {
+    ffmpegProcess.on('close', async (code) => {
       console.log('CLOSING   ', code);
       if (code === 0) {
         console.log('Video downloaded and combined successfully');
-        mainWindow.webContents.send('download-success', 'Download completed!');
+
+        const songData = await processSongMetadata(outputFilePath, []);
+        mainWindow.webContents.send(
+          'download-success',
+          'Download completed!',
+          songData
+        );
       } else {
         console.error(`FFmpeg process exited with code ${code}`);
         mainWindow.webContents.send(

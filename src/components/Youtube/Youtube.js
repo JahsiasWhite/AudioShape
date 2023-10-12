@@ -5,7 +5,11 @@ import LoadingSpinner from '../LoadingSpinner/LoadingSpinner';
 
 // TODO: Videos with the char '|' in the title don't download. Prob issue with the package but maybe I can fix this
 
+import { useAudioPlayer } from '../AudioContext';
+
 function YouTubeDownloader() {
+  const { addSong } = useAudioPlayer();
+
   const [videoUrl, setVideoUrl] = useState('');
   const [downloadStatus, setDownloadStatus] = useState(null);
 
@@ -15,8 +19,10 @@ function YouTubeDownloader() {
     window.electron.ipcRenderer.sendMessage('DOWNLOAD_YOUTUBE_VID', videoUrl);
     setDownloadStatus('Downloading');
 
-    window.electron.ipcRenderer.on('download-success', (message) => {
+    window.electron.ipcRenderer.on('download-success', (message, newSong) => {
       setDownloadStatus('Success: ' + message);
+
+      addSong(newSong);
     });
 
     window.electron.ipcRenderer.on('download-error', (error) => {

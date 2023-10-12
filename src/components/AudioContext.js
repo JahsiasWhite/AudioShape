@@ -570,13 +570,16 @@ export const AudioProvider = ({ children }) => {
 
   */
 
+  const addSong = (song) => {
+    loadedSongs[song.id] = song;
+    setLoadedSongs(loadedSongs);
+
+    console.error(loadedSongs);
+  };
+
   /**
    * Gets the updated temporary song
    */
-  // const getTempSong = () => {
-  //   window.electron.ipcRenderer.once('TEMP_SONG_SAVED', handleTempSongSaved);
-  // };
-
   const getTempSong = async () => {
     return new Promise((resolve) => {
       window.electron.ipcRenderer.once(
@@ -773,6 +776,7 @@ export const AudioProvider = ({ children }) => {
         speedupIsEnabled,
         slowDownIsEnabled,
         handleSongExport,
+        addSong,
         playlists,
         setPlaylists,
         createPlaylist,
