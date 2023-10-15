@@ -1,12 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import { useAudioPlayer } from '../../AudioContext';
 
 function VideoPlayer({ songFile, song }) {
   const { videoTime } = useAudioPlayer();
 
+  const videoRef = useRef(null);
+
   useEffect(() => {
-    console.log('TIME CHANGED', song.currentTime);
+    videoRef.current.currentTime = song.currentTime; // Set the video's currentTime
   }, [videoTime]); // TODO: Better way to do this? Need this component to update but would rather not have an extra useState
 
   return (
@@ -15,11 +17,7 @@ function VideoPlayer({ songFile, song }) {
       autoPlay
       controls={false}
       muted={true} // Mute the video
-      ref={(videoRef) => {
-        if (videoRef) {
-          videoRef.currentTime = song.currentTime; // Set the video's currentTime
-        }
-      }}
+      ref={videoRef}
     >
       <source src={songFile} type="video/mp4" />
       Your device doesn't support video streaming
