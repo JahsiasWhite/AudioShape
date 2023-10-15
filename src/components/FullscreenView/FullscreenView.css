@@ -1,8 +1,12 @@
 .fullscreen-view {
-  position: fixed;
+  /* position: fixed;
   width: 100vw;
-  height: 100vh;
-  background-color: black;
+  height: 100vh; */
+
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: var(--color-main);
 }
 
 .song-image {

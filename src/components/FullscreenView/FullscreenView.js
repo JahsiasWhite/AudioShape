@@ -43,26 +43,28 @@ const FullscreenView = ({ toggleFullscreen }) => {
         </div>
       )}
 
-      {isMP4 ? (
-        // If it's an MP4, show the video element
-        // <video
-        //   className="song-video"
-        //   autoPlay
-        //   controls={false}
-        //   muted={true} // Mute the video
-        //   ref={(videoRef) => {
-        //     if (videoRef) {
-        //       videoRef.currentTime = currentSong.currentTime; // Set the video's currentTime
-        //     }
-        //   }}
-        // >
-        //   <source src={song.file} type="video/mp4" />
-        //   Your device doesn't support video streaming
-        // </video>
-        <VideoPlayer songFile={song.file} song={currentSong} />
-      ) : (
-        <AudioSpectrum song={currentSong} />
-      )}
+      <div className="middle-content">
+        {isMP4 ? (
+          // If it's an MP4, show the video element
+          // <video
+          //   className="song-video"
+          //   autoPlay
+          //   controls={false}
+          //   muted={true} // Mute the video
+          //   ref={(videoRef) => {
+          //     if (videoRef) {
+          //       videoRef.currentTime = currentSong.currentTime; // Set the video's currentTime
+          //     }
+          //   }}
+          // >
+          //   <source src={song.file} type="video/mp4" />
+          //   Your device doesn't support video streaming
+          // </video>
+          <VideoPlayer songFile={song.file} song={currentSong} />
+        ) : (
+          <AudioSpectrum song={currentSong} />
+        )}
+      </div>
 
       <FullscreenPlaybar toggleFullscreen={toggleFullscreen} />
     </div>
