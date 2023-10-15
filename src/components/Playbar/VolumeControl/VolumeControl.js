@@ -8,9 +8,10 @@ import VolumeQuietSVG from './volume-quiet.svg';
 import { useAudioPlayer } from '../../AudioContext';
 
 function VolumeControl() {
-  const { volume, changeVolume, isMuted, toggleMute } = useAudioPlayer();
+  const { volume, changeVolume, toggleMute } = useAudioPlayer();
 
-  const [localVolume, setLocalVolume] = useState(100); // TODO: Move this to audiocontext to fix toggle mute issues
+  // const [localVolume, setLocalVolume] = useState(100); // TODO: Move this to audiocontext to fix toggle mute issues
+  const localVolume = volume * 100;
 
   /**
    * Changing the input slider
@@ -19,7 +20,7 @@ function VolumeControl() {
   const handleVolumeChange = (event) => {
     const newVolume = event.target.value;
 
-    setLocalVolume(newVolume);
+    // setLocalVolume(newVolume);
     changeVolume(newVolume / 100); // Convert to a range between 0 and 1
   };
 
@@ -34,9 +35,9 @@ function VolumeControl() {
   // }, [isMuted]);
 
   /* Update the input slider when the volume changes */
-  useEffect(() => {
-    setLocalVolume(volume * 100);
-  }, [volume]);
+  // useEffect(() => {
+  //   setLocalVolume(volume * 100);
+  // }, [volume]);
 
   return (
     <div className="volume-control">
