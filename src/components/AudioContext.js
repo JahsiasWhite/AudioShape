@@ -62,6 +62,11 @@ export const AudioProvider = ({ children }) => {
     setVolume(newVolume);
   };
 
+  const [videoTime, setVideoTime] = useState(0);
+  const changeVideoTime = (newVideoTime) => {
+    setVideoTime(newVideoTime);
+  };
+
   const playPreviousSong = () => {
     if (currentSong) {
       currentSong.removeEventListener('ended', onSongEnded);
@@ -777,6 +782,8 @@ export const AudioProvider = ({ children }) => {
         changeVolume,
         isMuted,
         toggleMute,
+        videoTime,
+        changeVideoTime,
         playPreviousSong,
         playNextSong,
         addEffect,

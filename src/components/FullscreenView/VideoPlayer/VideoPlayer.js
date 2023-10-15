@@ -1,9 +1,13 @@
 import React, { useEffect } from 'react';
 
+import { useAudioPlayer } from '../../AudioContext';
+
 function VideoPlayer({ songFile, song }) {
+  const { videoTime } = useAudioPlayer();
+
   useEffect(() => {
     console.log('TIME CHANGED', song.currentTime);
-  }, []);
+  }, [videoTime]); // TODO: Better way to do this? Need this component to update but would rather not have an extra useState
 
   return (
     <video

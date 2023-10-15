@@ -12,6 +12,7 @@ const FullscreenView = ({ toggleFullscreen }) => {
   const { visibleSongs, currentSongId, currentSong } = useAudioPlayer(); // TODO: Do I have to import currentSong
   const song = visibleSongs[currentSongId];
 
+  // TODO: Changing volume rerenders this component...
   console.error(song, currentSong);
 
   // Need to know if the current song has a video or not
