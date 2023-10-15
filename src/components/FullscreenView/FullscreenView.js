@@ -4,12 +4,15 @@ import './FullscreenView.css';
 
 import AudioSpectrum from '../AudioSpectrum/AudioSpectrum.js';
 import FullscreenPlaybar from '../Playbar/FullscreenPlaybar.js';
+import VideoPlayer from './VideoPlayer/VideoPlayer.js';
 
 import { useAudioPlayer } from '../AudioContext';
 
 const FullscreenView = ({ toggleFullscreen }) => {
   const { visibleSongs, currentSongId, currentSong } = useAudioPlayer(); // TODO: Do I have to import currentSong
   const song = visibleSongs[currentSongId];
+
+  console.error(song, currentSong);
 
   // Need to know if the current song has a video or not
   const isMP4 = song && song.file.endsWith('.mp4');
@@ -41,20 +44,21 @@ const FullscreenView = ({ toggleFullscreen }) => {
 
       {isMP4 ? (
         // If it's an MP4, show the video element
-        <video
-          className="song-video"
-          autoPlay
-          controls={false}
-          muted={true} // Mute the video
-          ref={(videoRef) => {
-            if (videoRef) {
-              videoRef.currentTime = currentSong.currentTime; // Set the video's currentTime
-            }
-          }}
-        >
-          <source src={song.file} type="video/mp4" />
-          Your device doesn't support video streaming
-        </video>
+        // <video
+        //   className="song-video"
+        //   autoPlay
+        //   controls={false}
+        //   muted={true} // Mute the video
+        //   ref={(videoRef) => {
+        //     if (videoRef) {
+        //       videoRef.currentTime = currentSong.currentTime; // Set the video's currentTime
+        //     }
+        //   }}
+        // >
+        //   <source src={song.file} type="video/mp4" />
+        //   Your device doesn't support video streaming
+        // </video>
+        <VideoPlayer songFile={song.file} song={currentSong} />
       ) : (
         <AudioSpectrum song={currentSong} />
       )}

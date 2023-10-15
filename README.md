@@ -46,6 +46,7 @@ BUGS:
 3.  Changing the time when watching a music video only changes the audio, not the video with it
 4.  Force closing the program doesnt delete the temp song. This is expected but should it delete it when the program first starts?
 5.  Fixup all of the addEffect, runEffect stuff. Do they all have to be async?
+6.  Temp song should be deleted when speedup/slowdown is toggled off
 
 ## Launching
 
