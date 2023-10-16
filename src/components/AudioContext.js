@@ -158,6 +158,8 @@ export const AudioProvider = ({ children }) => {
     /* Update the new file location */
     fileLocation = visibleSongs[currentSongId].file;
 
+    console.error('HI', effectsEnabled, speedupIsEnabled);
+
     /* If effects are enabled, apply them to the new song */
     if (effectsEnabled) {
       applySavedEffects(currentEffectCombo);
@@ -493,6 +495,7 @@ export const AudioProvider = ({ children }) => {
     );
 
     downloadAudio(renderedBuffer);
+    getTempSong(); // ? Need an await here?
   };
   function applySpeedChange(audioBuffer, speedChange) {
     const player = new Tone.Player(audioBuffer).toDestination();
