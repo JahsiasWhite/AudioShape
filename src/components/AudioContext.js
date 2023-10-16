@@ -33,6 +33,7 @@ export const AudioProvider = ({ children }) => {
   /* Effects */
   const [speedupIsEnabled, setSpeedupIsEnabled] = useState(false);
   const [slowDownIsEnabled, setSlowDownIsEnabled] = useState(false);
+  const [currentSpeed, setCurrentSpeed] = useState(1);
 
   /* Navigation */
   // ! Todo, should this be moved out of here? Is it in this context's scope?
@@ -158,8 +159,6 @@ export const AudioProvider = ({ children }) => {
     /* Update the new file location */
     fileLocation = visibleSongs[currentSongId].file;
 
-    console.error('HI', effectsEnabled, speedupIsEnabled);
-
     /* If effects are enabled, apply them to the new song */
     if (effectsEnabled) {
       applySavedEffects(currentEffectCombo);
@@ -168,10 +167,12 @@ export const AudioProvider = ({ children }) => {
 
     /* If speed up is enabled, edit the song first and then play */
     if (speedupIsEnabled) {
-      handleSpeedChange(DEFAULT_SPEEDUP);
+      // handleSpeedChange(DEFAULT_SPEEDUP);
+      addEffect('speed', DEFAULT_SPEEDUP);
       return;
     } else if (slowDownIsEnabled) {
-      handleSpeedChange(DEFAULT_SLOWDOWN);
+      // handleSpeedChange(DEFAULT_SLOWDOWN);
+      addEffect('speed', DEFAULT_SLOWDOWN);
       return;
     } else {
       currentSong.src = fileLocation;
@@ -367,6 +368,11 @@ export const AudioProvider = ({ children }) => {
     /* Make effects unclickable while the current song is being edited */
     setEffectsClickable(false);
 
+    // Save the new speed. RN only used for the video player
+    if (currentEffect === 'speed') {
+      setCurrentSpeed(value);
+    }
+
     // Add our effects to the list
     // Check if the effect was turned off
     // TODO: Get the actual defaults, kinda fcking up with reverb wetness rn
@@ -495,7 +501,7 @@ export const AudioProvider = ({ children }) => {
     );
 
     downloadAudio(renderedBuffer);
-    getTempSong(); // ? Need an await here?
+    // getTempSong(); // ? Need an await here?
   };
   function applySpeedChange(audioBuffer, speedChange) {
     const player = new Tone.Player(audioBuffer).toDestination();
@@ -630,6 +636,7 @@ export const AudioProvider = ({ children }) => {
   const handleTempSongSaved = (outputPath) => {
     // This function gets called twice for some odd reason, need to just fix that, then I don't need this
     // if (currentSongIndex === null) return;
+    console.error('SAVED :  ', effects);
 
     /* Update the new file path */
     currentSong.src = outputPath;
@@ -793,6 +800,7 @@ export const AudioProvider = ({ children }) => {
         changeVolume,
         isMuted,
         toggleMute,
+        currentSpeed,
         videoTime,
         changeVideoTime,
         playPreviousSong,

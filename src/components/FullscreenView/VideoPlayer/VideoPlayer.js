@@ -3,13 +3,16 @@ import React, { useEffect, useRef } from 'react';
 import { useAudioPlayer } from '../../AudioContext';
 
 function VideoPlayer({ songFile, song }) {
-  const { videoTime } = useAudioPlayer();
+  const { videoTime, currentSpeed } = useAudioPlayer();
 
   const videoRef = useRef(null);
 
   useEffect(() => {
     videoRef.current.currentTime = song.currentTime; // Set the video's currentTime
-  }, [videoTime]); // TODO: Better way to do this? Need this component to update but would rather not have an extra useState
+    console.error('NEW VIDEO TIME: ' + song.currentTime);
+
+    videoRef.current.playbackRate = currentSpeed; // TODO ! Takes time to render, setCurrentSpeed fires too fast meaning song.currentTime isn't updated properly
+  }, [videoTime, currentSpeed]); // TODO: Better way to do this? Need this component to update but would rather not have an extra useState
 
   return (
     <video
