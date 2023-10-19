@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
 
+import './AudioSpectrum.css';
+
 /**
  * SHOUTOUT https://codepen.io/nfj525/pen/rVBaab
  */
@@ -29,10 +31,10 @@ const AudioSpectrum = ({ song }) => {
     const ctx = canvas.getContext('2d');
 
     const parent = document.getElementsByClassName('fullscreen-view')[0];
-    canvas.width = parent.clientWidth;
-    canvas.height = parent.clientHeight;
+    canvas.width = parent.clientWidth * 0.7;
+    canvas.height = parent.clientHeight * 0.5;
 
-    const barWidth = (canvas.width / bufferLength) * 2.5;
+    const barWidth = (canvas.width / bufferLength) * 1;
     let x = 0;
 
     function renderFrame() {
@@ -45,18 +47,22 @@ const AudioSpectrum = ({ song }) => {
       ctx.fillStyle = '#000';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+      console.error(bufferLength);
       for (let i = 0; i < bufferLength; i++) {
         let barHeight = dataArray[i];
-        barHeight *= 2;
+        barHeight *= 1;
 
+        // TODO: Add option for colors?
         const r = barHeight / 2 + 25 * (i / bufferLength);
         const g = 250 * (i / bufferLength);
         const b = 50;
 
-        ctx.fillStyle = 'rgb(' + r + ',' + g + ',' + b + ')';
+        // ctx.fillStyle = 'rgb(' + r + ',' + g + ',' + b + ')';
+        ctx.fillStyle = '#FFFFFF';
+
         ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
 
-        x += barWidth + 1;
+        x += barWidth + 5;
       }
     }
 

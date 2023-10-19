@@ -22,18 +22,30 @@ const FullscreenView = ({ toggleFullscreen }) => {
     <div className="fullscreen-view">
       {!isMP4 ? (
         <>
-          {song && song.albumImage && (
-            <img
-              className="song-image"
-              src={song.albumImage}
-              alt={`${song.album} cover`}
-            />
-          )}
+          {/* {song && song.albumImage && (
+            // <img
+            //   className="song-image"
+            //   src={song.albumImage}
+            //   alt={`${song.album} cover`}
+            // />
+          )} */}
           {song && (
             <div className="fullscreen-song-details">
-              <div>{song.title}</div>
-              <div>{song.artist}</div>
-              <div>{song.album}</div>{' '}
+              {song.albumImage && (
+                <img
+                  className="song-image"
+                  src={song.albumImage}
+                  alt={`${song.album} cover`}
+                />
+              )}
+
+              <div style={{ marginLeft: '2%' }}>
+                <div style={{ fontSize: '35px', textOverflow: 'ellipsis' }}>
+                  {song.title}
+                </div>
+                <div style={{ fontSize: '17px' }}>{song.artist}</div>
+                <div style={{ fontSize: '17px' }}>{song.album}</div>{' '}
+              </div>
             </div>
           )}
         </>

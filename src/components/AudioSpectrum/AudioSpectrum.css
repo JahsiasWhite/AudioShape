@@ -17,8 +17,8 @@
 
 #canvas-container {
   position: fixed;
-  left: 0px;
-  bottom: 15%;
+  left: 15%;
+  bottom: 40%;
 }
 
 .audio {
