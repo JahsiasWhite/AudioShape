@@ -2,40 +2,6 @@
   margin-right: 10px;
 }
 
-.queue-popup {
-  /* display: none;
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: white;
-  color: black;
-  padding: 20px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  overflow: scroll;
-  height: 50%; */
-
-  display: none;
-  position: fixed;
-  top: 50px;
-  right: 50px; /* Adjust this to move the menu to the right */
-  width: 400px;
-  height: 70%;
-  background-color: var(--color-main);
-  color: var(--color-text);
-  border: 1px solid #ccc;
-  padding: 16px; /* Increased padding for better spacing */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Slightly larger shadow */
-
-  /* Positioning in the container */
-  /* display: flex; */
-  flex-direction: column;
-  justify-content: space-between;
-
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
 .showing {
   display: flex;
 }

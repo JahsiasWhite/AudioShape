@@ -2,7 +2,7 @@
   /* display: none; */
   position: fixed;
   top: 50px;
-  right: 50px; /* Adjust this to move the menu to the right */
+  right: 25%;
   width: 400px;
   height: 70%;
   background-color: var(--color-main);
@@ -13,11 +13,44 @@
 
   /* Positioning in the container */
   /* display: flex; */
-  flex-direction: column;
-  justify-content: space-between;
+  /* flex-direction: column;
+  justify-content: space-between; */
 
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+.close-menu {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+
+  width: 24px;
+  height: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 50%; /* Circular shape */
+}
+
+.popup-container ul {
+  padding: 0;
+  overflow-y: auto;
+  margin-top: 30px;
+}
+
+.popup-container li {
+  margin-bottom: 2%;
+  border: 1px solid var(--color-text);
+  padding: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.popup-container span {
+  cursor: pointer;
 }
 
 .saved-effects-enabled {

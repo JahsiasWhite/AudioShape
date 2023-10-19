@@ -60,7 +60,7 @@ function PlaylistMenu({ song, closePlaylistMenu }) {
   };
 
   return (
-    <div className="playlist-menu">
+    <div className="popup-container">
       <div className="song-name">{song.title}</div>
       <div className="close-menu" onClick={closePlaylistMenu}>
         X
