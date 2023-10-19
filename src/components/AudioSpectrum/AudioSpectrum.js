@@ -47,9 +47,27 @@ const AudioSpectrum = ({ song }) => {
       ctx.fillStyle = '#000';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+      let lastBarHeights = [];
+      const smoothnessFactor = 0.2;
+
       for (let i = 0; i < bufferLength; i++) {
         let barHeight = dataArray[i];
-        barHeight *= 1;
+        barHeight *= 4;
+
+        // Calculate the new smoothed bar height
+        if (lastBarHeights[i] === undefined) {
+          lastBarHeights[i] = 0;
+        }
+
+        // TODO: Is this really smoothing anything? It still looks a little choppy
+        // Apply smoothing to the current bar height
+        // const smoothedBarHeight = (barHeight + lastBarHeights[i]) * 0.5;
+        const smoothedBarHeight =
+          lastBarHeights[i] * (1 - smoothnessFactor) +
+          barHeight * smoothnessFactor;
+
+        // Store the smoothed height as the previous height for the next frame
+        lastBarHeights[i] = smoothedBarHeight;
 
         // TODO: Add option for colors?
         const r = barHeight / 2 + 25 * (i / bufferLength);
@@ -59,7 +77,12 @@ const AudioSpectrum = ({ song }) => {
         // ctx.fillStyle = 'rgb(' + r + ',' + g + ',' + b + ')';
         ctx.fillStyle = '#FFFFFF';
 
-        ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+        ctx.fillRect(
+          x,
+          canvas.height - smoothedBarHeight,
+          barWidth,
+          smoothedBarHeight
+        );
 
         x += barWidth + 5;
       }
