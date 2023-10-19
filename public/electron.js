@@ -36,9 +36,11 @@ let defaultSettings = JSON.stringify({
 let songs = [];
 
 /* Create the files to save settings */
+// TODO: Use these instead of 'path.join()'. I don't know why I have so many duplicates
 const dataDirectory = path.join(app.getPath('userData'), 'Data');
-const settingsFile = dataDirectory + 'settings.json';
-const playlistsFile = dataDirectory + 'playlists.json';
+const settingsFile = dataDirectory + '\\settings.json';
+const playlistsFile = dataDirectory + '\\playlists.json';
+const effectCombosFile = dataDirectory + '\\effectCombos.json';
 if (!fs.existsSync(dataDirectory)) {
   fs.mkdirSync(dataDirectory);
 }
@@ -47,6 +49,9 @@ if (!fs.existsSync(settingsFile)) {
 }
 if (!fs.existsSync(playlistsFile)) {
   fs.writeFileSync(playlistsFile, '');
+}
+if (!fs.existsSync(effectCombosFile)) {
+  fs.writeFileSync(effectCombosFile, JSON.stringify({}));
 }
 
 /* Where the files are saved for the auto playing  */
@@ -523,6 +528,43 @@ app.on('ready', function () {
   });
 
   /**
+   * Get all user effect combos
+   */
+  ipcMain.on('GRAB_EFFECT_COMBOS', (event) => {
+    // Get all, if any, existing effects
+    const effectCombos = getEffectCombos(effectCombosFile);
+    mainWindow.webContents.send('GRAB_EFFECT_COMBOS', effectCombos);
+  });
+
+  /**
+   * Saves a new effect combo to the local filesystem
+   */
+  ipcMain.on('SAVE_EFFECT_COMBO', (event, effectName, effects) => {
+    // Get all, if any, existing effects
+    let effectCombos = getEffectCombos(effectCombosFile);
+
+    // Create a new combo object
+    // const newCombo = {
+    //   name: effectName,
+    //   effects: effects,
+    // };
+
+    // Add the new combo to the list of combos
+    // effectCombos.push(newCombo);
+    effectCombos[effectName] = effects;
+
+    // Save the updated list of combos back to the JSON file
+    try {
+      fs.writeFileSync(effectCombosFile, JSON.stringify(effectCombos, null, 2));
+    } catch (error) {
+      console.error('Error writing combos file:', error);
+    }
+
+    // Send the new effects back to the client
+    mainWindow.webContents.send('SAVE_EFFECT_COMBO', effectCombos);
+  });
+
+  /**
    * Downloads the youtube video from the specified url
    */
   // TODO: ADD A Progress bar: https://github.com/fent/node-ytdl-core/blob/master/example/ffmpeg.js
@@ -723,6 +765,18 @@ app.on('ready', function () {
 
     // Return the updated list of playlists (optional)
     return playlists;
+  }
+
+  function getEffectCombos(filePath) {
+    let effectCombos = {}; // Should I reget this everytime?
+    try {
+      const effectComboData = fs.readFileSync(filePath, 'utf-8');
+      effectCombos = JSON.parse(effectComboData);
+    } catch (error) {
+      console.error('Error reading effect combos file:', error);
+    }
+
+    return effectCombos;
   }
 
   var generateRandomString = function (length) {

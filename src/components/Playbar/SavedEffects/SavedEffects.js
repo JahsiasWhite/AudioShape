@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './SavedEffects.css';
 import { useAudioPlayer } from '../../AudioContext';
 
@@ -18,6 +18,11 @@ const SavedEffects = () => {
   const handleApplyEffect = (comboName) => {
     applySavedEffects(comboName);
   };
+
+  // TODO: This should only run once. Will run everytime we switch between fullscreen mode though :(
+  useEffect(() => {
+    window.electron.ipcRenderer.sendMessage('GRAB_EFFECT_COMBOS');
+  }, []);
 
   return (
     <div className="saved-effects">

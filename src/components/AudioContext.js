@@ -424,14 +424,6 @@ export const AudioProvider = ({ children }) => {
     await getTempSong();
   };
 
-  const saveEffects = (comboName) => {
-    if (Object.keys(effects).length === 0) return;
-
-    savedEffects[comboName] = effects;
-    console.error('SAVING AS ', savedEffects[comboName]);
-    setSavedEffects(savedEffects);
-  };
-
   const applySavedEffects = async (comboName) => {
     // TODO MAKE THIS NOT HARDCODED
     // if (comboName === 'speedupIsEnabled') {
@@ -445,6 +437,7 @@ export const AudioProvider = ({ children }) => {
     // The first effect will be applied to the original file
     fileLocation = visibleSongs[currentSongId].file;
 
+    console.error(savedEffects, comboName, savedEffects[comboName]);
     if (savedEffects[comboName]) {
       for (const effect in savedEffects[comboName]) {
         effectThreshold++;
@@ -778,6 +771,33 @@ export const AudioProvider = ({ children }) => {
 
     window.electron.ipcRenderer.once('CREATE_PLAYLIST', handlePlaylistAdded);
   }, [playlists]);
+
+  /**
+   * Initial call to get all effect combos
+   */
+  window.electron.ipcRenderer.on('GRAB_EFFECT_COMBOS', (newEffectCombos) => {
+    setSavedEffects(newEffectCombos);
+  });
+
+  const saveEffects = (comboName) => {
+    // Save the effectCombo permanently
+    window.electron.ipcRenderer.sendMessage(
+      'SAVE_EFFECT_COMBO',
+      comboName,
+      effects
+    );
+  };
+
+  useEffect(() => {
+    const handleEffectComboAdded = (newEffectCombos) => {
+      setSavedEffects(newEffectCombos);
+    };
+
+    window.electron.ipcRenderer.once(
+      'SAVE_EFFECT_COMBO',
+      handleEffectComboAdded
+    );
+  }, [savedEffects]);
 
   return (
     <AudioContext.Provider

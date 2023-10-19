@@ -33,10 +33,9 @@ TODO:
 12. Need to export to mp3, rn, exporting to WAV is creating audio files x10 as big as their original
 13. Shuffle
 14. Resturcture styles, does creating all of these extra folders take up a lot of storage??
-15. Add gif support for fullscreen mode
-16. Start creating the new song before the current ends on auto play so the user doesnt have to wait for it to render
-17. Add tailwindCSS, it should reduce a lot of the duplicate CSS
-18. Progress bar for the youtube download
+15. Start creating the new song before the current ends on auto play so the user doesnt have to wait for it to render
+16. Add tailwindCSS, it should reduce a lot of the duplicate CSS
+17. Progress bar for the youtube download
 
 999 Easy file/song sharing
 
@@ -44,10 +43,9 @@ BUGS:
 
 1.  Playlists with 0 songs show all songs
 2.  Can't enter fullscreen multiple times
-3.  Changing the time when watching a music video only changes the audio, not the video with it
-4.  Force closing the program doesnt delete the temp song. This is expected but should it delete it when the program first starts?
-5.  Fixup all of the addEffect, runEffect stuff. Do they all have to be async?
-6.  Temp song should be deleted when speedup/slowdown is toggled off
+3.  Force closing the program doesnt delete the temp song. This is expected but should it delete it when the program first starts?
+4.  Fixup all of the addEffect, runEffect stuff. Do they all have to be async?
+5.  Temp song is not always deleted when using custom effects. EX: Have speedup toggled, add any effect, there will be two temp songs. Each effect adds a new temp song but doesnt delete the previous
 
 ## Launching
 
