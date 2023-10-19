@@ -40,9 +40,7 @@ const FullscreenView = ({ toggleFullscreen }) => {
               )}
 
               <div style={{ marginLeft: '2%' }}>
-                <div style={{ fontSize: '35px', textOverflow: 'ellipsis' }}>
-                  {song.title}
-                </div>
+                <div style={{ fontSize: '35px' }}>{song.title}</div>
                 <div style={{ fontSize: '17px' }}>{song.artist}</div>
                 <div style={{ fontSize: '17px' }}>{song.album}</div>{' '}
               </div>
