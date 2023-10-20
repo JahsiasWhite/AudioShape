@@ -36,6 +36,7 @@ function LayoutBar({ toggleSection }) {
     'playlists',
     'artists',
     'youtube',
+    'spotify',
     'settings',
   ];
 
@@ -53,6 +54,7 @@ function LayoutBar({ toggleSection }) {
             {section === 'playlists' && <PlaylistButton />}
             {section === 'artists' && <ArtistButton />}
             {section === 'youtube' && <YoutubeButton />}
+            {section === 'spotify' && <button />}
             {section === 'settings' && <SettingsButton />}
           </div>
         ))}

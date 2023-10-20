@@ -1,4 +1,11 @@
-const { app, BrowserWindow, ipcMain, shell, session } = require('electron');
+const {
+  app,
+  BrowserWindow,
+  ipcMain,
+  shell,
+  session,
+  protocol,
+} = require('electron');
 
 const path = require('path');
 const fs = require('fs');
@@ -59,6 +66,18 @@ let temporaryFilePath = null;
 let newTemporaryFilePath = null;
 
 app.name = 'Music Player';
+
+// Register the custom protocol handler
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'myapp', // Use your own custom scheme
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+    },
+  },
+]);
 
 app.on('ready', function () {
   // Create our app
@@ -357,17 +376,27 @@ app.on('ready', function () {
   /**
    * Starts the spotify login with the user id
    */
+
+  // Handle custom protocol requests
+  protocol.registerFileProtocol('myapp', (request, callback) => {
+    // Handle custom protocol requests here
+    console.log('RECEIVED: ', request.url); // Log the custom URL
+
+    // Handle the URL and perform necessary actions (e.g., extract tokens)
+    // You may want to close the window and continue the OAuth flow in the main window.
+  });
   // var spotify_client_id = process.env.SPOTIFY_CLIENT_ID;
   // var spotify_client_secret = process.env.SPOTIFY_CLIENT_SECRET;
-  var spotify_client_id = '071723df542346fab9e3c0f2dee691fd';
+  var spotify_client_id = '0f4a9e39a958421b8650f7a9142baefd';
   var spotify_client_secret = 1;
   // my application redirect uri
-  const redirectUri = 'http://localhost/oauth/redirect';
+  // const redirectUri = 'http://localhost:8888/call';
+  // const redirectUri = 'http://localhost/auth/callback';
+  const redirectUri = 'myapp://oauth-callback';
   ipcMain.on('start-spotify-login', (event) => {
     const spotifyClientId = spotify_client_id;
     const scope = 'streaming user-read-email user-read-private';
     const state = generateRandomString(16);
-    // const redirectUri = 'http://localhost:3000/auth/callback';
     const authUrl =
       `https://accounts.spotify.com/authorize/?` +
       `response_type=code&` +
@@ -376,26 +405,19 @@ app.on('ready', function () {
       `redirect_uri=${encodeURIComponent(redirectUri)}&` +
       `state=${state}`;
 
-    shell.openExternal(authUrl);
+    // shell.openExternal(authUrl);
+    mainWindow.loadURL(authUrl);
   });
 
   // Prepare to filter only the callbacks for my redirectUri
-  const filter = {
-    urls: [redirectUri + '*'],
-  };
+  // const filter = {
+  //   urls: [redirectUri + '*'],
+  // };
   // intercept all the requests for that includes my redirect uri
-  session.defaultSession.webRequest.onBeforeRequest(
-    filter,
-    function (details, callback) {
-      const url = details.url;
-      // process the callback url and get any param you need
-
-      // don't forget to let the request proceed
-      callback({
-        cancel: false,
-      });
-    }
-  );
+  // mainWindow.webContents.on('will-navigate', function (event, newUrl) {
+  //   console.log('WILL-NAVIGATE', newUrl);
+  //   // More complex code to handle tokens goes here
+  // });
 
   /**
    * Gets all user settings. Called when the user navigates to the settings page
