@@ -24,6 +24,10 @@ const SavedEffects = () => {
     window.electron.ipcRenderer.sendMessage('GRAB_EFFECT_COMBOS');
   }, []);
 
+  useEffect(() => {
+    console.error('HMMM: ', currentEffectCombo);
+  }, [currentEffectCombo]);
+
   return (
     <div className="saved-effects">
       {/* Button to toggle visibility */}
@@ -47,7 +51,11 @@ const SavedEffects = () => {
             {Object.keys(savedEffects).map((comboName, index) => (
               <div
                 key={index}
-                className="saved-effect-item"
+                className={`saved-effect-item ${
+                  comboName === currentEffectCombo
+                    ? 'saved-effect-item-enabled'
+                    : ''
+                }`}
                 onClick={() => handleApplyEffect(comboName)}
               >
                 {comboName}

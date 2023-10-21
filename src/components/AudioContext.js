@@ -39,6 +39,9 @@ export const AudioProvider = ({ children }) => {
   // ! Todo, should this be moved out of here? Is it in this context's scope?
   const [currentScreen, setCurrentScreen] = useState('All Songs');
 
+  /* General */
+  const [loading, setLoading] = useState(false);
+
   /*
 
 ██████   █████  ███████ ██  ██████      ██████  ██████  ███    ██ ████████ ██████   ██████  ██      
@@ -156,6 +159,8 @@ export const AudioProvider = ({ children }) => {
     // ? Can we do something here so if this is null, we never would even end up here
     if (currentSongId === null) return;
 
+    startLoading();
+
     /* Update the new file location */
     fileLocation = visibleSongs[currentSongId].file;
 
@@ -182,6 +187,8 @@ export const AudioProvider = ({ children }) => {
     initCurrentSong();
 
     setCurrentSong(currentSong);
+
+    finishLoading();
   }, [currentSongId]);
 
   const initCurrentSong = () => {
@@ -245,6 +252,16 @@ export const AudioProvider = ({ children }) => {
       (key) => visibleSongs[key].id === songId
     );
     setCurrentSongIndex(index);
+  };
+
+  const startLoading = () => {
+    console.log('Starting loading');
+    setLoading(true);
+  };
+
+  const finishLoading = () => {
+    console.log('Finished loading');
+    setLoading(false);
   };
 
   /*
@@ -439,6 +456,12 @@ export const AudioProvider = ({ children }) => {
 
     console.error(savedEffects, comboName, savedEffects[comboName]);
     if (savedEffects[comboName]) {
+      setEffectsEnabled(true);
+      setCurrentEffectCombo(comboName); // TODO ALSO REDUNDANT
+
+      // Start loading the song
+      startLoading();
+
       for (const effect in savedEffects[comboName]) {
         effectThreshold++;
 
@@ -450,8 +473,8 @@ export const AudioProvider = ({ children }) => {
         fileLocation = currentSong.src; // All subsequent effects will be applied to the temp file
       }
 
-      setEffectsEnabled(true);
-      setCurrentEffectCombo(comboName); // TODO ALSO REDUNDANT
+      // Finish loading the song
+      finishLoading();
     } else {
       // NOT A COMBO
     }
@@ -803,6 +826,7 @@ export const AudioProvider = ({ children }) => {
     <AudioContext.Provider
       value={{
         initialSongLoad,
+        loading,
         resetCurrentSong,
         loadedSongs,
         visibleSongs,

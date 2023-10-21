@@ -36,6 +36,7 @@ TODO:
 15. Start creating the new song before the current ends on auto play so the user doesnt have to wait for it to render
 16. Add tailwindCSS, it should reduce a lot of the duplicate CSS
 17. Progress bar for the youtube download
+18. Videos tab. Just another songList but showing only mp4 files
 
 999 Easy file/song sharing
 

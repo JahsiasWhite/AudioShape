@@ -14,6 +14,7 @@ import SpeedupButtonSVG from './SpeedupButtonSVG';
 import FullscreenSVG from './Fullscreen.svg';
 
 import { useAudioPlayer } from '../AudioContext';
+import LoadingSpinner from '../LoadingSpinner/LoadingSpinner';
 
 function Playbar({ toggleFullscreen }) {
   const {
@@ -23,6 +24,8 @@ function Playbar({ toggleFullscreen }) {
     speedupIsEnabled,
     toggleSlowDown,
     slowDownIsEnabled,
+
+    loading,
   } = useAudioPlayer();
 
   return (
@@ -37,18 +40,22 @@ function Playbar({ toggleFullscreen }) {
               alt={`${visibleSongs[currentSongId].album} cover`}
             />
           )}
-        <div className="song-details">
-          <span id="song-title">
-            {visibleSongs[currentSongId]
-              ? visibleSongs[currentSongId].title
-              : 'No song playing'}
-          </span>
-          <span id="artist">
-            {visibleSongs[currentSongId]
-              ? visibleSongs[currentSongId].artist
-              : ''}
-          </span>
-        </div>
+        {loading ? (
+          <LoadingSpinner />
+        ) : (
+          <div className="song-details">
+            <span id="song-title">
+              {visibleSongs[currentSongId]
+                ? visibleSongs[currentSongId].title
+                : 'No song playing'}
+            </span>
+            <span id="artist">
+              {visibleSongs[currentSongId]
+                ? visibleSongs[currentSongId].artist
+                : ''}
+            </span>
+          </div>
+        )}
       </div>
       <div className="playbar-controls">
         <SavedEffects />
