@@ -373,26 +373,125 @@ app.on('ready', function () {
     temporaryFilePath = newTemporaryFilePath;
   });
 
+  /********************************************** */
   /**
    * Starts the spotify login with the user id
    */
 
-  // Handle custom protocol requests
-  protocol.registerFileProtocol('myapp', (request, callback) => {
-    // Handle custom protocol requests here
-    console.log('RECEIVED: ', request.url); // Log the custom URL
-
-    // Handle the URL and perform necessary actions (e.g., extract tokens)
-    // You may want to close the window and continue the OAuth flow in the main window.
-  });
   // var spotify_client_id = process.env.SPOTIFY_CLIENT_ID;
   // var spotify_client_secret = process.env.SPOTIFY_CLIENT_SECRET;
   var spotify_client_id = '0f4a9e39a958421b8650f7a9142baefd';
-  var spotify_client_secret = 1;
+  var spotify_client_secret = 'd67ebb6b783e447c89d53175e8116752';
+
   // my application redirect uri
   // const redirectUri = 'http://localhost:8888/call';
   // const redirectUri = 'http://localhost/auth/callback';
   const redirectUri = 'myapp://oauth-callback';
+
+  var SpotifyWebApi = require('spotify-web-api-node');
+  var spotifyApi;
+
+  function createSpotifyClient(code) {
+    // credentials are optional
+    spotifyApi = new SpotifyWebApi({
+      clientId: spotify_client_id,
+      clientSecret: spotify_client_secret,
+      redirectUri: redirectUri,
+    });
+    console.log('SETTING WITH : ', code);
+
+    // Retrieve an access token and a refresh token
+    spotifyApi.authorizationCodeGrant(code).then(
+      function (data) {
+        console.log('The token expires in ' + data.body['expires_in']);
+        console.log('The access token is ' + data.body['access_token']);
+        console.log('The refresh token is ' + data.body['refresh_token']);
+
+        // Set the access token on the API object to use it in later calls
+        spotifyApi.setAccessToken(data.body['access_token']);
+        spotifyApi.setRefreshToken(data.body['refresh_token']);
+
+        // getMe();
+        getUserPlaylists(code);
+      },
+      function (err) {
+        console.log('Something went wrong!', err);
+      }
+    );
+
+    // Retrieve an access token.
+    // spotifyApi.clientCredentialsGrant().then(
+    //   function (data) {
+    //     console.log('The access token expires in ' + data.body['expires_in']);
+    //     console.log('The access token is ' + data.body['access_token']);
+
+    //     // Save the access token so that it's used in future calls
+    //     spotifyApi.setAccessToken(data.body['access_token']);
+
+    //     getUserPlaylists();
+    //     getMe();
+    //   },
+    //   function (err) {
+    //     console.log(
+    //       'Something went wrong when retrieving an access token',
+    //       err
+    //     );
+    //   }
+    // );
+
+    function getMe() {
+      spotifyApi.getMe().then(
+        function (data) {
+          console.log(
+            'Some information about the authenticated user',
+            data.body
+          );
+        },
+        function (err) {
+          console.log('Something went wrong!', err);
+        }
+      );
+    }
+
+    function getUserPlaylists(code) {
+      spotifyApi.getUserPlaylists().then(
+        function (data) {
+          console.log('Retrieved playlists', data.body);
+          mainWindow.webContents.send('start-spotify-login', code, data.body);
+        },
+        function (err) {
+          console.log('Something went wrong!', err);
+        }
+      );
+    }
+  }
+
+  ipcMain.on('get-spotify-playlist', (event, playlistId) => {
+    spotifyApi.getPlaylist(playlistId).then(
+      function (data) {
+        console.log('Some information about this playlist', data.body);
+        mainWindow.webContents.send('get-spotify-playlist', data.body);
+      },
+      function (err) {
+        console.log('Something went wrong!', err);
+      }
+    );
+  });
+
+  // Handle custom protocol requests
+  protocol.registerFileProtocol('myapp', (request, callback) => {
+    // Handle custom protocol requests here
+    const url = new URL(request.url);
+    // Extract the 'code' parameter from the query string
+    const code = url.searchParams.get('code');
+
+    // Handle the URL and perform necessary actions (e.g., extract tokens)
+    // You may want to close the window and continue the OAuth flow in the main window.
+    console.log(code);
+
+    createSpotifyClient(code);
+  });
+
   ipcMain.on('start-spotify-login', (event) => {
     const spotifyClientId = spotify_client_id;
     const scope = 'streaming user-read-email user-read-private';
@@ -407,6 +506,8 @@ app.on('ready', function () {
 
     // shell.openExternal(authUrl);
     mainWindow.loadURL(authUrl);
+
+    // createSpotifyClient();
   });
 
   // Prepare to filter only the callbacks for my redirectUri
@@ -418,6 +519,8 @@ app.on('ready', function () {
   //   console.log('WILL-NAVIGATE', newUrl);
   //   // More complex code to handle tokens goes here
   // });
+
+  /****************************************************** */
 
   /**
    * Gets all user settings. Called when the user navigates to the settings page
