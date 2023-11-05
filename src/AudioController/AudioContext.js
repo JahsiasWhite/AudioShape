@@ -3,9 +3,6 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 // Very helpful audio processing library
 import * as Tone from 'tone';
 
-// Helper files
-import { startLoading, finishLoading, loading } from './Loading.js';
-
 const AudioContext = createContext();
 
 export const useAudioPlayer = () => useContext(AudioContext);
@@ -41,6 +38,10 @@ export const AudioProvider = ({ children }) => {
   /* Navigation */
   // ! Todo, should this be moved out of here? Is it in this context's scope?
   const [currentScreen, setCurrentScreen] = useState('All Songs');
+
+  /* General */
+  const [loading, setLoading] = useState(false);
+  var loadingQueue = [];
 
   /*
 
@@ -252,6 +253,22 @@ export const AudioProvider = ({ children }) => {
       (key) => visibleSongs[key].id === songId
     );
     setCurrentSongIndex(index);
+  };
+
+  const startLoading = (effects) => {
+    if (effects !== undefined) {
+      loadingQueue = Object.keys(effects);
+    }
+    console.log('Starting loading', effects, loadingQueue);
+    setLoading(loadingQueue);
+  };
+
+  const finishLoading = (effect) => {
+    if (effects !== undefined) {
+      loadingQueue = loadingQueue.filter((curEffect) => curEffect !== effect);
+    }
+    console.log('Finished loading', loading, effect, loadingQueue);
+    setLoading(loadingQueue);
   };
 
   /*
