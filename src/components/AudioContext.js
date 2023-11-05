@@ -41,6 +41,7 @@ export const AudioProvider = ({ children }) => {
 
   /* General */
   const [loading, setLoading] = useState(false);
+  var loadingQueue = [];
 
   /*
 
@@ -254,14 +255,20 @@ export const AudioProvider = ({ children }) => {
     setCurrentSongIndex(index);
   };
 
-  const startLoading = () => {
-    console.log('Starting loading');
-    setLoading(true);
+  const startLoading = (effects) => {
+    if (effects !== undefined) {
+      loadingQueue = Object.keys(effects);
+    }
+    console.log('Starting loading', effects, loadingQueue);
+    setLoading(loadingQueue);
   };
 
-  const finishLoading = () => {
-    console.log('Finished loading');
-    setLoading(false);
+  const finishLoading = (effect) => {
+    if (effects !== undefined) {
+      loadingQueue = loadingQueue.filter((curEffect) => curEffect !== effect);
+    }
+    console.log('Finished loading', loading, effect, loadingQueue);
+    setLoading(loadingQueue);
   };
 
   /*
@@ -459,8 +466,8 @@ export const AudioProvider = ({ children }) => {
       setEffectsEnabled(true);
       setCurrentEffectCombo(comboName); // TODO ALSO REDUNDANT
 
-      // Start loading the song
-      startLoading();
+      // Start loading the all effects
+      startLoading(savedEffects[comboName]);
 
       for (const effect in savedEffects[comboName]) {
         effectThreshold++;
@@ -471,10 +478,10 @@ export const AudioProvider = ({ children }) => {
         // runEffect(effect, effectValue);
         await addEffect(effect, effectValue, fileLocation); // TODO I dont like this, kinda sloppy
         fileLocation = currentSong.src; // All subsequent effects will be applied to the temp file
-      }
 
-      // Finish loading the song
-      finishLoading();
+        // Finish loading the effect
+        finishLoading(effect);
+      }
     } else {
       // NOT A COMBO
     }
@@ -852,6 +859,7 @@ export const AudioProvider = ({ children }) => {
         addEffect,
         saveEffects,
         savedEffects,
+        effects,
         applySavedEffects,
         currentEffectCombo,
         effectsClickable,

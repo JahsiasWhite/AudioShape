@@ -26,7 +26,10 @@ function Playbar({ toggleFullscreen }) {
     slowDownIsEnabled,
 
     loading,
+    effects,
   } = useAudioPlayer();
+
+  console.error('HI THERE: ', loading.length, Object.keys(effects).length);
 
   return (
     <div className="playbar">
@@ -40,8 +43,14 @@ function Playbar({ toggleFullscreen }) {
               alt={`${visibleSongs[currentSongId].album} cover`}
             />
           )}
-        {loading ? (
-          <LoadingSpinner />
+        {loading.length > 0 ? (
+          <>
+            <LoadingSpinner />
+            {-1 * (loading.length - Object.keys(effects).length) +
+              '/' +
+              Object.keys(effects).length +
+              'effects'}
+          </>
         ) : (
           <div className="song-details">
             <span id="song-title">
