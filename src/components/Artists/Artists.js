@@ -1,7 +1,7 @@
 import React from 'react';
 import './Artists.css';
 
-import { useAudioPlayer } from '../AudioContext';
+import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 function Artists({ toggleSection }) {
   const { setVisibleSongs, setCurrentScreen, loadedSongs } = useAudioPlayer();

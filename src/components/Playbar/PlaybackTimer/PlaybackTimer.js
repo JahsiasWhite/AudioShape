@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-import { useAudioPlayer } from '../../AudioContext';
+import { useAudioPlayer } from '../../../AudioController/AudioContext';
 
 function PlaybackTimer() {
   const { currentSong, changeVideoTime } = useAudioPlayer();

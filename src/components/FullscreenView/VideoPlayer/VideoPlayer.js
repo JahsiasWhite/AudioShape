@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 
-import { useAudioPlayer } from '../../AudioContext';
+import { useAudioPlayer } from '../../../AudioController/AudioContext';
 
 function VideoPlayer({ songFile, song }) {
   const { videoTime, currentSpeed, isPlaying } = useAudioPlayer();

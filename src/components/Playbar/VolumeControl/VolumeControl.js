@@ -5,7 +5,7 @@ import VolumeMaxSVG from './volume-max.svg';
 import VolumeLowSVG from './volume-low.svg';
 import VolumeQuietSVG from './volume-quiet.svg';
 
-import { useAudioPlayer } from '../../AudioContext';
+import { useAudioPlayer } from '../../../AudioController/AudioContext';
 
 function VolumeControl() {
   const { volume, changeVolume, toggleMute } = useAudioPlayer();

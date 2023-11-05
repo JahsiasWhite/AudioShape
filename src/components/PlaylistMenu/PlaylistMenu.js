@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAudioPlayer } from '../AudioContext';
+import { useAudioPlayer } from '../../AudioController/AudioContext';
 import './PlaylistMenu.css';
 
 // TODO: Instead of exit button, click on outside of menu to close

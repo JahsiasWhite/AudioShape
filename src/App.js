@@ -18,7 +18,7 @@ import FullscreenView from './components/FullscreenView/FullscreenView';
 import ErrorMessages from './components/ErrorMessages/ErrorMessages';
 
 // CONTEXT
-import { AudioProvider } from './components/AudioContext'; // So we can talk to the editor directly, NO PROP DRILLING YAY!!
+import { AudioProvider } from './AudioController/AudioContext'; // So we can talk to the editor directly, NO PROP DRILLING YAY!!
 
 function App() {
   const [selectedSongIndex, setSelectedSongIndex] = useState(null);

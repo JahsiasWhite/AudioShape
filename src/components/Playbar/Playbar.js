@@ -13,7 +13,7 @@ import SlowDownButtonSVG from './SlowDownButtonSVG';
 import SpeedupButtonSVG from './SpeedupButtonSVG';
 import FullscreenSVG from './Fullscreen.svg';
 
-import { useAudioPlayer } from '../AudioContext';
+import { useAudioPlayer } from '../../AudioController/AudioContext';
 import LoadingSpinner from '../LoadingSpinner/LoadingSpinner';
 
 function Playbar({ toggleFullscreen }) {

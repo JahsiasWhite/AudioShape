@@ -4,7 +4,7 @@ import './PlayButton.css';
 import PlayButtonSVG from './PlayButton.svg';
 import PauseButtonSVG from './PauseButton.svg';
 
-import { useAudioPlayer } from '../../AudioContext';
+import { useAudioPlayer } from '../../../AudioController/AudioContext';
 
 function PlayButton() {
   const { isPlaying, pauseAudio, playAudio } = useAudioPlayer();

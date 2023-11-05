@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './SavedEffects.css';
-import { useAudioPlayer } from '../../AudioContext';
+import { useAudioPlayer } from '../../../AudioController/AudioContext';
 
 const SavedEffects = () => {
   const { savedEffects, applySavedEffects, currentEffectCombo } =

@@ -5,7 +5,7 @@ import LoadingSpinner from '../LoadingSpinner/LoadingSpinner';
 
 // TODO: Videos with the char '|' in the title don't download. Prob issue with the package but maybe I can fix this
 
-import { useAudioPlayer } from '../AudioContext';
+import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 function YouTubeDownloader() {
   const { addSong } = useAudioPlayer();

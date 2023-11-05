@@ -6,7 +6,7 @@ import AudioSpectrum from '../AudioSpectrum/AudioSpectrum.js';
 import FullscreenPlaybar from '../Playbar/FullscreenPlaybar.js';
 import VideoPlayer from './VideoPlayer/VideoPlayer.js';
 
-import { useAudioPlayer } from '../AudioContext';
+import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 const FullscreenView = ({ toggleFullscreen }) => {
   const { visibleSongs, currentSongId, currentSong } = useAudioPlayer(); // TODO: Do I have to import currentSong

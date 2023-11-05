@@ -10,7 +10,7 @@ import PlaybackTimer from './PlaybackTimer/PlaybackTimer';
 import SlowDownButtonSVG from './SlowDownButtonSVG';
 import SpeedupButtonSVG from './SpeedupButtonSVG';
 
-import { useAudioPlayer } from '../AudioContext';
+import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 function FullscreenPlaybar({ toggleFullscreen }) {
   const { toggleSpeedup, speedupIsEnabled, toggleSlowDown, slowDownIsEnabled } =

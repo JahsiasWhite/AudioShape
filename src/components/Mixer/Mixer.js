@@ -3,7 +3,7 @@ import './Mixer.css';
 
 import AudioPlugin from './AudioPlugin';
 
-import { useAudioPlayer } from '../AudioContext';
+import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 // The user can select which song they want to edit or just come in here and choose which song after
 function Mixer({ selectedIndex, setSelectedIndex }) {

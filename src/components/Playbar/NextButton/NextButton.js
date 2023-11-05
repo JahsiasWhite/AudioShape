@@ -3,7 +3,7 @@ import './NextButton.css';
 
 import NextButtonSVG from './NextButton.svg';
 
-import { useAudioPlayer } from '../../AudioContext';
+import { useAudioPlayer } from '../../../AudioController/AudioContext';
 
 function NextButton() {
   const { playNextSong } = useAudioPlayer();

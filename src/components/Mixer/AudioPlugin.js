@@ -5,7 +5,7 @@ import './AudioPlugin.css';
 
 import Knob from './Knob';
 
-import { useAudioPlayer } from '../AudioContext';
+import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 // DREADBOX INSPIRED
 

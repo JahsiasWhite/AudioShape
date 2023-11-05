@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './Queue.css';
-import { useAudioPlayer } from '../../AudioContext';
+import { useAudioPlayer } from '../../../AudioController/AudioContext';
 
 import QueueSVG from './queue.svg';
 

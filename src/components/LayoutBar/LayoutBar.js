@@ -9,7 +9,7 @@ import SpotifyButton from './SpotifyButton/SpotifyButton';
 import YoutubeButton from './YoutubeButton/YoutubeButton';
 import SettingsButton from './SettingsButton/SettingsButton';
 
-import { useAudioPlayer } from '../AudioContext';
+import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 function LayoutBar({ toggleSection }) {
   const { setVisibleSongs, loadedSongs, setCurrentScreen } = useAudioPlayer();

@@ -9,7 +9,7 @@ import PlaylistMenu from '../PlaylistMenu/PlaylistMenu';
 import DownArrowSVG from './down-arrow.svg';
 import PlusButtonSVG from './add-svgrepo-com.svg';
 
-import { useAudioPlayer } from '../AudioContext';
+import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 function SongList({ handleSongEdit, toggleSection }) {
   const { handleSongSelect, visibleSongs, currentSongId, currentScreen } =
