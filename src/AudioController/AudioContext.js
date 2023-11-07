@@ -254,6 +254,10 @@ export const AudioProvider = ({ children }) => {
     setCurrentSongIndex(index);
   };
 
+  /**
+   * Starts loading a new process
+   * @param {String} effectName
+   */
   const startLoading = (effectName) => {
     // let queue = [];
     // if (effects !== undefined) {
@@ -264,6 +268,10 @@ export const AudioProvider = ({ children }) => {
     setLoadingQueue([...loadingQueue, effectName]);
   };
 
+  /**
+   * Finish loading the given process
+   * @param {*} effect
+   */
   const finishLoading = (effect) => {
     let queue = [];
     if (effect !== undefined) {

@@ -28,6 +28,7 @@
     "react-scripts": "^5.0.1",
     "spotify-web-api-node": "^5.0.2",
     "tone": "^14.7.77",
+    "yt-search": "^2.10.4",
     "ytdl-core": "^4.11.5"
   },
   "browserslist": {

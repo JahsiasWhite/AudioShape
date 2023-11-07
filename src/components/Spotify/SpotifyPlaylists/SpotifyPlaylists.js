@@ -37,6 +37,7 @@ const SpotifyPlaylists = ({ playlists }) => {
 
   return (
     <>
+      Playlists
       {loadPlaylist && <SpotifyPlaylist playlistId={loadPlaylist} />}
       {!loadPlaylist && (
         <div className="playlist-cards">

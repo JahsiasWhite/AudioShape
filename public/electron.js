@@ -19,6 +19,9 @@ const ytdl = require('ytdl-core');
 const ffmpegPath = require('ffmpeg-static');
 const cp = require('child_process');
 
+// For searching youtube videos. The spotify downloader requires this
+const yts = require('yt-search');
+
 const { glob, globSync, Glob } = require('glob');
 // const { fetch } = require('node-fetch');
 let fetch;
@@ -694,10 +697,87 @@ app.on('ready', function () {
    */
   // TODO: ADD A Progress bar: https://github.com/fent/node-ytdl-core/blob/master/example/ffmpeg.js
   ipcMain.on('DOWNLOAD_YOUTUBE_VID', async (event, videoUrl) => {
-    console.error('URL IS : ', videoUrl);
-    // try {
+    downloadYoutubeVideo(videoUrl);
+
+    // Start the download
+    //   ytdl(videoUrl, downloadOptions)
+    //     .pipe(
+    //       fs.createWriteStream(
+    //         path.join(downloadOptions.directory, downloadOptions.filename)
+    //       )
+    //     )
+    //     .on('finish', () => {
+    //       console.error('FINISHED DOWNLOADING');
+    //       mainWindow.webContents.send(
+    //         'download-success',
+    //         'Download completed!'
+    //       );
+    //     })
+    //     .on('error', (error) => {
+    //       console.error('Error downloading video', error.message);
+    //       mainWindow.webContents.send('download-error', error.message);
+    //     });
+    // } catch (error) {
+    //   console.error('Error fetching video', error.message);
+
+    //   // maybe use error.name === 'SyntaxError' instead?
+    //   if (error.message === 'Invalid or unexpected token') {
+    //     // This error usually happens when the ytdl package is broken
+    //     console.error('ytdl package is most likely broken');
+    //   }
+
+    //   mainWindow.webContents.send('download-error', error.message);
+    // }
+  });
+
+  ipcMain.on('DOWNLOAD_SPOTIFY_SONG', async (event, songDetails) => {
+    // Get the song url
+    const result = await yts(songDetails.name + songDetails.artist);
+    const url = result.all[0].url; // TODO: What happens if all is empty? Is that possible? 'all' is an array of the search results...
+
+    // download the song from youtube
+    downloadYoutubeVideo(url);
+  });
+
+  /**
+   *
+   *
+   * Helper functions
+   *
+   *
+   *
+   */
+
+  /**
+   * Creates the settings file and returns the location of it
+   * @returns
+   */
+  function createSettingsPath() {
+    const settingsPath = path.join(
+      app.getPath('userData'),
+      'Data',
+      'settings.json'
+    );
+    return settingsPath;
+  }
+
+  function getSettings(settingsPath) {
+    // Optional parameter
+    if (settingsPath === undefined) {
+      settingsPath = createSettingsPath();
+    }
+
+    const settingsData = fs.readFileSync(settingsPath, 'utf-8');
+    return JSON.parse(settingsData);
+  }
+
+  async function downloadYoutubeVideo(url) {
+    console.log('----------------------------------------------------');
+    console.log('DOWNLOADING VIDEO');
+    console.log('Youtube URL is: ', url);
+
     // Get the youtube video title
-    const info = await ytdl.getInfo(videoUrl);
+    const info = await ytdl.getInfo(url);
     const videoTitle = info.videoDetails.title;
 
     // Get where we are saving the video to
@@ -706,10 +786,10 @@ app.on('ready', function () {
 
     // Use ytdl to download the video and audio separately
     // This is necessary because for higher quality videos, Youtube downloads the audio and video separately
-    const videoStream = ytdl(videoUrl, {
+    const videoStream = ytdl(url, {
       quality: 'highestvideo',
     });
-    const audioStream = ytdl(videoUrl, {
+    const audioStream = ytdl(url, {
       quality: 'highestaudio',
     });
 
@@ -755,8 +835,12 @@ app.on('ready', function () {
       }
     );
 
+    // C O M B I N E
+    audioStream.pipe(ffmpegProcess.stdio[4]);
+    videoStream.pipe(ffmpegProcess.stdio[5]);
+
+    // When an error is encountered or we finished processing
     ffmpegProcess.on('close', async (code) => {
-      console.log('CLOSING   ', code);
       if (code === 0) {
         console.log('Video downloaded and combined successfully');
 
@@ -774,70 +858,6 @@ app.on('ready', function () {
         );
       }
     });
-    audioStream.pipe(ffmpegProcess.stdio[4]);
-    videoStream.pipe(ffmpegProcess.stdio[5]);
-
-    // Start the download
-    //   ytdl(videoUrl, downloadOptions)
-    //     .pipe(
-    //       fs.createWriteStream(
-    //         path.join(downloadOptions.directory, downloadOptions.filename)
-    //       )
-    //     )
-    //     .on('finish', () => {
-    //       console.error('FINISHED DOWNLOADING');
-    //       mainWindow.webContents.send(
-    //         'download-success',
-    //         'Download completed!'
-    //       );
-    //     })
-    //     .on('error', (error) => {
-    //       console.error('Error downloading video', error.message);
-    //       mainWindow.webContents.send('download-error', error.message);
-    //     });
-    // } catch (error) {
-    //   console.error('Error fetching video', error.message);
-
-    //   // maybe use error.name === 'SyntaxError' instead?
-    //   if (error.message === 'Invalid or unexpected token') {
-    //     // This error usually happens when the ytdl package is broken
-    //     console.error('ytdl package is most likely broken');
-    //   }
-
-    //   mainWindow.webContents.send('download-error', error.message);
-    // }
-  });
-
-  /**
-   *
-   *
-   * Helper functions
-   *
-   *
-   *
-   */
-
-  /**
-   * Creates the settings file and returns the location of it
-   * @returns
-   */
-  function createSettingsPath() {
-    const settingsPath = path.join(
-      app.getPath('userData'),
-      'Data',
-      'settings.json'
-    );
-    return settingsPath;
-  }
-
-  function getSettings(settingsPath) {
-    // Optional parameter
-    if (settingsPath === undefined) {
-      settingsPath = createSettingsPath();
-    }
-
-    const settingsData = fs.readFileSync(settingsPath, 'utf-8');
-    return JSON.parse(settingsData);
   }
 
   /**
