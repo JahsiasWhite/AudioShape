@@ -22,6 +22,9 @@ const cp = require('child_process');
 // For searching youtube videos. The spotify downloader requires this
 const yts = require('yt-search');
 
+// Adding metadata to newly created music files
+// const NodeID3 = require('node-id3');
+
 const { glob, globSync, Glob } = require('glob');
 // const { fetch } = require('node-fetch');
 let fetch;
@@ -274,17 +277,34 @@ app.on('ready', function () {
           ) {
             title = path.basename(file).split('.').slice(0, -1).join('.');
           }
+
           if (
             typeof data.common.album === 'undefined' ||
             data.common.album.trim() === ''
           ) {
             album = 'Unknown Album';
           }
+
           if (
             typeof data.common.artist === 'undefined' ||
             data.common.artist.trim() === ''
           ) {
             artist = 'Unknown Artist';
+          }
+
+          // A lot of songs on youtube are in the format of "artist - title", so we do a check here to
+          // Use a regular expression to split the string by "-"
+          const parts = title.split(/\s*-\s*/);
+
+          // Currently no support for multiple artists
+          if (parts.length === 2) {
+            // The first part (index 0) will be the artist, and the second part (index 1) will be the song title
+            const titleArtist = parts[0];
+            const songTitle = parts[1];
+
+            if (artist === 'Unknown Artist' && titleArtist !== undefined) {
+              artist = titleArtist;
+            }
           }
 
           /* Gets image for the song/album */
@@ -839,6 +859,10 @@ app.on('ready', function () {
     audioStream.pipe(ffmpegProcess.stdio[4]);
     videoStream.pipe(ffmpegProcess.stdio[5]);
 
+    // Adds some extra info to the new audio file
+    // TODO! ACTUALLY IMPLEMENT THIS!!
+    // writeMetadata(videoTitle, outputFilePath);
+
     // When an error is encountered or we finished processing
     ffmpegProcess.on('close', async (code) => {
       if (code === 0) {
@@ -856,6 +880,45 @@ app.on('ready', function () {
           'download-error',
           `FFmpeg process exited with code ${code}`
         );
+      }
+    });
+
+    // When a file of the same name already exists in the current dir. Im not entirely sure if this code only applies to that but good enough for now
+    ffmpegProcess.stdio[4].on('error', (err) => {
+      console.error('FFmpeg audio output error:', err);
+
+      if (err.code === 'EPIPE') {
+        mainWindow.webContents.send(
+          'download-error',
+          `FFmpeg process exited with code ${err.code}. FILE ALREADY EXISTS`
+        );
+      }
+    });
+  }
+
+  function writeMetadata(title, filePath) {
+    // A lot of songs on youtube are in the format of "artist - title", so we do a check here to
+    // Use a regular expression to split the string by "-"
+    const parts = title.split(/\s*-\s*/);
+
+    // The first part (index 0) will be the artist, and the second part (index 1) will be the song title
+    const artist = parts[0];
+    const songTitle = parts[1];
+
+    // Read the existing tags from the file
+    const tags = NodeID3.read(filePath);
+
+    // Construct the metadata object with artist and title tags
+    // Update the artist and title tags
+    tags.artist = artist;
+    tags.title = songTitle;
+
+    // Write the metadata to the output file
+    NodeID3.write(tags, filePath, (error, buffer) => {
+      if (error) {
+        console.error('Error writing metadata to the output file:', error);
+      } else {
+        console.log('Metadata written to the output file.', tags);
       }
     });
   }
