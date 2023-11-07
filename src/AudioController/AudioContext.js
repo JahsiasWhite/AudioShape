@@ -40,8 +40,7 @@ export const AudioProvider = ({ children }) => {
   const [currentScreen, setCurrentScreen] = useState('All Songs');
 
   /* General */
-  const [loading, setLoading] = useState(false);
-  var loadingQueue = [];
+  const [loadingQueue, setLoadingQueue] = useState([]);
 
   /*
 
@@ -255,20 +254,23 @@ export const AudioProvider = ({ children }) => {
     setCurrentSongIndex(index);
   };
 
-  const startLoading = (effects) => {
-    if (effects !== undefined) {
-      loadingQueue = Object.keys(effects);
-    }
-    console.log('Starting loading', effects, loadingQueue);
-    setLoading(loadingQueue);
+  const startLoading = (effectName) => {
+    // let queue = [];
+    // if (effects !== undefined) {
+    //   queue = Object.keys(effects);
+    // }
+
+    console.log('Starting loading', effectName, loadingQueue);
+    setLoadingQueue([...loadingQueue, effectName]);
   };
 
   const finishLoading = (effect) => {
-    if (effects !== undefined) {
-      loadingQueue = loadingQueue.filter((curEffect) => curEffect !== effect);
+    let queue = [];
+    if (effect !== undefined) {
+      queue = loadingQueue.filter((curEffect) => curEffect !== effect);
     }
-    console.log('Finished loading', loading, effect, loadingQueue);
-    setLoading(loadingQueue);
+    console.log('Finished loading', effect, queue);
+    setLoadingQueue(queue);
   };
 
   /*
@@ -387,10 +389,9 @@ export const AudioProvider = ({ children }) => {
     downloadAudio(renderedBuffer);
   };
 
-  const [effectsClickable, setEffectsClickable] = useState(true); // TODO: Can this be local to audioPlugin?
   const addEffect = async (currentEffect, value, fL) => {
     /* Make effects unclickable while the current song is being edited */
-    setEffectsClickable(false);
+    startLoading(currentEffect);
 
     // Save the new speed. RN only used for the video player
     if (currentEffect === 'speed') {
@@ -418,7 +419,7 @@ export const AudioProvider = ({ children }) => {
         setCurrentSong(currentSong);
 
         /* Make the effects clickable again */
-        setEffectsClickable(true);
+        finishLoading();
       } else {
         // loop through all other effects
         runEffect(otherEffect[0], effects[otherEffect[0]]);
@@ -467,7 +468,7 @@ export const AudioProvider = ({ children }) => {
       setCurrentEffectCombo(comboName); // TODO ALSO REDUNDANT
 
       // Start loading the all effects
-      startLoading(savedEffects[comboName]);
+      // startLoading(savedEffects[comboName]);
 
       for (const effect in savedEffects[comboName]) {
         effectThreshold++;
@@ -677,7 +678,8 @@ export const AudioProvider = ({ children }) => {
       setCurrentSong(currentSong);
 
       /* Make the effects clickable again */
-      setEffectsClickable(true);
+      // setEffectsClickable(true);
+      finishLoading();
 
       effectThreshold = 0;
     }
@@ -833,7 +835,7 @@ export const AudioProvider = ({ children }) => {
     <AudioContext.Provider
       value={{
         initialSongLoad,
-        loading,
+        loadingQueue,
         resetCurrentSong,
         loadedSongs,
         visibleSongs,
@@ -862,7 +864,6 @@ export const AudioProvider = ({ children }) => {
         effects,
         applySavedEffects,
         currentEffectCombo,
-        effectsClickable,
         toggleSpeedup,
         toggleSlowDown,
         speedupIsEnabled,

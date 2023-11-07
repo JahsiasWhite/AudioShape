@@ -24,7 +24,7 @@ const AudioPlugin = () => {
     resetCurrentSong,
     setIsLooping,
     saveEffects,
-    effectsClickable,
+    loadingQueue,
   } = useAudioPlayer();
 
   const [speedKnobValue, setSpeedKnobValue] = useState(50);
@@ -210,12 +210,10 @@ const AudioPlugin = () => {
   //   };
   // }, []);
 
-  useEffect(() => {
-    // console.error('CLICKABLE ? : ', effectsClickable);
-  }, [effectsClickable]);
-
   return (
-    <div className="audio-plugin">
+    <div
+      className={`audio-plugin ${loadingQueue.length > 0 ? 'unclickable' : ''}`}
+    >
       <div className="plugin-settings-container">
         <div className="plugin-button-container">
           Export
@@ -246,11 +244,7 @@ const AudioPlugin = () => {
         </div>
       </div>
 
-      <div
-        className={`modifiers-container ${
-          !effectsClickable ? 'unclickable' : ''
-        }`}
-      >
+      <div className={`modifiers-container`}>
         <div className="module-container">
           <div className="header">SPEED</div>
           <div className="speed-body">
