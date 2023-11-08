@@ -617,13 +617,7 @@ export const AudioProvider = ({ children }) => {
   }
 
   async function downloadAudio(audioBuffer) {
-    const player = new Tone.Player().toDestination();
-
-    // const renderedBuffer = await renderAudioWithReverb(audioBuffer);
-    player.buffer = audioBuffer;
-    // player.start();
-
-    const wavBytes = createWavBytes(player); // ! TODO: Just put the buffer in then we dont have to create a new player
+    const wavBytes = createWavBytes(audioBuffer);
     window.electron.ipcRenderer.sendMessage('SAVE_TEMP_SONG', wavBytes);
     // getTempSong();
   }
@@ -709,13 +703,10 @@ export const AudioProvider = ({ children }) => {
     downloadAudio(audioBuffer);
   }
 
-  function createWavBytes(inputSong) {
+  function createWavBytes(buffer) {
     /* All of this stuff is really annoying. Unfortunately, ipcRenderer can't take in audioBuffer objects so we have to break it down */
     // Float32Array samples
-    const [left, right] = [
-      inputSong.buffer.getChannelData(0),
-      inputSong.buffer.getChannelData(1),
-    ];
+    const [left, right] = [buffer.getChannelData(0), buffer.getChannelData(1)];
     // interleaved
     const interleaved = new Float32Array(left.length + right.length);
     for (let src = 0, dst = 0; src < left.length; src++, dst += 2) {
@@ -725,8 +716,8 @@ export const AudioProvider = ({ children }) => {
     // get WAV file bytes and audio params of your audio source
     const wavBytes = getWavBytes(interleaved.buffer, {
       isFloat: true, // floating point or 16-bit integer
-      numChannels: inputSong.buffer.numberOfChannels,
-      sampleRate: inputSong.buffer.sampleRate,
+      numChannels: buffer.numberOfChannels,
+      sampleRate: buffer.sampleRate,
     });
 
     return wavBytes;
