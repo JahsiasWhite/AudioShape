@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export const PlayerManager = (currentSong, visibleSongs) => {
+export const QueueManager = (currentSong, visibleSongs) => {
   const [currentSongId, setCurrentSongId] = useState(null);
   const [currentSongIndex, setCurrentSongIndex] = useState(null);
 
@@ -48,13 +48,27 @@ export const PlayerManager = (currentSong, visibleSongs) => {
   const onSongEnded = () => {
     // If we are looping the song, restart the current song
     // ! Broken because this function gets created before isLooping is set
-    if (isLooping) {
-      restartCurrentSong();
-      return;
-    }
+    // if (isLooping) {
+    //   restartCurrentSong();
+    //   return;
+    // }
 
     // Automatically play the next song when the current song ends
     playNextSong();
+  };
+
+  /**
+   * Resets the current song's effects to the default and restarts it
+   */
+  const resetCurrentSong = () => {
+    // Reset the songs effects
+    setCurrentEffectCombo('');
+
+    // Change to the original file location
+    currentSong.src = visibleSongs[currentSongId].file;
+
+    // Start playing the song from the beginning
+    restartCurrentSong();
   };
 
   const restartCurrentSong = () => {
@@ -68,6 +82,7 @@ export const PlayerManager = (currentSong, visibleSongs) => {
     playNextSong,
     playPreviousSong,
     onSongEnded,
+    resetCurrentSong,
     restartCurrentSong,
     currentSongId,
     currentSongIndex,
