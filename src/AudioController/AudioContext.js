@@ -115,20 +115,6 @@ export const AudioProvider = ({ children }) => {
     }
   };
 
-  // useEffect(() => {
-  //   if (isMuted) {
-  //     setVolume(0);
-  //   } else {
-  //     // TODO: set to previous value
-  //     setVolume(1);
-  //   }
-  // }, [isMuted]);
-
-  /* When the volume changes, edit the audio object to reflect the change */
-  // useEffect(() => {
-  //   currentSong.volume = volume;
-  // }, [volume]);
-
   /**
    * Toggles shuffle
    * TODO: Should I not make a new list? Better to create a list and set currentSongIndex to the values.
@@ -458,15 +444,6 @@ export const AudioProvider = ({ children }) => {
   };
 
   const applySavedEffects = async (comboName) => {
-    // TODO MAKE THIS NOT HARDCODED
-    // if (comboName === 'speedupIsEnabled') {
-    //   handleSpeedChange(DEFAULT_SPEEDUP);
-    //   return;
-    // } else if (comboName === 'slowdownIsEnabled') {
-    //   handleSpeedChange(DEFAULT_SLOWDOWN);
-    //   return;
-    // }
-
     // The first effect will be applied to the original file
     fileLocation = visibleSongs[currentSongId].file;
 
@@ -635,8 +612,6 @@ export const AudioProvider = ({ children }) => {
   const addSong = (song) => {
     loadedSongs[song.id] = song;
     setLoadedSongs(loadedSongs);
-
-    console.error(loadedSongs);
   };
 
   /**
