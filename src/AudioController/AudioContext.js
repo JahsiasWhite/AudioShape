@@ -3,8 +3,12 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 // Very helpful audio processing library
 import * as Tone from 'tone';
 
-const AudioContext = createContext();
+import { AudioObject } from './AudioObject';
+import { AudioControls } from './AudioControls';
+import { PlayerManager } from './PlayerManager';
 
+// Setup this controller
+const AudioContext = createContext();
 export const useAudioPlayer = () => useContext(AudioContext);
 
 const DEFAULT_SPEEDUP = 1.2;
@@ -15,18 +19,47 @@ export const AudioProvider = ({ children }) => {
   const [loadedSongs, setLoadedSongs] = useState({});
   const [visibleSongs, setVisibleSongs] = useState({}); // ! TODO, I think this would work better as an array
 
+  // Audio Object
+  // src: file location
+  // volume: number from 0-1 representing 0-100% volume
+  const { currentSong } = AudioObject();
+
+  // Controller for all basic audio controls
+  // and settings?
+  const {
+    playAudio,
+    pauseAudio,
+    changeVolume,
+    toggleMute,
+    isPlaying,
+    setIsPlaying,
+    volume,
+    isMuted,
+  } = AudioControls(currentSong);
+
+  // Handles the overall functionality of playing and switching songs
+  const {
+    handleSongSelect,
+    playNextSong,
+    playPreviousSong,
+    onSongEnded,
+    restartCurrentSong,
+    currentSongId,
+    currentSongIndex,
+  } = PlayerManager(currentSong, visibleSongs);
+
   /* Current song info */
-  const [currentSong, setCurrentSong] = useState(new Audio()); // Current playing audio object
-  const [currentSongIndex, setCurrentSongIndex] = useState(null);
-  const [currentSongId, setCurrentSongId] = useState(null);
+  // const [currentSong, setCurrentSong] = useState(new Audio()); // Current playing audio object
+  // const [currentSongIndex, setCurrentSongIndex] = useState(null);
+  // const [currentSongId, setCurrentSongId] = useState(null);
 
   /* Playlists */
   const [playlists, setPlaylists] = useState([]);
 
   /* Settings */
-  const [volume, setVolume] = useState(1); // Initial volume is 100%
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  // const [volume, setVolume] = useState(1); // Initial volume is 100%
+  // const [isPlaying, setIsPlaying] = useState(false);
+  // const [isMuted, setIsMuted] = useState(false);
   const [isRandomMode, setIsRandomMode] = useState(false);
   const [isLooping, setIsLooping] = useState(false);
 
@@ -52,68 +85,68 @@ export const AudioProvider = ({ children }) => {
 
   */
 
-  const playAudio = () => {
-    currentSong.play();
-    setIsPlaying(true);
-  };
+  // const playAudio = () => {
+  //   currentSong.play();
+  //   setIsPlaying(true);
+  // };
 
-  const pauseAudio = () => {
-    currentSong.pause();
-    setIsPlaying(false);
-  };
+  // const pauseAudio = () => {
+  //   currentSong.pause();
+  //   setIsPlaying(false);
+  // };
 
-  const changeVolume = (newVolume) => {
-    currentSong.volume = newVolume;
-    setVolume(newVolume);
-  };
+  // const changeVolume = (newVolume) => {
+  //   currentSong.volume = newVolume;
+  //   setVolume(newVolume);
+  // };
 
   const [videoTime, setVideoTime] = useState(0);
   const changeVideoTime = (newVideoTime) => {
     setVideoTime(newVideoTime);
   };
 
-  const playPreviousSong = () => {
-    if (currentSong) {
-      currentSong.removeEventListener('ended', onSongEnded);
-    }
+  // const playPreviousSong = () => {
+  //   if (currentSong) {
+  //     currentSong.removeEventListener('ended', onSongEnded);
+  //   }
 
-    const previousIndex =
-      (currentSongIndex - 1 + Object.keys(visibleSongs).length) %
-      Object.keys(visibleSongs).length;
-    setCurrentSongIndex(previousIndex);
+  //   const previousIndex =
+  //     (currentSongIndex - 1 + Object.keys(visibleSongs).length) %
+  //     Object.keys(visibleSongs).length;
+  //   setCurrentSongIndex(previousIndex);
 
-    const songArray = Object.values(visibleSongs);
-    const nextSongId = songArray[previousIndex].id;
-    setCurrentSongId(nextSongId);
-  };
+  //   const songArray = Object.values(visibleSongs);
+  //   const nextSongId = songArray[previousIndex].id;
+  //   setCurrentSongId(nextSongId);
+  // };
 
-  const playNextSong = () => {
-    if (currentSong) {
-      currentSong.removeEventListener('ended', onSongEnded);
-    }
+  // const playNextSong = () => {
+  //   if (currentSong) {
+  //     currentSong.removeEventListener('ended', onSongEnded);
+  //   }
 
-    const nextIndex = (currentSongIndex + 1) % Object.keys(visibleSongs).length;
-    setCurrentSongIndex(nextIndex);
+  //   const nextIndex = (currentSongIndex + 1) % Object.keys(visibleSongs).length;
+  //   setCurrentSongIndex(nextIndex);
 
-    // ! TODO: More modular, and I don't really like this
-    const songArray = Object.values(visibleSongs); // REALLY? I only need one, not the whole thing
-    const nextSongId = songArray[nextIndex].id;
-    setCurrentSongId(nextSongId);
-  };
+  //   // ! TODO: More modular, and I don't really like this
+  //   const songArray = Object.values(visibleSongs); // REALLY? I only need one, not the whole thing
+  //   const nextSongId = songArray[nextIndex].id;
+  //   setCurrentSongId(nextSongId);
+  // };
 
-  /**
-   * Toggle mute
-   */
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
+  // /**
+  //  * Toggle mute
+  //  */
+  // const toggleMute = () => {
+  //   setIsMuted(!isMuted);
 
-    if (!isMuted) {
-      changeVolume(0);
-    } else {
-      // TODO: set to previous value
-      changeVolume(1);
-    }
-  };
+  //   if (!isMuted) {
+  //     changeVolume(0);
+  //   } else {
+  //     // TODO: set to previous value
+  //     changeVolume(1);
+  //   }
+  // };
 
   /**
    * Toggles shuffle
@@ -172,7 +205,7 @@ export const AudioProvider = ({ children }) => {
     /* (Re)Initializes the current song */
     initCurrentSong();
 
-    setCurrentSong(currentSong);
+    // setCurrentSong(currentSong);
 
     finishLoading();
   }, [currentSongId]);
@@ -186,11 +219,11 @@ export const AudioProvider = ({ children }) => {
     currentSong.addEventListener('ended', onSongEnded);
   };
 
-  const restartCurrentSong = () => {
-    // currentSong.pause();
-    currentSong.currentTime = 0;
-    currentSong.play();
-  };
+  // const restartCurrentSong = () => {
+  //   // currentSong.pause();
+  //   currentSong.currentTime = 0;
+  //   currentSong.play();
+  // };
 
   /**
    * Resets the current song's effects to the default and restarts it
@@ -206,17 +239,17 @@ export const AudioProvider = ({ children }) => {
     restartCurrentSong();
   };
 
-  const onSongEnded = () => {
-    // If we are looping the song, restart the current song
-    // ! Broken because this function gets created before isLooping is set
-    if (isLooping) {
-      restartCurrentSong();
-      return;
-    }
+  // const onSongEnded = () => {
+  //   // If we are looping the song, restart the current song
+  //   // ! Broken because this function gets created before isLooping is set
+  //   if (isLooping) {
+  //     restartCurrentSong();
+  //     return;
+  //   }
 
-    // Automatically play the next song when the current song ends
-    playNextSong();
-  };
+  //   // Automatically play the next song when the current song ends
+  //   playNextSong();
+  // };
 
   /* When the songs first load, we want all songs to be shown */
   const initialSongLoad = (songs) => {
@@ -228,17 +261,17 @@ export const AudioProvider = ({ children }) => {
     initialSongLoad(retrievedSongs);
   });
 
-  /* When a song is double-clicked, change the current song to that one! */
-  const handleSongSelect = (songId) => {
-    // setCurrentSongIndex(songIndex);
-    setCurrentSongId(songId);
+  // /* When a song is double-clicked, change the current song to that one! */
+  // const handleSongSelect = (songId) => {
+  //   // setCurrentSongIndex(songIndex);
+  //   setCurrentSongId(songId);
 
-    // ! TODO: Don't love this
-    const index = Object.keys(visibleSongs).findIndex(
-      (key) => visibleSongs[key].id === songId
-    );
-    setCurrentSongIndex(index);
-  };
+  //   // ! TODO: Don't love this
+  //   const index = Object.keys(visibleSongs).findIndex(
+  //     (key) => visibleSongs[key].id === songId
+  //   );
+  //   setCurrentSongIndex(index);
+  // };
 
   /**
    * Starts loading a new process
@@ -410,7 +443,7 @@ export const AudioProvider = ({ children }) => {
         /* Start playing the new song */
         currentSong.src = fileLocation;
         initCurrentSong();
-        setCurrentSong(currentSong);
+        // setCurrentSong(currentSong);
 
         /* Make the effects clickable again */
         finishLoading();
@@ -652,7 +685,7 @@ export const AudioProvider = ({ children }) => {
     ) {
       /* Start playing the new song */
       initCurrentSong();
-      setCurrentSong(currentSong);
+      // setCurrentSong(currentSong);
 
       /* Make the effects clickable again */
       // setEffectsClickable(true);
