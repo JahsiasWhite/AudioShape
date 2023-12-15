@@ -25,6 +25,7 @@ const AudioPlugin = () => {
     setIsLooping,
     saveEffects,
     loadingQueue,
+    handleSongExport,
   } = useAudioPlayer();
 
   const [speedKnobValue, setSpeedKnobValue] = useState(50);

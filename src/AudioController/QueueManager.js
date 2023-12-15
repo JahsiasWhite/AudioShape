@@ -13,6 +13,13 @@ export const QueueManager = (currentSong, visibleSongs) => {
     const index = Object.keys(visibleSongs).findIndex(
       (key) => visibleSongs[key].id === songId
     );
+
+    console.error(
+      'SETTING SONG TO INDEX: ' +
+        index +
+        '   ' +
+        visibleSongs[Object.keys(visibleSongs)[index]].title
+    );
     setCurrentSongIndex(index);
   };
 

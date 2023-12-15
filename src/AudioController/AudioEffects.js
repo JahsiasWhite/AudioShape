@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 // Very helpful audio processing library
 import * as Tone from 'tone';
@@ -15,7 +15,8 @@ export const AudioEffects = (
   handleTempSongSaved,
   initCurrentSong,
   DEFAULT_SPEEDUP,
-  DEFAULT_SLOWDOWN
+  DEFAULT_SLOWDOWN,
+  getCurrentAudioBuffer
 ) => {
   const [effects, setEffects] = useState({});
   const [savedEffects, setSavedEffects] = useState({});
@@ -231,27 +232,6 @@ export const AudioEffects = (
   }
 
   /**
-   * Gets the current song's audio data from the file system
-   * @param {*} audioContext
-   * @returns
-   */
-  const getCurrentAudioBuffer = async () => {
-    // let filePath = currentSongId;
-    // let filePath = index === undefined ? currentSongIndex : index;
-    // if (filePath === null) return;
-    const audioContext = new (window.AudioContext ||
-      window.webkitAudioContext)();
-
-    // const response = await fetch(visibleSongs[filePath].file);
-    // const response = await fetch(currentSong.src);
-    const response = await fetch(fileLocation);
-    const audioData = await response.arrayBuffer();
-    const audioBuffer = await audioContext.decodeAudioData(audioData);
-
-    return audioBuffer;
-  };
-
-  /**
    * Gets the updated temporary song
    */
   const getTempSong = async () => {
@@ -265,6 +245,33 @@ export const AudioEffects = (
       );
     });
   };
+
+  /**
+   * Initial call to get all effect combos
+   */
+  window.electron.ipcRenderer.on('GRAB_EFFECT_COMBOS', (newEffectCombos) => {
+    setSavedEffects(newEffectCombos);
+  });
+
+  const saveEffects = (comboName) => {
+    // Save the effectCombo permanently
+    window.electron.ipcRenderer.sendMessage(
+      'SAVE_EFFECT_COMBO',
+      comboName,
+      effects
+    );
+  };
+
+  useEffect(() => {
+    const handleEffectComboAdded = (newEffectCombos) => {
+      setSavedEffects(newEffectCombos);
+    };
+
+    window.electron.ipcRenderer.once(
+      'SAVE_EFFECT_COMBO',
+      handleEffectComboAdded
+    );
+  }, [savedEffects]);
 
   /* SPEEDUP EFFECT */
   /**
@@ -366,8 +373,8 @@ export const AudioEffects = (
     toggleSpeedup,
     toggleSlowDown,
     renderAudioWithEffect,
-    getCurrentAudioBuffer,
     handleSpeedChange,
+    saveEffects,
     fileLocation,
     effects,
     setEffects,

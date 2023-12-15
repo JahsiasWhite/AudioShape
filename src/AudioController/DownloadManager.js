@@ -3,9 +3,9 @@ import { useState } from 'react';
 export const DownloadManager = (
   currentSong,
   finishLoading,
-  initCurrentSong
+  initCurrentSong,
+  getCurrentAudioBuffer
 ) => {
-  // TODO: Remove effects, I dont really need the whole thing here
   var effectThreshold = 0;
   /**
    * Saves the new temporary song from the server and sets it to the current song

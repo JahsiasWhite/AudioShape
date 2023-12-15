@@ -5,6 +5,8 @@ import { AudioControls } from './AudioControls';
 import { QueueManager } from './QueueManager';
 import { AudioEffects } from './AudioEffects';
 import { DownloadManager } from './DownloadManager';
+import { PlaylistsManager } from './PlaylistsManager';
+import { Tools } from './Tools';
 
 // Sets up this context to be the main controller for the application
 const AudioContext = createContext();
@@ -19,6 +21,9 @@ export const AudioProvider = ({ children }) => {
   /* General songs */
   const [loadedSongs, setLoadedSongs] = useState({});
   const [visibleSongs, setVisibleSongs] = useState({}); // ! TODO, I think this would work better as an array
+
+  /* General */
+  const [loadingQueue, setLoadingQueue] = useState([]);
 
   const initCurrentSong = () => {
     currentSong.volume = volume;
@@ -56,6 +61,9 @@ export const AudioProvider = ({ children }) => {
     setLoadingQueue(queue);
   };
 
+  // Extra tools to help with stuff
+  const { getCurrentAudioBuffer } = Tools(fileLocation);
+
   /**
    * Audio object
    * src: file location
@@ -78,7 +86,12 @@ export const AudioProvider = ({ children }) => {
   } = AudioControls(currentSong);
 
   const { handleSongExport, handleTempSongSaved, downloadAudio } =
-    DownloadManager(currentSong, finishLoading, initCurrentSong);
+    DownloadManager(
+      currentSong,
+      finishLoading,
+      initCurrentSong,
+      getCurrentAudioBuffer
+    );
 
   // Handles the overall functionality of playing and switching songs
   const {
@@ -100,8 +113,8 @@ export const AudioProvider = ({ children }) => {
     toggleSpeedup,
     toggleSlowDown,
     renderAudioWithEffect,
-    getCurrentAudioBuffer,
     handleSpeedChange,
+    saveEffects,
     effects,
     setEffects,
     savedEffects,
@@ -128,11 +141,12 @@ export const AudioProvider = ({ children }) => {
     handleTempSongSaved,
     initCurrentSong,
     DEFAULT_SPEEDUP,
-    DEFAULT_SLOWDOWN
+    DEFAULT_SLOWDOWN,
+    getCurrentAudioBuffer
   );
 
-  /* Playlists */
-  const [playlists, setPlaylists] = useState([]);
+  // Handles playlists
+  const { createPlaylist, playlists, setPlaylists } = PlaylistsManager();
 
   /* Settings */
   const [isRandomMode, setIsRandomMode] = useState(false);
@@ -141,9 +155,6 @@ export const AudioProvider = ({ children }) => {
   /* Navigation */
   // ! Todo, should this be moved out of here? Is it in this context's scope?
   const [currentScreen, setCurrentScreen] = useState('All Songs');
-
-  /* General */
-  const [loadingQueue, setLoadingQueue] = useState([]);
 
   /*
 
@@ -184,6 +195,7 @@ export const AudioProvider = ({ children }) => {
     }
   };
 
+  // ! I can put this in AudioEffects.js and it will work properly.
   // Current song changed! Update our variables
   // Essentially create the new song :)
   useEffect(() => {
@@ -194,6 +206,7 @@ export const AudioProvider = ({ children }) => {
 
     /* Update the new file location */
     fileLocation = visibleSongs[currentSongId].file;
+    console.error('SETTING FILE LOCATION TO : ' + fileLocation);
 
     /* If effects are enabled, apply them to the new song */
     if (effectsEnabled) {
@@ -254,52 +267,14 @@ export const AudioProvider = ({ children }) => {
 
   */
 
+  /**
+   * Adds a new song to the list of songs
+   * @param {Audio Object} song
+   */
   const addSong = (song) => {
     loadedSongs[song.id] = song;
     setLoadedSongs(loadedSongs);
   };
-
-  const createPlaylist = (playlistName) => {
-    window.electron.ipcRenderer.sendMessage('CREATE_PLAYLIST', playlistName);
-  };
-
-  /**
-   * Callback from the server of the new playlist creation
-   */
-  useEffect(() => {
-    const handlePlaylistAdded = (newPlaylists) => {
-      setPlaylists(newPlaylists);
-    };
-
-    window.electron.ipcRenderer.once('CREATE_PLAYLIST', handlePlaylistAdded);
-  }, [playlists]);
-
-  /**
-   * Initial call to get all effect combos
-   */
-  window.electron.ipcRenderer.on('GRAB_EFFECT_COMBOS', (newEffectCombos) => {
-    setSavedEffects(newEffectCombos);
-  });
-
-  const saveEffects = (comboName) => {
-    // Save the effectCombo permanently
-    window.electron.ipcRenderer.sendMessage(
-      'SAVE_EFFECT_COMBO',
-      comboName,
-      effects
-    );
-  };
-
-  useEffect(() => {
-    const handleEffectComboAdded = (newEffectCombos) => {
-      setSavedEffects(newEffectCombos);
-    };
-
-    window.electron.ipcRenderer.once(
-      'SAVE_EFFECT_COMBO',
-      handleEffectComboAdded
-    );
-  }, [savedEffects]);
 
   return (
     <AudioContext.Provider
