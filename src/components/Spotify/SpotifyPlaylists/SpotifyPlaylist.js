@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 import DownloadSVG from './download.svg';
 
-const SpotifyPlaylist = ({ playlistId }) => {
+const SpotifyPlaylist = ({ playlistId, unloadPlaylist }) => {
   const [playlistData, setPlaylistData] = useState(null); // TODO: Does this have to be a useState?
 
   const [downloadStatus, setDownloadStatus] = useState({});
@@ -60,6 +60,7 @@ const SpotifyPlaylist = ({ playlistId }) => {
 
   return (
     <div className="song-list-container">
+      <div onClick={() => unloadPlaylist()}>BACK</div>
       {playlistData && (
         <>
           <div className="song-list-header">{playlistData.name}</div>

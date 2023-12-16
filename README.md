@@ -37,6 +37,8 @@ TODO:
 16. Add tailwindCSS, it should reduce a lot of the duplicate CSS
 17. Progress bar for the youtube download
 18. Videos tab. Just another songList but showing only mp4 files
+19. Fix how Spotify songs are saved. Right now its doing extra stuff to get the artist. I should send data somehow of the song data (title, artist, album) to be used when its finished downloading from youtube. Maybe just use a callback?
+20. On spotify -> display if song/playlist is already downloaded
 
 999 Easy file/song sharing
 
