@@ -311,24 +311,21 @@ export const AudioEffects = (
     // const reverb = new Tone.Reverb().toDestination();
     // const player = new Tone.Player(audioBuffer).connect(reverb);
 
-    // // Default is one, only have to change it if the user changes it though
-    // // Scale of 0-1
-    // if (wetValue) {
-    //   reverb.wet.value = wetValue;
-    // }
+    const reverb = new Tone.Freeverb().toDestination();
 
-    const reverbTest = new Tone.Freeverb(0.8, 8000).toDestination();
+    // Defaults
+    const WET_VALUE = 0.5; // 0-1, determines how much the original signal is mixed with the reverb signal. 1 === 100%, 0 === 0% meaning it will be the original audio
+    const ROOM_SIZE = 0.5; // 0-1, how expansive the reverb sounds. 1 === large room/long decay time.
+    const DAMPENING_VALUE = 8000; // 1000-10000, controls how quickly high-frequency content decays over time. The lower the value, the 'brighter' and more reflective it sounds. High values make the reverb sound darker and less reflective
+    reverb.wet.value = WET_VALUE; // Also known as 'mix'
+    reverb.roomSize.value = ROOM_SIZE;
+    reverb.dampening = DAMPENING_VALUE; // Also known as 'Tone'
 
-    // console.error(
-    //   reverbTest.wet.value, // 0-1, determines how much the original signal is mixed with the reverb signal. 1 === 100%, 0 === 0% meaning it will be the original audio
-    //   reverbTest.roomSize.value, // 0-1, how expansive the reverb sounds. 1 === large room/long decay time.
-    //   reverbTest.dampening // 1000-10000, controls how quickly high-frequency content decays over time. The lower the value, the 'brighter' and more reflective it sounds. High values make the reverb sound darker and less reflective
-    // );
+    if (wetValue) {
+      reverb.wet.value = wetValue;
+    }
 
-    reverbTest.wet.value = 0.7;
-    reverbTest.roomSize.value = 0.8;
-    reverbTest.dampening = 8000;
-    const player = new Tone.Player(audioBuffer).connect(reverbTest);
+    const player = new Tone.Player(audioBuffer).connect(reverb);
 
     return player;
   }

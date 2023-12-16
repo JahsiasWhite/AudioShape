@@ -1,10 +1,18 @@
 import React from 'react';
 import './ContextMenu.css'; // Generic?
 
-function ContextMenu({ onContextMenu, style }) {
+import { useAudioPlayer } from '../../../AudioController/AudioContext';
+
+function ContextMenu({ onContextMenu, style, songData }) {
+  const { addToQueue } = useAudioPlayer();
+
   const handleContextMenu = (event) => {
     event.preventDefault();
     onContextMenu(event);
+  };
+
+  const addSongToQueue = () => {
+    addToQueue(songData.id);
   };
 
   return (
@@ -16,7 +24,7 @@ function ContextMenu({ onContextMenu, style }) {
       <ul className="context-menu">
         <li>Add to playlist</li>
         <li>Edit</li>
-        <li>Add to queue</li>
+        <li onClick={addSongToQueue}>Add to queue</li>
       </ul>
     </div>
   );

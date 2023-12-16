@@ -46,11 +46,14 @@ function SongList({ handleSongEdit, toggleSection }) {
     x: 0,
     y: 0,
   });
-  const handleContextMenu = (event) => {
+  const [contextMenuSongData, setContextMenuSongData] = useState(null);
+
+  const handleContextMenu = (event, songData) => {
     // Handle the context menu here, e.g., show/hide the menu
     event.preventDefault();
     const { clientX, clientY } = event;
     setContextMenuPosition({ x: clientX, y: clientY });
+    setContextMenuSongData(songData);
     setIsContextMenuActive(true);
   };
   const hideContextMenu = () => {
@@ -94,7 +97,9 @@ function SongList({ handleSongEdit, toggleSection }) {
                   onClick={() => {
                     setIsContextMenuActive(false); // Hide the 'right-click' menu when we left-click
                   }}
-                  onContextMenu={handleContextMenu} // Open context menu when we right-click
+                  onContextMenu={
+                    (event) => handleContextMenu(event, visibleSongs[key]) // Pass the song data when right-clicking
+                  }
                   className={`list-item ${
                     currentSongId === visibleSongs[key].id ? 'highlighted' : ''
                   }`}
@@ -135,13 +140,14 @@ function SongList({ handleSongEdit, toggleSection }) {
               </div>
             ))}
           </ul>
-          {isContextMenuActive && (
+          {isContextMenuActive && contextMenuSongData && (
             <ContextMenu
               onContextMenu={hideContextMenu} // Prob dont need, just hides the menu if you right click it
               style={{
                 top: contextMenuPosition.y,
                 left: contextMenuPosition.x,
               }}
+              songData={contextMenuSongData}
             />
           )}
           {/* Render the PlaylistMenu when playlistMenuIndex has a real index */}

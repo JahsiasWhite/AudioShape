@@ -31,6 +31,7 @@ export const AudioProvider = ({ children }) => {
     currentSong.play();
     setIsPlaying(true);
 
+    console.error('Adding event listener for onSongEnded');
     currentSong.addEventListener('ended', onSongEnded);
   };
 
@@ -130,6 +131,10 @@ export const AudioProvider = ({ children }) => {
     onSongEnded,
     currentSongId,
     currentSongIndex,
+    addToQueue,
+    removeFromQueue,
+    rearrangeQueue,
+    songQueue,
   } = QueueManager(currentSong, visibleSongs);
 
   // Handles all audio effects
@@ -348,6 +353,8 @@ export const AudioProvider = ({ children }) => {
         setPlaylists,
         createPlaylist,
         setIsLooping,
+        addToQueue,
+        songQueue,
       }}
     >
       {children}
