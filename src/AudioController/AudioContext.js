@@ -34,6 +34,35 @@ export const AudioProvider = ({ children }) => {
     currentSong.addEventListener('ended', onSongEnded);
   };
 
+  /* TOOLS */
+  /**
+   * Gets the current song's audio data from the file system
+   * @param {*} audioContext
+   * @returns
+   */
+  const getCurrentAudioBuffer = async (file) => {
+    // let filePath = currentSongId;
+    // let filePath = index === undefined ? currentSongIndex : index;
+    // if (filePath === null) return;
+    const audioContext = new (window.AudioContext ||
+      window.webkitAudioContext)();
+
+    // const response = await fetch(visibleSongs[filePath].file);
+    // const response = await fetch(currentSong.src);
+
+    if (file) {
+      fileLocation = file;
+    }
+
+    console.error(file);
+    console.error(fileLocation);
+    const response = await fetch(fileLocation);
+    const audioData = await response.arrayBuffer();
+    const audioBuffer = await audioContext.decodeAudioData(audioData);
+
+    return audioBuffer;
+  };
+
   /**
    * Starts loading a new process
    * @param {String} effectName
@@ -62,7 +91,7 @@ export const AudioProvider = ({ children }) => {
   };
 
   // Extra tools to help with stuff
-  const { getCurrentAudioBuffer } = Tools(fileLocation);
+  // const { getCurrentAudioBuffer } = Tools(fileLocation);
 
   /**
    * Audio object
@@ -99,8 +128,6 @@ export const AudioProvider = ({ children }) => {
     playNextSong,
     playPreviousSong,
     onSongEnded,
-    resetCurrentSong,
-    restartCurrentSong,
     currentSongId,
     currentSongIndex,
   } = QueueManager(currentSong, visibleSongs);
@@ -115,6 +142,7 @@ export const AudioProvider = ({ children }) => {
     renderAudioWithEffect,
     handleSpeedChange,
     saveEffects,
+    resetCurrentSong,
     effects,
     setEffects,
     savedEffects,

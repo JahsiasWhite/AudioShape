@@ -62,7 +62,7 @@ export const AudioEffects = (
     }
 
     // Get our new audio data
-    const audioBuffer = await getCurrentAudioBuffer();
+    const audioBuffer = await getCurrentAudioBuffer(fileLocation);
     const renderedBuffer = await renderAudioWithEffect(
       audioBuffer,
       effectFunction,
@@ -74,6 +74,7 @@ export const AudioEffects = (
   };
 
   const addEffect = async (currentEffect, value, fL) => {
+    console.error('ADDING EFFECT: ' + currentEffect);
     /* Make effects unclickable while the current song is being edited */
     startLoading(currentEffect);
 
@@ -282,7 +283,7 @@ export const AudioEffects = (
    */
   const handleSpeedChange = async (newSpeed, index) => {
     // Load the current song's audio buffer
-    const audioBuffer = await getCurrentAudioBuffer();
+    const audioBuffer = await getCurrentAudioBuffer(fileLocation);
 
     const renderedBuffer = await renderAudioWithSpeedChange(
       audioBuffer,
@@ -366,6 +367,26 @@ export const AudioEffects = (
     return player;
   }
 
+  /**
+   * Resets the current song's effects to the default and restarts it
+   */
+  const resetCurrentSong = () => {
+    // Reset the songs effects
+    setCurrentEffectCombo('');
+
+    // Change to the original file location
+    currentSong.src = visibleSongs[currentSongId].file;
+
+    // Start playing the song from the beginning
+    restartCurrentSong();
+  };
+
+  const restartCurrentSong = () => {
+    // currentSong.pause();
+    currentSong.currentTime = 0;
+    currentSong.play();
+  };
+
   return {
     runEffect,
     addEffect,
@@ -375,6 +396,7 @@ export const AudioEffects = (
     renderAudioWithEffect,
     handleSpeedChange,
     saveEffects,
+    resetCurrentSong,
     fileLocation,
     effects,
     setEffects,

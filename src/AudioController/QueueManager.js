@@ -64,33 +64,11 @@ export const QueueManager = (currentSong, visibleSongs) => {
     playNextSong();
   };
 
-  /**
-   * Resets the current song's effects to the default and restarts it
-   */
-  const resetCurrentSong = () => {
-    // Reset the songs effects
-    setCurrentEffectCombo('');
-
-    // Change to the original file location
-    currentSong.src = visibleSongs[currentSongId].file;
-
-    // Start playing the song from the beginning
-    restartCurrentSong();
-  };
-
-  const restartCurrentSong = () => {
-    // currentSong.pause();
-    currentSong.currentTime = 0;
-    currentSong.play();
-  };
-
   return {
     handleSongSelect,
     playNextSong,
     playPreviousSong,
     onSongEnded,
-    resetCurrentSong,
-    restartCurrentSong,
     currentSongId,
     currentSongIndex,
   };
