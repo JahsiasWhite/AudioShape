@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './layoutBar.css';
 
 import HomeButton from './HomeButton/HomeButton';
@@ -12,7 +12,8 @@ import SettingsButton from './SettingsButton/SettingsButton';
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 function LayoutBar({ toggleSection }) {
-  const { setVisibleSongs, loadedSongs, setCurrentScreen } = useAudioPlayer();
+  const { setVisibleSongs, loadedSongs, currentScreen, setCurrentScreen } =
+    useAudioPlayer();
 
   /* Keeps track of which 'tab' we are currently viewing */
   const [currentSection, setCurrentSection] = useState('allSongs');
@@ -29,6 +30,15 @@ function LayoutBar({ toggleSection }) {
     // Call the original toggleSection with the modified section
     toggleSection(section);
   };
+
+  // TODO: FIND A way better way to do this
+  // This is just the quick and dirty way
+  // Fixes the bug where going to the edit screen from the song list wouldn't highlight the tab
+  useEffect(() => {
+    if (currentScreen !== 'mixer') return;
+
+    modifiedToggleSection('mixer');
+  }, [currentScreen]);
 
   const sections = [
     'allSongs',

@@ -335,6 +335,7 @@ export const AudioProvider = ({ children }) => {
         saveEffects,
         savedEffects,
         effects,
+        setEffects,
         applySavedEffects,
         currentEffectCombo,
         toggleSpeedup,

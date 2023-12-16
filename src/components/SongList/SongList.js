@@ -12,10 +12,20 @@ import PlusButtonSVG from './add-svgrepo-com.svg';
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 function SongList({ handleSongEdit, toggleSection }) {
-  const { handleSongSelect, visibleSongs, currentSongId, currentScreen } =
-    useAudioPlayer();
+  const {
+    handleSongSelect,
+    visibleSongs,
+    currentSongId,
+    currentScreen,
+    setCurrentScreen,
+  } = useAudioPlayer();
 
   const [isLoading, setIsLoading] = useState(true);
+
+  function handleSongEditClick(id) {
+    handleSongEdit(id);
+    setCurrentScreen('mixer');
+  }
 
   /**
    * Once songs are loaded in, we know we are done loading
@@ -118,7 +128,7 @@ function SongList({ handleSongEdit, toggleSection }) {
                     <img
                       className="dropdown-button"
                       src={DownArrowSVG}
-                      onClick={() => handleSongEdit(visibleSongs[key].id)}
+                      onClick={() => handleSongEditClick(visibleSongs[key].id)}
                     ></img>
                   </div>
                 </li>
