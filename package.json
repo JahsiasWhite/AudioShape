@@ -10,14 +10,26 @@
     "package-win": "electron-packager . MusicPlayer --platform=win32 --arch=x64 --out=release-builds",
     "react-build": "react-scripts build",
     "electron-build": "electron-builder",
-    "build": "npm react-build && npm electron-build"
+    "build": "npm react-build && npm electron-build",
+    "test": "jest --silent"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@babel/preset-env": "^7.23.6",
+    "@babel/preset-react": "^7.23.3",
+    "@testing-library/react": "^14.1.2",
+    "babel-jest": "^29.7.0",
     "concurrently": "^8.2.0",
     "electron": "^26.0.0",
+    "jest": "^27.5.1",
     "wait-on": "^7.0.1"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.(js|jsx)$": "babel-jest"
+    },
+    "testEnvironment": "jsdom"
   },
   "dependencies": {
     "ffmpeg-static": "^5.2.0",

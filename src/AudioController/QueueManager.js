@@ -16,7 +16,7 @@ export const QueueManager = (currentSong, visibleSongs) => {
       (key) => visibleSongs[key].id === songId
     );
 
-    console.error(
+    console.log(
       'SETTING SONG TO INDEX: ' +
         index +
         '   ' +
@@ -31,10 +31,11 @@ export const QueueManager = (currentSong, visibleSongs) => {
 
   const playNextSong = () => {
     if (currentSong) {
+      console.error('HI');
       currentSong.removeEventListener('ended', onSongEnded);
     }
 
-    console.error('Playing next song: ', songQueue);
+    console.log('Playing next song: ', songQueue);
     // Remove the current song from the queue
     popQueue((updatedQueue) => {
       const nextIndex =
@@ -48,9 +49,9 @@ export const QueueManager = (currentSong, visibleSongs) => {
       if (updatedQueue.length > 0) {
         // If there are songs in the queue, play the next song in the queue
         const [nextQueueSongId, ...restQueue] = updatedQueue;
-        setQueue(restQueue);
+        setQueue(updatedQueue);
         // songQueue = restQueue;
-        console.error(
+        console.log(
           'Setting current song to : ',
           nextQueueSongId,
           visibleSongs
@@ -86,19 +87,19 @@ export const QueueManager = (currentSong, visibleSongs) => {
     //   return;
     // }
 
-    console.error('SONG ENDED', currentSong, currentSongId);
+    console.log('SONG ENDED', currentSong, currentSongId);
     // Automatically play the next song when the current song ends
     playNextSong();
   };
 
   const addToQueue = (songId) => {
     setQueue((prevQueue) => {
-      console.error(prevQueue);
+      console.log(prevQueue);
 
       return [...prevQueue, songId];
     });
     // songQueue.push(songId);
-    console.error('Added to queue: ', songQueue);
+    console.log('Added to queue: ', songQueue);
   };
 
   const removeFromQueue = (index) => {
@@ -113,16 +114,14 @@ export const QueueManager = (currentSong, visibleSongs) => {
   const popQueue = (cb) => {
     if (songQueue.length === 0) cb([]);
 
-    console.error(songQueue);
+    console.log(songQueue);
     const newQueue = songQueue.slice(1);
-    console.error('SETTING QUEUE: ', newQueue);
+    console.log('SETTING QUEUE: ', newQueue);
     setQueue(newQueue);
     // songQueue = newQueue;
 
     // Invoke the callback with the updated queue
-    if (typeof cb === 'function') {
-      cb(newQueue);
-    }
+    cb(newQueue);
   };
 
   // Rearranges the order of songs in the queue
@@ -138,16 +137,16 @@ export const QueueManager = (currentSong, visibleSongs) => {
   };
 
   const setCurrentSongInQueue = (songId) => {
-    console.error(songQueue);
+    console.log(songQueue);
     popQueue((updatedQueue) => {
-      console.error(updatedQueue);
+      console.log(updatedQueue);
       // Place new song to the start of the queue
       const newQueue = [songId, ...updatedQueue];
       setQueue(newQueue);
       // songQueue = newQueue;
-      console.error('NEW songQueue value: ' + newQueue);
+      console.log('NEW songQueue value: ' + newQueue);
     }); // Remove current song from the list
-    console.error(songQueue);
+    console.log(songQueue);
   };
 
   return {

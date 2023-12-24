@@ -50,10 +50,21 @@ BUGS:
 4.  Fixup all of the addEffect, runEffect stuff. Do they all have to be async?
 5.  Temp song is not always deleted when using custom effects. EX: Have speedup toggled, add any effect, there will be two temp songs. Each effect adds a new temp song but doesnt delete the previous
 6.  What quality are the mp4s being downloaded at from youtube
+7.  Queue display gets out of sync.
+8.  Playing multiple songs with an effect preset will not work. This is when clicking the songs, it works by skipping
+9.  Songs not autoplaying once they finish playing
 
 ## Launching
 
 npm run all
+
+## Testing
+
+To run the tests
+`npm test`
+
+To see the coverage
+`npx jest --coverage`
 
 #### EFFECTS TO ADD
 
