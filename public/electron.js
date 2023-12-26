@@ -1067,8 +1067,6 @@ app.on('ready', function () {
   }
 });
 
-// app.whenReady().then(createWindow);
-
 /* MAC OS STUFF */
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

@@ -41,6 +41,7 @@ export const QueueManager = (currentSong, visibleSongs) => {
       const nextIndex =
         (currentSongIndex + 1) % Object.keys(visibleSongs).length;
       setCurrentSongIndex(nextIndex);
+      console.log('NEXT SONG IS : ', nextIndex, visibleSongs);
 
       // ! TODO: More modular, and I don't really like this
       const songArray = Object.values(visibleSongs); // REALLY? I only need one, not the whole thing

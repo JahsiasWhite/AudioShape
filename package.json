@@ -29,7 +29,11 @@
     "transform": {
       "^.+\\.(js|jsx)$": "babel-jest"
     },
-    "testEnvironment": "jsdom"
+    "testEnvironment": "jsdom",
+    "moduleNameMapper": {
+      "\\.(css|less|sass|scss)$": "<rootDir>/__mocks__/styleMock.js",
+      "\\.(gif|ttf|eot|svg)$": "<rootDir>/__mocks__/fileMock.js"
+    }
   },
   "dependencies": {
     "ffmpeg-static": "^5.2.0",
