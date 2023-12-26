@@ -27,6 +27,7 @@ export const AudioEffects = (
   const [slowDownIsEnabled, setSlowDownIsEnabled] = useState(false);
 
   //   var fileLocation; // TODO
+  var effectThreshold = 0;
 
   /**
    * Applies the given effect to the current song
@@ -240,7 +241,11 @@ export const AudioEffects = (
       window.electron.ipcRenderer.once(
         'TEMP_SONG_SAVED',
         async (outputPath) => {
-          await handleTempSongSaved(outputPath, Object.keys(effects).length);
+          await handleTempSongSaved(
+            outputPath,
+            Object.keys(effects).length,
+            effectThreshold
+          );
           resolve();
         }
       );

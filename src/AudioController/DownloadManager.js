@@ -6,12 +6,11 @@ export const DownloadManager = (
   initCurrentSong,
   getCurrentAudioBuffer
 ) => {
-  var effectThreshold = 0;
   /**
    * Saves the new temporary song from the server and sets it to the current song
    * @param {*} outputPath
    */
-  const handleTempSongSaved = (outputPath, numEffects) => {
+  const handleTempSongSaved = (outputPath, numEffects, effectThreshold) => {
     // This function gets called twice for some odd reason, need to just fix that, then I don't need this
     // if (currentSongIndex === null) return;
     // console.error('SAVED :  ', effects);

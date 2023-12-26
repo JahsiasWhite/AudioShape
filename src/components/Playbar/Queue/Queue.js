@@ -10,6 +10,7 @@ const Queue = () => {
 
   const toggleShowing = () => {
     setIsVisible(!isVisible);
+    console.error('SHOWING?', isVisible, '   and queue is : ', songQueue);
   };
 
   const handleClose = () => {

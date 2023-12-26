@@ -13,7 +13,7 @@ function FolderSelection({ onSettingsUpdate }) {
   };
 
   return (
-    <label htmlFor="folderInput" style={{ cursor: 'pointer' }}>
+    <label htmlFor="folderInput" style={{ cursor: 'pointer', color: 'green' }}>
       <b>Choose Song Directory</b>
       <input
         id="folderInput"

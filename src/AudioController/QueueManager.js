@@ -61,6 +61,7 @@ export const QueueManager = (currentSong, visibleSongs) => {
       } else {
         // If the queue is empty, play the next song in the visibleSongs list
         setCurrentSongId(nextSongId);
+        setQueue([nextSongId]);
       }
     });
   };

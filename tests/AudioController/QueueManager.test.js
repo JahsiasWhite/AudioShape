@@ -28,7 +28,7 @@ describe('QueueManager', () => {
     expect(result.current.currentSongIndex).toBe(1); // Assuming 'song2' is at index 1 in mockVisibleSongs
   });
 
-  it('should add song to the queue and update queue state', () => {
+  it('should add a song to the queue', () => {
     const { result } = renderHook(() => QueueManager(null, null));
 
     // Trigger adding a song to the queue
@@ -40,7 +40,7 @@ describe('QueueManager', () => {
     expect(result.current.songQueue).toEqual(['song1']);
   });
 
-  it('should add multiple songs to the queue and update queue state', () => {
+  it('should add multiple songs to the queue', () => {
     const { result } = renderHook(() => QueueManager(null, null));
 
     // Trigger adding a song to the queue
@@ -126,7 +126,7 @@ describe('QueueManager', () => {
     expect(result.current.currentSongIndex).toBe(1); // Assuming 'song2' is at index 1 in mockVisibleSongs
   });
 
-  it('should play the next song when there is no queue and update state', () => {
+  it('should play the next song when there is no queue', () => {
     const mockCurrentSong = {
       addEventListener: jest.fn(),
       removeEventListener: jest.fn(),
@@ -153,12 +153,12 @@ describe('QueueManager', () => {
     });
 
     // Assertions
-    // expect(result.current.songQueue).toEqual(['song2', 'song3']);
+    expect(result.current.songQueue).toEqual(['song2']);
     expect(result.current.currentSongId).toBe('song2');
     expect(result.current.currentSongIndex).toBe(1); // Assuming 'song2' is at index 1 in mockVisibleSongs
   });
 
-  it('should play the next song when there is no current song and update state', () => {
+  it('should play the next song when there is no current song', () => {
     const mockVisibleSongs = {
       song1: { id: 'song1', title: 'Song 1' },
       song2: { id: 'song2', title: 'Song 2' },
