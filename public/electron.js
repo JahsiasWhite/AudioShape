@@ -24,6 +24,7 @@ const yts = require('yt-search');
 
 // Adding metadata to newly created music files
 // const NodeID3 = require('node-id3');
+const ffmpeg = require('fluent-ffmpeg');
 
 const { glob, globSync, Glob } = require('glob');
 // const { fetch } = require('node-fetch');
@@ -756,7 +757,7 @@ app.on('ready', function () {
     const url = result.all[0].url; // TODO: What happens if all is empty? Is that possible? 'all' is an array of the search results...
 
     // download the song from youtube
-    downloadYoutubeVideo(url);
+    downloadYoutubeVideo(url, songDetails);
   });
 
   /**
@@ -791,7 +792,10 @@ app.on('ready', function () {
     return JSON.parse(settingsData);
   }
 
-  async function downloadYoutubeVideo(url) {
+  /* 
+    I dont like spotifyDetails. It was the easiest way to implement albeit a bit ugly
+  */
+  async function downloadYoutubeVideo(url, spotifyDetails) {
     console.log('----------------------------------------------------');
     console.log('DOWNLOADING VIDEO');
     console.log('Youtube URL is: ', url);
@@ -799,6 +803,7 @@ app.on('ready', function () {
     // Get the youtube video title
     const info = await ytdl.getInfo(url);
     const videoTitle = info.videoDetails.title;
+    console.log('Got video detail');
 
     // Get where we are saving the video to
     const settings = getSettings();
@@ -817,6 +822,7 @@ app.on('ready', function () {
     const outputFilePath = path.join(songDirectory, `${videoTitle}.mp4`);
 
     // Spawn FFmpeg process to combine video and audio
+    console.log('Creating ffmpeg process...');
     const ffmpegProcess = cp.spawn(
       ffmpegPath,
       [
@@ -854,26 +860,40 @@ app.on('ready', function () {
         ],
       }
     );
+    console.log('Created ffmpeg process');
 
     // C O M B I N E
+    console.log('Combing video and audio...');
     audioStream.pipe(ffmpegProcess.stdio[4]);
     videoStream.pipe(ffmpegProcess.stdio[5]);
-
-    // Adds some extra info to the new audio file
-    // TODO! ACTUALLY IMPLEMENT THIS!!
-    // writeMetadata(videoTitle, outputFilePath);
 
     // When an error is encountered or we finished processing
     ffmpegProcess.on('close', async (code) => {
       if (code === 0) {
         console.log('Video downloaded and combined successfully');
 
-        const songData = await processSongMetadata(outputFilePath, []);
+        // We can download from both the youtube tab and the spotify tab
+        // If we are downloading from spotify, we want to use the data supplied from them
+        // If just from youtube, we have to get our data from the video information
+        let songData;
+        if (spotifyDetails) {
+          //TODO I think since we have to download it a second time, it is reducing quality... Also doubles the time it takes to download
+          // So I should add a button in settings to toggle if spotifyDetails is used. Toggle it in DOWNLOAD_SPOTIFY_SONG
+          songData = await writeSpotifyDetails(
+            outputFilePath,
+            path.join(songDirectory, `spotify-${videoTitle}.mp4`),
+            spotifyDetails
+          );
+        } else {
+          songData = await processSongMetadata(outputFilePath, []);
+        }
+
         mainWindow.webContents.send(
           'download-success',
           'Download completed!',
           songData
         );
+        console.log('Download completed, sent song data');
       } else {
         console.error(`FFmpeg process exited with code ${code}`);
         mainWindow.webContents.send(
@@ -892,6 +912,48 @@ app.on('ready', function () {
           'download-error',
           `FFmpeg process exited with code ${err.code}. FILE ALREADY EXISTS`
         );
+      }
+    });
+  }
+
+  /**
+   * Writes the given file details from Spotify into the file
+   * @param {string} inputFilePath - Path to the original MP4 file
+   * @param {string} outputFilePath - Path to the new output file
+   * @param {object} metadata - New metadata values
+   * @returns {Promise<void>} - A promise that resolves when the metadata is edited successfully
+   */
+  function writeSpotifyDetails(inputFilePath, outputFilePath, metadata) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        console.log('--------------------------------');
+        console.log('METADATA');
+        console.log(metadata);
+        console.log('--------------------------------');
+        await ffmpeg(inputFilePath)
+          .outputOption('-metadata', `title=${metadata.name}`)
+          .outputOption('-metadata', `artist=${metadata.artist}`)
+          .outputOption('-metadata', `album=${metadata.album}`)
+          // Add more metadata options as needed
+          .output(outputFilePath)
+          .on('end', async () => {
+            console.log('Metadata edited successfully');
+
+            // Delete the original file (inputFilePath)
+            // I have to do this because ffmpeg doesnt let you edit files you read. So you need two different files...
+            // await fs.unlink(inputFilePath);
+            await fsPromises.unlink(inputFilePath);
+
+            resolve();
+          })
+          .on('error', (err) => {
+            console.error('Error editing metadata:', err);
+            reject(err);
+          })
+          .run();
+      } catch (error) {
+        console.error('Error editing metadata:', error);
+        reject(error);
       }
     });
   }

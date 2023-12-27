@@ -37,6 +37,7 @@
   },
   "dependencies": {
     "ffmpeg-static": "^5.2.0",
+    "fluent-ffmpeg": "^2.1.2",
     "glob": "^10.3.3",
     "music-metadata": "^8.1.4",
     "node-fetch": "^3.3.2",
