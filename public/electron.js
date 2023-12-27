@@ -27,11 +27,7 @@ const yts = require('yt-search');
 const ffmpeg = require('fluent-ffmpeg');
 
 const { glob, globSync, Glob } = require('glob');
-// const { fetch } = require('node-fetch');
-let fetch;
-import('node-fetch').then((module) => {
-  fetch = module;
-});
+
 // Annoying way to import this tbh
 let metadata;
 import('music-metadata').then((module) => {

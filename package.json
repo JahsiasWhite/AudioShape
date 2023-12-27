@@ -40,7 +40,6 @@
     "fluent-ffmpeg": "^2.1.2",
     "glob": "^10.3.3",
     "music-metadata": "^8.1.4",
-    "node-fetch": "^3.3.2",
     "react-dom": "^18.2.0",
     "react-scripts": "^5.0.1",
     "spotify-web-api-node": "^5.0.2",
