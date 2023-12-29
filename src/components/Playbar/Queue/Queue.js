@@ -5,12 +5,12 @@ import { useAudioPlayer } from '../../../AudioController/AudioContext';
 import QueueSVG from './queue.svg';
 
 const Queue = () => {
-  const { visibleSongs, handleSongSelect, songQueue } = useAudioPlayer();
+  const { visibleSongs, currentSongIndex, handleSongSelect, songQueue } =
+    useAudioPlayer();
   const [isVisible, setIsVisible] = useState(false);
 
   const toggleShowing = () => {
     setIsVisible(!isVisible);
-    console.error('SHOWING?', isVisible, '   and queue is : ', songQueue);
   };
 
   const handleClose = () => {
@@ -59,6 +59,21 @@ const Queue = () => {
                   </div>
                 )
               )}
+          </div>
+          <div className="secondary-queue">
+            <h3>Next</h3>
+            {visibleSongs &&
+              Object.keys(visibleSongs)
+                .slice(currentSongIndex + 1)
+                .map((id, index) => (
+                  <div
+                    key={id}
+                    className="queue-item"
+                    onDoubleClick={() => handleSongSelectQueue(parseFloat(id))}
+                  >
+                    {visibleSongs[id].title}
+                  </div>
+                ))}
           </div>
           {/* {isVisible && (
             <div className="queue-content">

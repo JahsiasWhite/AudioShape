@@ -1,6 +1,11 @@
 import { renderHook, act } from '@testing-library/react';
 import { AudioControls } from '../../src/AudioController/AudioControls';
 
+const currentSong = {
+  duration: 45,
+  play: jest.fn(),
+};
+
 describe('AudioControls', () => {
   it('should initialize with default values', () => {
     const { result } = renderHook(() =>
@@ -17,10 +22,7 @@ describe('AudioControls', () => {
   });
 
   it('should play audio when playAudio is called', () => {
-    const playMock = jest.fn();
-    const { result } = renderHook(() =>
-      AudioControls({ play: playMock, pause: jest.fn() })
-    );
+    const { result } = renderHook(() => AudioControls(currentSong));
 
     // Trigger the playAudio function
     act(() => {
@@ -29,7 +31,7 @@ describe('AudioControls', () => {
 
     // Assertion
     expect(result.current.isPlaying).toBe(true);
-    expect(playMock).toHaveBeenCalled();
+    expect(currentSong.play).toHaveBeenCalled();
   });
 
   it('should pause audio when pauseAudio is called', () => {

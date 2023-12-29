@@ -6,6 +6,11 @@ export const AudioControls = (currentSong) => {
   const [isMuted, setIsMuted] = useState(false);
 
   const playAudio = () => {
+    // Duration is probably not the best way to check but it's easy
+    console.log(currentSong);
+    const songLoaded = !isNaN(currentSong.duration);
+    if (!songLoaded) return;
+
     currentSong.play();
     setIsPlaying(true);
   };
