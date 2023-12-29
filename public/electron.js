@@ -12,6 +12,9 @@ const fs = require('fs');
 const fsPromises = require('fs').promises;
 const url = require('url');
 
+// For outputting to terminal
+const readline = require('readline');
+
 const { v4: uuidv4 } = require('uuid');
 
 // For downloading youtube videos
@@ -805,14 +808,80 @@ app.on('ready', function () {
     const settings = getSettings();
     const songDirectory = settings.libraryDirectory;
 
+    /* Setup progress tracking */
+    const tracker = {
+      start: Date.now(),
+      audio: { downloaded: 0, total: Infinity },
+      video: { downloaded: 0, total: Infinity },
+      merged: { frame: 0, speed: '0x', fps: 0 },
+    };
+
     // Use ytdl to download the video and audio separately
     // This is necessary because for higher quality videos, Youtube downloads the audio and video separately
-    const videoStream = ytdl(url, {
-      quality: 'highestvideo',
-    });
-    const audioStream = ytdl(url, {
-      quality: 'highestaudio',
-    });
+    // Get audio and video streams
+    const audioStream = ytdl(url, { quality: 'highestaudio' }).on(
+      'progress',
+      (_, downloaded, total) => {
+        tracker.audio = { downloaded, total };
+        showProgress();
+      }
+    );
+    const videoStream = ytdl(url, { quality: 'highestvideo' }).on(
+      'progress',
+      (_, downloaded, total) => {
+        tracker.video = { downloaded, total };
+        showProgress();
+      }
+    );
+
+    // Prepare the progress bar
+    let progressbarHandle = null;
+    const progressbarInterval = 1000;
+    const showProgress = () => {
+      readline.cursorTo(process.stdout, 0);
+      const toMB = (i) => (i / 1024 / 1024).toFixed(2);
+
+      process.stdout.write(
+        `Audio  | ${(
+          (tracker.audio.downloaded / tracker.audio.total) *
+          100
+        ).toFixed(2)}% processed `
+      );
+      process.stdout.write(
+        `(${toMB(tracker.audio.downloaded)}MB of ${toMB(
+          tracker.audio.total
+        )}MB).${' '.repeat(10)}\n`
+      );
+
+      process.stdout.write(
+        `Video  | ${(
+          (tracker.video.downloaded / tracker.video.total) *
+          100
+        ).toFixed(2)}% processed `
+      );
+      process.stdout.write(
+        `(${toMB(tracker.video.downloaded)}MB of ${toMB(
+          tracker.video.total
+        )}MB).${' '.repeat(10)}\n`
+      );
+
+      process.stdout.write(
+        `Merged | processing frame ${tracker.merged.frame} `
+      );
+      process.stdout.write(
+        `(at ${tracker.merged.fps} fps => ${tracker.merged.speed}).${' '.repeat(
+          10
+        )}\n`
+      );
+
+      process.stdout.write(
+        `running for: ${((Date.now() - tracker.start) / 1000 / 60).toFixed(
+          2
+        )} Minutes.`
+      );
+
+      readline.moveCursor(process.stdout, 0, -3);
+    };
 
     // Construct the output file path using the video title and song directory
     const outputFilePath = path.join(songDirectory, `${videoTitle}.mp4`);
@@ -897,7 +966,25 @@ app.on('ready', function () {
           `FFmpeg process exited with code ${code}`
         );
       }
+
+      clearInterval(progressbarHandle);
     });
+
+    // Updates the progress bar
+    // ffmpegProcess.stdio[3].on('data', (chunk) => {
+    //   console.log('WORKING');
+    //   // Start the progress bar
+    //   if (!progressbarHandle)
+    //     progressbarHandle = setInterval(showProgress, progressbarInterval);
+    //   // Parse the param=value list returned by ffmpeg
+    //   const lines = chunk.toString().trim().split('\n');
+    //   const args = {};
+    //   for (const l of lines) {
+    //     const [key, value] = l.split('=');
+    //     args[key.trim()] = value.trim();
+    //   }
+    //   tracker.merged = args;
+    // });
 
     // When a file of the same name already exists in the current dir. Im not entirely sure if this code only applies to that but good enough for now
     ffmpegProcess.stdio[4].on('error', (err) => {
@@ -932,6 +1019,11 @@ app.on('ready', function () {
           .outputOption('-metadata', `album=${metadata.album}`)
           // Add more metadata options as needed
           .output(outputFilePath)
+          .on('progress', (progress) => {
+            console.log(
+              `FFmpeg Progress: ${progress.percent}% done, ${progress.timemark}`
+            );
+          })
           .on('end', async () => {
             console.log('Metadata edited successfully');
 
