@@ -9,6 +9,7 @@ import PlaybackTimer from './PlaybackTimer/PlaybackTimer';
 import Queue from './Queue/Queue';
 import SavedEffects from './SavedEffects/SavedEffects';
 
+import EffectsSVG from './EffectsSVG';
 import SlowDownButtonSVG from './SlowDownButtonSVG';
 import SpeedupButtonSVG from './SpeedupButtonSVG';
 import FullscreenSVG from './Fullscreen.svg';
@@ -67,8 +68,9 @@ function Playbar({ toggleFullscreen }) {
         )}
       </div>
       <div className="playbar-controls">
-        <SavedEffects />
         <div className="buttons-container">
+          <SavedEffects />
+
           <SlowDownButtonSVG
             slowDownIsEnabled={slowDownIsEnabled}
             onClick={() => {

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import './SavedEffects.css';
 import { useAudioPlayer } from '../../../AudioController/AudioContext';
 
+import EffectsSVG from '../EffectsSVG';
+
 const SavedEffects = () => {
   const { savedEffects, applySavedEffects, currentEffectCombo } =
     useAudioPlayer();
@@ -31,14 +33,21 @@ const SavedEffects = () => {
   return (
     <div className="saved-effects">
       {/* Button to toggle visibility */}
-      <button
+      {/* <button
         className={`saved-effects-button ${
           currentEffectCombo !== '' ? 'saved-effects-enabled' : ''
         } `}
         onClick={toggleShowing}
       >
         Show Saved Effects
-      </button>
+      </button> */}
+      <EffectsSVG
+        // className={`saved-effects-button ${
+        //   currentEffectCombo !== '' ? 'saved-effects-enabled' : ''
+        // } `}
+        effectsEnabled={currentEffectCombo}
+        onClick={toggleShowing}
+      />
 
       {/* Popup displaying saved effects */}
       {isVisible && (

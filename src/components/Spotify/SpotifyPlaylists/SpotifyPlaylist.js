@@ -166,7 +166,7 @@ const SpotifyPlaylist = ({ playlistId, unloadPlaylist }) => {
                     <div>{item.track.album.name}</div>
                     <div>{item.track.artists[0].name}</div>
                   </div>
-                  <div className="right-side">
+                  <div className="right-side" style={{ flex: 'auto' }}>
                     {downloadStatus[idx] && <>{downloadStatus[idx]}</>}
                     <img
                       className="plus-sign"

@@ -53,6 +53,11 @@
   cursor: pointer;
 }
 
+.saved-effects {
+  width: 25px;
+  height: 25px;
+}
+
 .saved-effects-enabled {
   background-color: var(--color-button) !important;
 }

@@ -15,6 +15,8 @@ function SongList({ handleSongEdit, toggleSection }) {
   const {
     handleSongSelect,
     visibleSongs,
+    setVisibleSongs,
+    loadedSongs,
     currentSongId,
     currentScreen,
     setCurrentScreen,
@@ -71,6 +73,73 @@ function SongList({ handleSongEdit, toggleSection }) {
     setPlaylistMenuOpen(-1);
   };
 
+  const goToArtistScreen = (key) => {
+    /* Get songs by ID */
+    // Initialize an empty object to store songs organized by artist
+    const songsByArtist = {};
+    const artist = loadedSongs[key].artist;
+
+    // Loop through loadedSongs and organize them by artist
+    Object.keys(loadedSongs).forEach((id) => {
+      const song = loadedSongs[id];
+
+      // Skip to the next iteration if the artist doesn't match
+      if (artist !== song.artist) {
+        return;
+      }
+
+      // Use the duration as the key for each song within the artist
+      songsByArtist[id] = song;
+    });
+
+    setVisibleSongs(songsByArtist);
+    setCurrentScreen(artist);
+  };
+
+  const goToAlbumScreen = (key) => {
+    /* Get songs by ID */
+    // Initialize an empty object to store songs organized by album
+    const songsByAlbum = {};
+    const album = loadedSongs[key].album;
+
+    // Loop through loadedSongs and organize them by album
+    Object.keys(loadedSongs).forEach((id) => {
+      const song = loadedSongs[id];
+
+      // Skip to the next iteration if the album doesn't match
+      if (album !== song.album) {
+        return;
+      }
+
+      // Use the duration as the key for each song within the artist
+      songsByAlbum[id] = song;
+    });
+
+    setVisibleSongs(songsByAlbum);
+    setCurrentScreen(album);
+  };
+
+  /**
+   * Formats decimal duration to "mm:ss" format.
+   * @param {number} decimalDuration - The decimal duration to be formatted.
+   * @returns {string} - The formatted duration in "mm:ss" format.
+   */
+  function formatDuration(decimalDuration) {
+    // Extract whole minutes from the decimal duration
+    const minutes = Math.floor(decimalDuration);
+
+    // Calculate remaining seconds by rounding the fractional part and multiplying by 60
+    const seconds = Math.round((decimalDuration - minutes) * 60);
+
+    // Ensure seconds are within the valid range (0 to 59)
+    const formattedSeconds = seconds < 10 ? `0${seconds}` : `${seconds}`;
+
+    // Format the duration as "mm:ss"
+    const formattedDuration = `${minutes}:${formattedSeconds}`;
+
+    return formattedDuration;
+  }
+
   return (
     <div className="song-list-container">
       <div className="song-list-header">{currentScreen}</div>
@@ -121,8 +190,15 @@ function SongList({ handleSongEdit, toggleSection }) {
                     >
                       {visibleSongs[key].title}
                     </div>
-                    <div>{visibleSongs[key].artist}</div>
-                    <div>{visibleSongs[key].album}</div>
+                    <div onDoubleClick={() => goToArtistScreen(key)}>
+                      {visibleSongs[key].artist}
+                    </div>
+                    <div onDoubleClick={() => goToAlbumScreen(key)}>
+                      {visibleSongs[key].album}
+                    </div>
+                  </div>
+                  <div className="song-duration">
+                    {formatDuration(visibleSongs[key].duration / 60)}
                   </div>
                   <div className="right-side">
                     <img
