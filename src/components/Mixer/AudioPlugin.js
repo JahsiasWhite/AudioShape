@@ -9,27 +9,42 @@ import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 // DREADBOX INSPIRED
 
-// DEFAULT VALUES
-const initialKnobValues = {
-  speedKnobValue: 50,
-  reverbKnobValue: 100,
-  delayKnobValue: 0,
-  bitCrusherKnobValue: 16,
-  pitchShiftKnobValue: 0,
-};
-
 const AudioPlugin = () => {
+  // DEFAULT VALUES
+  const initialKnobValues = {
+    speedKnobValue: 50,
+    reverbKnobValue: 100,
+    delayKnobValue: 0,
+    bitCrusherKnobValue: 16,
+    pitchShiftKnobValue: 0,
+  };
+  let INIT_MULTIPLIER = 1;
+
   const {
     addEffect,
     resetCurrentSong,
     setIsLooping,
+    currentEffectCombo,
+    savedEffects,
     saveEffects,
     loadingQueue,
     handleSongExport,
   } = useAudioPlayer();
 
-  const [speedKnobValue, setSpeedKnobValue] = useState(50);
-  const [multiplier, setMultiplier] = useState(1);
+  console.error('HMM', savedEffects[currentEffectCombo]);
+  if (savedEffects[currentEffectCombo] !== undefined) {
+    Object.keys(savedEffects[currentEffectCombo]).forEach((effect) => {
+      if (effect === 'speed') {
+        INIT_MULTIPLIER = savedEffects[currentEffectCombo][effect];
+      }
+    });
+  }
+
+  console.error(initialKnobValues.speedKnobValue);
+  const [speedKnobValue, setSpeedKnobValue] = useState(
+    initialKnobValues.speedKnobValue * INIT_MULTIPLIER
+  );
+  const [multiplier, setMultiplier] = useState(INIT_MULTIPLIER);
 
   const [reverbKnobValue, setReverbKnobValue] = useState(100);
   // const [wetValue, setWetValue] = useState(1);

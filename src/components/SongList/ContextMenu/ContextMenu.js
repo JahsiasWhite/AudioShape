@@ -3,7 +3,7 @@ import './ContextMenu.css'; // Generic?
 
 import { useAudioPlayer } from '../../../AudioController/AudioContext';
 
-function ContextMenu({ onContextMenu, style, songData }) {
+function ContextMenu({ onContextMenu, style, songData, hideContextMenu }) {
   const { addToQueue } = useAudioPlayer();
 
   const handleContextMenu = (event) => {
@@ -13,6 +13,7 @@ function ContextMenu({ onContextMenu, style, songData }) {
 
   const addSongToQueue = () => {
     addToQueue(songData.id);
+    hideContextMenu();
   };
 
   return (

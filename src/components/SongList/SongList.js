@@ -148,6 +148,7 @@ function SongList({ handleSongEdit, toggleSection }) {
                 left: contextMenuPosition.x,
               }}
               songData={contextMenuSongData}
+              hideContextMenu={hideContextMenu}
             />
           )}
           {/* Render the PlaylistMenu when playlistMenuIndex has a real index */}
