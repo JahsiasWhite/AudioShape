@@ -11,6 +11,10 @@ Don't have any local songs? No problem! Music Player also includes the ability t
 
 Music Player also has an extensive full-screen mode. Sit back and watch the audio spectrum of the current song. Listening to an MP4? Full-screen mode even lets you watch the accompanied music video!
 
+# IDEAS
+
+- Move the effects off of the tab. make the main screen slide up and the effect controller screen slides up.
+
 WIP
 
 TODO:

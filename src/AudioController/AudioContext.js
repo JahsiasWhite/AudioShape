@@ -135,6 +135,7 @@ export const AudioProvider = ({ children }) => {
     removeFromQueue,
     rearrangeQueue,
     songQueue,
+    nextSongs,
   } = QueueManager(currentSong, visibleSongs);
 
   // Handles all audio effects
@@ -355,6 +356,7 @@ export const AudioProvider = ({ children }) => {
         setIsLooping,
         addToQueue,
         songQueue,
+        nextSongs,
       }}
     >
       {children}

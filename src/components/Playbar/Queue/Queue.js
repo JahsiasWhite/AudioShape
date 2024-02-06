@@ -5,8 +5,14 @@ import { useAudioPlayer } from '../../../AudioController/AudioContext';
 import QueueSVG from './queue.svg';
 
 const Queue = () => {
-  const { visibleSongs, currentSongIndex, handleSongSelect, songQueue } =
-    useAudioPlayer();
+  const {
+    visibleSongs,
+    currentSongId,
+    currentSongIndex,
+    handleSongSelect,
+    songQueue,
+    nextSongs,
+  } = useAudioPlayer();
   const [isVisible, setIsVisible] = useState(false);
 
   const toggleShowing = () => {
@@ -21,10 +27,6 @@ const Queue = () => {
     handleSongSelect(id);
   };
 
-  useEffect(() => {
-    console.error('SONG QUEUE CHANGED : ', songQueue);
-  }, [songQueue]);
-
   return (
     <div className="queue">
       <img
@@ -38,42 +40,40 @@ const Queue = () => {
             X
           </div>
           <div className="test-queue">
+            <div>
+              <h3>Current Song</h3>
+              <div
+                key={songQueue[0]}
+                className={`queue-item current-song-queue
+                }`}
+              >
+                {visibleSongs[currentSongId].title}
+              </div>
+            </div>
             <h3>Queue</h3>
             {songQueue.length > 0 &&
-              songQueue.map((id, index) =>
-                index === 0 ? (
-                  <div
-                    key={id}
-                    className={`queue-item current-song-queue
-                }`}
-                  >
-                    {'Current Song: ' + visibleSongs[id].title}
-                  </div>
-                ) : (
-                  <div
-                    key={id}
-                    className="queue-item"
-                    onDoubleClick={() => handleSongSelectQueue(id)}
-                  >
-                    {visibleSongs[id].title}
-                  </div>
-                )
-              )}
+              songQueue.map((id, index) => (
+                <div
+                  key={id}
+                  className="queue-item"
+                  onDoubleClick={() => handleSongSelectQueue(id)}
+                >
+                  {visibleSongs[id].title}
+                </div>
+              ))}
           </div>
           <div className="secondary-queue">
-            <h3>Next</h3>
-            {visibleSongs &&
-              Object.keys(visibleSongs)
-                .slice(currentSongIndex + 1)
-                .map((id, index) => (
-                  <div
-                    key={id}
-                    className="queue-item"
-                    onDoubleClick={() => handleSongSelectQueue(parseFloat(id))}
-                  >
-                    {visibleSongs[id].title}
-                  </div>
-                ))}
+            <h3>After</h3>
+            {nextSongs &&
+              nextSongs.map((id, index) => (
+                <div
+                  key={id}
+                  className="queue-item"
+                  onDoubleClick={() => handleSongSelectQueue(parseFloat(id))}
+                >
+                  {visibleSongs[id].title}
+                </div>
+              ))}
           </div>
           {/* {isVisible && (
             <div className="queue-content">

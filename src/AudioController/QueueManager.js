@@ -4,29 +4,26 @@ export const QueueManager = (currentSong, visibleSongs) => {
   const [currentSongId, setCurrentSongId] = useState(null);
   const [currentSongIndex, setCurrentSongIndex] = useState(null);
   const [songQueue, setQueue] = useState([]);
-  // let songQueue = [];
+
+  // Once the queue is empty, the songs will play through whatever environment they are in, being the next songs
+  const [nextSongs, setNextSongs] = useState([]);
+
+  // Record of all songs that played
+  const [history, setHistory] = useState([]);
 
   /* When a song is double-clicked, change the current song to that one! */
   const handleSongSelect = (songId) => {
-    // setCurrentSongIndex(songIndex);
-    setCurrentSongId(songId);
-
     // ! TODO: Don't love this
     const index = Object.keys(visibleSongs).findIndex(
       (key) => visibleSongs[key].id === songId
     );
 
-    console.log(
-      'SETTING SONG TO INDEX: ' +
-        index +
-        '   ' +
-        visibleSongs[Object.keys(visibleSongs)[index]].title
-    );
-
+    setCurrentSongId(songId);
     setCurrentSongIndex(index);
+    // setHistory((oldHistory) => [...oldHistory, songId]);
 
-    // Fix queue
-    setCurrentSongInQueue(songId); // Add the clicked song to the top of the list
+    const upNext = Object.keys(visibleSongs).slice(index + 1);
+    setNextSongs(upNext);
   };
 
   const playNextSong = () => {
@@ -35,9 +32,18 @@ export const QueueManager = (currentSong, visibleSongs) => {
       currentSong.removeEventListener('ended', onSongEnded);
     }
 
-    console.log('Playing next song: ', songQueue);
-    // Remove the current song from the queue
-    popQueue((updatedQueue) => {
+    setHistory((oldHistory) => [...oldHistory, currentSongId]);
+
+    // If we're using the queue
+    if (songQueue.length > 0) {
+      const curSong = songQueue.shift();
+
+      setQueue(songQueue);
+      setCurrentSongId(curSong);
+      // setHistory((oldHistory) => [...oldHistory, curSong]);
+
+      // Else if we're not using the queue, and just playing the next song up in line
+    } else {
       const nextIndex =
         (currentSongIndex + 1) % Object.keys(visibleSongs).length;
       setCurrentSongIndex(nextIndex);
@@ -46,39 +52,28 @@ export const QueueManager = (currentSong, visibleSongs) => {
       // ! TODO: More modular, and I don't really like this
       const songArray = Object.values(visibleSongs); // REALLY? I only need one, not the whole thing
       const nextSongId = songArray[nextIndex].id;
-      // setCurrentSongId(nextSongId);
-      if (updatedQueue.length > 0) {
-        // If there are songs in the queue, play the next song in the queue
-        const [nextQueueSongId, ...restQueue] = updatedQueue;
-        setQueue(updatedQueue);
-        // songQueue = restQueue;
-        console.log(
-          'Setting current song to : ',
-          nextQueueSongId,
-          visibleSongs
-        );
-        setCurrentSongId(nextQueueSongId);
-      } else {
-        // If the queue is empty, play the next song in the visibleSongs list
-        setCurrentSongId(nextSongId);
-        setQueue([nextSongId]);
-      }
-    });
+      setCurrentSongId(nextSongId);
+      // setHistory((oldHistory) => [...oldHistory, nextSongId]);
+
+      const upNext = Object.keys(visibleSongs).slice(nextIndex + 1);
+      setNextSongs(upNext);
+    }
   };
 
   const playPreviousSong = () => {
+    const previousId = history.pop();
+
+    if (previousId === undefined) return;
+
     if (currentSong) {
       currentSong.removeEventListener('ended', onSongEnded);
     }
 
-    const previousIndex =
-      (currentSongIndex - 1 + Object.keys(visibleSongs).length) %
-      Object.keys(visibleSongs).length;
-    setCurrentSongIndex(previousIndex);
+    setCurrentSongIndex(Object.keys(visibleSongs).indexOf('' + previousId));
+    setCurrentSongId(previousId);
 
-    const songArray = Object.values(visibleSongs);
-    const nextSongId = songArray[previousIndex].id;
-    setCurrentSongId(nextSongId);
+    // const upNext = Object.keys(visibleSongs).slice(previousIndex + 1);
+    // setNextSongs(upNext);
   };
 
   const onSongEnded = () => {
@@ -90,18 +85,19 @@ export const QueueManager = (currentSong, visibleSongs) => {
     // }
 
     console.log('SONG ENDED', currentSong, currentSongId);
+    // setHistory((oldHistory) => [...oldHistory, currentSongId]);
     // Automatically play the next song when the current song ends
     playNextSong();
   };
 
   const addToQueue = (songId) => {
     setQueue((prevQueue) => {
-      console.log(prevQueue);
+      console.error(prevQueue);
 
       return [...prevQueue, songId];
     });
     // songQueue.push(songId);
-    console.log('Added to queue: ', songQueue);
+    console.error('Added to queue: ', songQueue);
   };
 
   const removeFromQueue = (index) => {
@@ -162,5 +158,6 @@ export const QueueManager = (currentSong, visibleSongs) => {
     removeFromQueue,
     rearrangeQueue,
     songQueue,
+    nextSongs,
   };
 };
