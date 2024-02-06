@@ -3,6 +3,11 @@
   padding-top: 0px;
 }
 
+.song-list-header {
+  height: 10%;
+  font-size: 100px;
+}
+
 .empty-message {
   margin-top: 40%;
   text-align: center;
@@ -37,6 +42,7 @@
 
 .song {
   position: relative;
+  color: lightgrey;
 }
 
 .song-list {
@@ -46,10 +52,15 @@
 
 .list-item {
   padding: 10px;
-  border-bottom: 1px solid #ccc;
+  /* border-bottom: 1px solid #ccc; */
   display: flex;
   align-items: center;
   position: relative;
+  border-radius: 5px;
+}
+
+.list-item:hover {
+  background-color: rgba(1, 1, 1, 0.2);
 }
 
 .list-image {
@@ -63,11 +74,33 @@
   flex-direction: column;
 }
 
-.right-side {
+.song-title {
+  font-size: 25px;
+}
+
+.header-color {
+  color: white;
+}
+
+.highlighted {
+  color: rgb(88, 192, 88);
+  background-color: rgba(1, 1, 1, 0.5);
+}
+
+.song-duration {
   display: flex;
   flex: auto;
-  justify-content: end;
+  justify-content: flex-end;
+  font-size: 16px;
+  color: white;
+}
+
+.right-side {
+  display: flex;
+  /* flex: auto; */
+  justify-content: flex-end;
   align-items: center;
+  margin-left: 10px;
 }
 
 .plus-sign {

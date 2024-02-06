@@ -1,19 +1,43 @@
 .fullscreen-view {
-  position: fixed;
+  /* position: fixed;
   width: 100vw;
-  height: 100vh;
+  height: 100vh; */
+
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: var(--color-main);
 }
 
 .song-image {
-  width: 200px;
-  height: 200px;
-  position: fixed;
+  width: 11vw;
+  /* height: 15vw; */
+  /* position: fixed; */
+  top: 20%;
+  left: 5%;
   z-index: 1;
+}
+
+.song-video {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0;
 }
 
 .fullscreen-song-details {
   position: fixed;
-  font-size: 40px;
-  left: 230px;
-  top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1%;
+  /* font-size: 40px; */
+  width: 70%;
+  left: 15%;
+  top: 48%;
+  /* z-index: 1; */
+
+  color: var(--color-text);
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000,
+    1px 1px 0 #000;
 }

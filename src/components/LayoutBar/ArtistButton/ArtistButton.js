@@ -1,8 +1,8 @@
 import ArtistSVG from './Artist.svg';
 
-function Artists({ toggleSection }) {
+function Artists() {
   return (
-    <div className="button-container" onClick={() => toggleSection('artists')}>
+    <div className="button-container">
       <img className="icon" src={ArtistSVG}></img>Artists
     </div>
   );

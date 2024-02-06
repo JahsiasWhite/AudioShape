@@ -1,0 +1,27 @@
+.queue {
+  margin-right: 10px;
+}
+
+.showing {
+  display: flex;
+}
+
+.queue-item {
+  margin-top: 5px;
+  border-radius: 5px;
+  padding: 10px;
+}
+
+.queue-item:hover {
+  background-color: grey;
+}
+
+.current-song-queue {
+  margin-bottom: 30px;
+}
+
+.queue-button {
+  width: 25px;
+  height: 25px;
+  cursor: pointer;
+}

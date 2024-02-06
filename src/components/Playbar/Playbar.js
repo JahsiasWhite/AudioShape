@@ -6,53 +6,85 @@ import PlayButton from './PlayButton/PlayButton';
 import NextButton from './NextButton/NextButton';
 import VolumeControl from './VolumeControl/VolumeControl'; // ! I don't know if I like this name
 import PlaybackTimer from './PlaybackTimer/PlaybackTimer';
-import SpeedupButtonSVG from './SpeedupButtonSVG';
+import Queue from './Queue/Queue';
+import SavedEffects from './SavedEffects/SavedEffects';
 
-import { useAudioPlayer } from '../AudioContext';
+import EffectsSVG from './EffectsSVG';
+import SlowDownButtonSVG from './SlowDownButtonSVG';
+import SpeedupButtonSVG from './SpeedupButtonSVG';
+import FullscreenSVG from './Fullscreen.svg';
+
+import { useAudioPlayer } from '../../AudioController/AudioContext';
+import LoadingSpinner from '../LoadingSpinner/LoadingSpinner';
+import ShuffleButtonSVG from './ShuffleButtonSVG';
 
 function Playbar({ toggleFullscreen }) {
   const {
     visibleSongs,
-    currentSongIndex,
+    currentSongId,
     toggleSpeedup,
     speedupIsEnabled,
+    toggleShuffle,
+    shuffleIsEnabled,
     toggleSlowDown,
     slowDownIsEnabled,
+
+    loadingQueue,
+    effects,
   } = useAudioPlayer();
+
+  console.error('HI THERE: ', loadingQueue.length, Object.keys(effects).length);
+
+  const shuffleHelper = () => {
+    console.error(shuffleIsEnabled);
+    toggleShuffle();
+  };
 
   return (
     <div className="playbar">
       <div className="current-song">
         {/* TODO Clean this up? */}
-        {visibleSongs[currentSongIndex] &&
-          visibleSongs[currentSongIndex].albumImage && (
+        {visibleSongs[currentSongId] &&
+          visibleSongs[currentSongId].albumImage && (
             <img
               className="playbar-image"
-              src={visibleSongs[currentSongIndex].albumImage}
-              alt={`${visibleSongs[currentSongIndex].album} cover`}
+              src={visibleSongs[currentSongId].albumImage}
+              alt={`${visibleSongs[currentSongId].album} cover`}
             />
           )}
-        <div className="song-details">
-          <span id="song-title">
-            {visibleSongs[currentSongIndex]
-              ? visibleSongs[currentSongIndex].title
-              : 'No song playing'}
-          </span>
-          <span id="artist">
-            {visibleSongs[currentSongIndex]
-              ? visibleSongs[currentSongIndex].artist
-              : ''}
-          </span>
-        </div>
+        {loadingQueue.length > 0 ? (
+          <>
+            <LoadingSpinner />
+            {-1 * (loadingQueue.length - Object.keys(effects).length) +
+              '/' +
+              Object.keys(effects).length +
+              'effects'}
+          </>
+        ) : (
+          <div className="song-details">
+            <span id="song-title">
+              {visibleSongs[currentSongId]
+                ? visibleSongs[currentSongId].title
+                : 'No song playing'}
+            </span>
+            <span id="artist">
+              {visibleSongs[currentSongId]
+                ? visibleSongs[currentSongId].artist
+                : ''}
+            </span>
+          </div>
+        )}
       </div>
       <div className="playbar-controls">
         <div className="buttons-container">
-          <SpeedupButtonSVG
-            speedupIsEnabled={slowDownIsEnabled}
+          <SavedEffects />
+
+          <SlowDownButtonSVG
+            slowDownIsEnabled={slowDownIsEnabled}
             onClick={() => {
               toggleSlowDown();
             }}
-          ></SpeedupButtonSVG>
+          ></SlowDownButtonSVG>
           <PreviousButton />
           <PlayButton />
           <NextButton />
@@ -65,14 +97,23 @@ function Playbar({ toggleFullscreen }) {
         </div>
         <PlaybackTimer />
       </div>
-      <VolumeControl />
-      <div
-        className="fullscreen-button"
-        onClick={() => {
-          toggleFullscreen();
-        }}
-      >
-        +
+
+      <div className="playbar-right-side">
+        <ShuffleButtonSVG
+          shuffleIsEnabled={shuffleIsEnabled}
+          onClick={() => {
+            shuffleHelper();
+          }}
+        />
+        <Queue />
+        <img
+          className="fullscreen-button"
+          src={FullscreenSVG}
+          onClick={() => {
+            toggleFullscreen();
+          }}
+        ></img>
+        <VolumeControl />
       </div>
     </div>
   );

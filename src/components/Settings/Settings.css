@@ -1,0 +1,14 @@
+/* Settings.css */
+.settings-container {
+  background-color: #f4f4f4;
+  padding: 20px;
+  color: black;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin: 20px;
+}
+
+.setting-item {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}

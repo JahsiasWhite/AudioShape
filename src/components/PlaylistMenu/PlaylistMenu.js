@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAudioPlayer } from '../AudioContext';
+import { useAudioPlayer } from '../../AudioController/AudioContext';
 import './PlaylistMenu.css';
 
 // TODO: Instead of exit button, click on outside of menu to close
@@ -40,25 +40,27 @@ function PlaylistMenu({ song, closePlaylistMenu }) {
    * Figures out which playlists the current song is in
    */
   useEffect(() => {
-    if (playlists === []) return;
+    if (playlists.length === 0) return;
 
     // Initialize selectedPlaylists based on whether the song is already in each playlist
     const initialSelected = playlists.map((playlist) =>
-      playlist.songs.includes(song.title)
+      playlist.songs.includes(song.id)
     );
+
     setSelectedPlaylists(initialSelected);
   }, [playlists]);
 
   const addSongToPlaylist = (playlist, index) => {
+    console.error('ADDING SONG TO PLAYLIST ', song);
     window.electron.ipcRenderer.sendMessage(
       'TOGGLE_SONG_TO_PLAYLIST',
       playlist.name,
-      song.title
+      song.id
     );
   };
 
   return (
-    <div className="playlist-menu">
+    <div className="popup-container">
       <div className="song-name">{song.title}</div>
       <div className="close-menu" onClick={closePlaylistMenu}>
         X

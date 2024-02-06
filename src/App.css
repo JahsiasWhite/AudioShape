@@ -5,6 +5,7 @@
   --color-secondary: rgb(26, 25, 26);
   --color-button: #e76f51;
   --color-text: white;
+  --color-button-secondary: #4caf50;
 }
 
 .app-container {
@@ -19,16 +20,35 @@
 
 .non-fullscreen {
   display: flex;
-  height: 100vh;
-  width: 100vw;
+  flex-direction: column;
+  /* height: 100vh; */
+  /* width: 100vw; */
   background-color: var(--color-main);
 }
 
+.middle-content {
+  display: flex;
+  flex-direction: row;
+  flex-grow: 1;
+  overflow: hidden;
+  width: 100vw;
+}
+
 .playbar {
-  width: 100%;
-  background-color: inherit;
-  position: absolute;
-  bottom: 0;
+  /* width: 100%; */
+  /* background-color: inherit; */
+  /* position: absolute; */
+  /* bottom: 0; */
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  /* height: auto; */
+  /* position: absolute; */
+  /* width: 100%; */
+  padding-top: 10px;
+  padding-bottom: 10px;
+  width: 100vw;
 }
 
 .layout-bar {
@@ -41,11 +61,12 @@
   background-color: var(--color-secondary);
   overflow: overlay;
 
-  height: auto;
-  padding-bottom: 100px;
+  /* height: 90%; */
+  /* height: auto; */
+  /* padding-bottom: 100px; */
 
-  scrollbar-width: thin;
-  scrollbar-color: #ccc #f0f0f0;
+  /* scrollbar-width: thin;
+  scrollbar-color: #ccc #f0f0f0; */
 }
 
 .main-content::-webkit-scrollbar {

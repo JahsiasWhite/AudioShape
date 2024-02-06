@@ -4,49 +4,39 @@ import './songList.css';
 
 import FolderSelection from '../FolderSelection/FolderSelection';
 import ContextMenu from './ContextMenu/ContextMenu';
-import DropdownMenu from './DropdownMenu/DropdownMenu';
 import PlaylistMenu from '../PlaylistMenu/PlaylistMenu';
 
 import DownArrowSVG from './down-arrow.svg';
 import PlusButtonSVG from './add-svgrepo-com.svg';
 
-import { useAudioPlayer } from '../AudioContext';
+import { useAudioPlayer } from '../../AudioController/AudioContext';
 
-function SongList({ handleSongLoad }) {
-  const { initialSongLoad, handleSongSelect, visibleSongs, currentSongIndex } =
-    useAudioPlayer();
+function SongList({ handleSongEdit, toggleSection }) {
+  const {
+    handleSongSelect,
+    visibleSongs,
+    setVisibleSongs,
+    loadedSongs,
+    currentSongId,
+    currentScreen,
+    setCurrentScreen,
+  } = useAudioPlayer();
 
-  // FULL LIST OF SONGS, TODO: Remove? TOO MUCH DATA?
-  // const [visibleSongs, setVisibleSongs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  /* For the audio editor drop down */
-  // const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  function handleSongEditClick(id) {
+    handleSongEdit(id);
+    setCurrentScreen('mixer');
+  }
 
   /**
    * Once songs are loaded in, we know we are done loading
    */
   useEffect(() => {
-    /* TODO: This means we've been here before, I should fix this logic so it never ends up here in the first place */
-    if (visibleSongs.length > 0) {
+    if (Object.keys(visibleSongs).length > 0) {
       setIsLoading(false);
     }
-
-    //  ! Only change loading state if there are visible songs
-    else if (isLoading && handleSongLoad.length > 0) {
-      setIsLoading(false);
-      initialSongLoad(handleSongLoad);
-    }
-  }, [handleSongLoad]);
-
-  /**
-   * Takes in all the songs we are supposed to see and updates the view
-   */
-  // useEffect(() => {
-  //   // If songs is the same as visible songs, dont do anything?
-  //   console.error('SONGS CHANGED< ', songs);
-  //   setVisibleSongs(songs);
-  // }, [songs]);
+  }, [visibleSongs]);
 
   /**
    * Stuff to handle right clicks... this should be in its own component
@@ -58,25 +48,18 @@ function SongList({ handleSongLoad }) {
     x: 0,
     y: 0,
   });
-  const handleContextMenu = (event) => {
+  const [contextMenuSongData, setContextMenuSongData] = useState(null);
+
+  const handleContextMenu = (event, songData) => {
     // Handle the context menu here, e.g., show/hide the menu
     event.preventDefault();
     const { clientX, clientY } = event;
     setContextMenuPosition({ x: clientX, y: clientY });
+    setContextMenuSongData(songData);
     setIsContextMenuActive(true);
   };
   const hideContextMenu = () => {
     setIsContextMenuActive(false);
-  };
-
-  /* Toggles the dropdown menu */
-  const [openIndex, setOpenIndex] = useState(null); // Index of the open dropdown
-  const handleToggleDropdown = (index) => {
-    if (openIndex === index) {
-      setOpenIndex(null); // Close the dropdown if already open
-    } else {
-      setOpenIndex(index); // Open the dropdown
-    }
   };
 
   const [playlistMenuIndex, setPlaylistMenuOpen] = useState(-1);
@@ -90,8 +73,76 @@ function SongList({ handleSongLoad }) {
     setPlaylistMenuOpen(-1);
   };
 
+  const goToArtistScreen = (key) => {
+    /* Get songs by ID */
+    // Initialize an empty object to store songs organized by artist
+    const songsByArtist = {};
+    const artist = loadedSongs[key].artist;
+
+    // Loop through loadedSongs and organize them by artist
+    Object.keys(loadedSongs).forEach((id) => {
+      const song = loadedSongs[id];
+
+      // Skip to the next iteration if the artist doesn't match
+      if (artist !== song.artist) {
+        return;
+      }
+
+      // Use the duration as the key for each song within the artist
+      songsByArtist[id] = song;
+    });
+
+    setVisibleSongs(songsByArtist);
+    setCurrentScreen(artist);
+  };
+
+  const goToAlbumScreen = (key) => {
+    /* Get songs by ID */
+    // Initialize an empty object to store songs organized by album
+    const songsByAlbum = {};
+    const album = loadedSongs[key].album;
+
+    // Loop through loadedSongs and organize them by album
+    Object.keys(loadedSongs).forEach((id) => {
+      const song = loadedSongs[id];
+
+      // Skip to the next iteration if the album doesn't match
+      if (album !== song.album) {
+        return;
+      }
+
+      // Use the duration as the key for each song within the artist
+      songsByAlbum[id] = song;
+    });
+
+    setVisibleSongs(songsByAlbum);
+    setCurrentScreen(album);
+  };
+
+  /**
+   * Formats decimal duration to "mm:ss" format.
+   * @param {number} decimalDuration - The decimal duration to be formatted.
+   * @returns {string} - The formatted duration in "mm:ss" format.
+   */
+  function formatDuration(decimalDuration) {
+    // Extract whole minutes from the decimal duration
+    const minutes = Math.floor(decimalDuration);
+
+    // Calculate remaining seconds by rounding the fractional part and multiplying by 60
+    const seconds = Math.round((decimalDuration - minutes) * 60);
+
+    // Ensure seconds are within the valid range (0 to 59)
+    const formattedSeconds = seconds < 10 ? `0${seconds}` : `${seconds}`;
+
+    // Format the duration as "mm:ss"
+    const formattedDuration = `${minutes}:${formattedSeconds}`;
+
+    return formattedDuration;
+  }
+
   return (
     <div className="song-list-container">
+      <div className="song-list-header">{currentScreen}</div>
       {isLoading ? (
         <p>Loading...</p>
       ) : visibleSongs.length === 0 ? (
@@ -101,67 +152,83 @@ function SongList({ handleSongLoad }) {
         </div>
       ) : (
         <div>
+          <div className="num-songs">
+            {Object.keys(visibleSongs).length} songs
+          </div>
           <ul className="song-list">
-            {visibleSongs.map((song, index) => (
-              <div className="song">
+            {Object.keys(visibleSongs).map((key) => (
+              <div className="song" key={key}>
                 <li
-                  key={index} // TODO Fix this to be more appropriate/an actual unique key, when the page changes to artists for example, the indices are all messed up
+                  key={key} // TODO Fix this to be more appropriate/an actual unique key, when the page changes to artists for example, the indices are all messed up
                   onDoubleClick={() => {
-                    handleSongSelect(index);
+                    handleSongSelect(visibleSongs[key].id);
                   }}
                   onClick={() => {
                     setIsContextMenuActive(false); // Hide the 'right-click' menu when we left-click
                   }}
-                  onContextMenu={handleContextMenu} // Open context menu when we right-click
-                  style={{
-                    color: currentSongIndex === index ? 'rgb(88, 192, 88)' : '',
-                  }}
-                  className="list-item"
+                  onContextMenu={
+                    (event) => handleContextMenu(event, visibleSongs[key]) // Pass the song data when right-clicking
+                  }
+                  className={`list-item ${
+                    currentSongId === visibleSongs[key].id ? 'highlighted' : ''
+                  }`}
                 >
-                  {song.albumImage && (
+                  {visibleSongs[key].albumImage && (
                     <img
                       className="list-image"
-                      src={song.albumImage}
-                      alt={`${song.album} cover`}
+                      src={visibleSongs[key].albumImage}
+                      alt={`${visibleSongs[key].album} cover`}
                     />
                   )}
                   <div className="song-details">
-                    <div>{song.title}</div>
-                    <div>{song.artist}</div>
-                    <div>{song.album}</div>
-                    {/* <div>{song.duration}</div> */}
+                    <div
+                      className={`song-title ${
+                        currentSongId === visibleSongs[key].id
+                          ? ''
+                          : 'header-color'
+                      }`}
+                    >
+                      {visibleSongs[key].title}
+                    </div>
+                    <div onDoubleClick={() => goToArtistScreen(key)}>
+                      {visibleSongs[key].artist}
+                    </div>
+                    <div onDoubleClick={() => goToAlbumScreen(key)}>
+                      {visibleSongs[key].album}
+                    </div>
+                  </div>
+                  <div className="song-duration">
+                    {formatDuration(visibleSongs[key].duration / 60)}
                   </div>
                   <div className="right-side">
                     <img
                       className="plus-sign"
                       src={PlusButtonSVG}
-                      onClick={() => handlePlaylistEdit(index)}
+                      onClick={() => handlePlaylistEdit(visibleSongs[key].id)}
                     ></img>
                     <img
                       className="dropdown-button"
                       src={DownArrowSVG}
-                      onClick={() => handleToggleDropdown(index)}
+                      onClick={() => handleSongEditClick(visibleSongs[key].id)}
                     ></img>
                   </div>
-                  {/* {openIndex === index && <DropdownMenu isOpen={true} />} */}
                 </li>
-                {openIndex === index && (
-                  <DropdownMenu isOpen={true} index={index} />
-                )}
               </div>
             ))}
           </ul>
-          {isContextMenuActive && (
+          {isContextMenuActive && contextMenuSongData && (
             <ContextMenu
               onContextMenu={hideContextMenu} // Prob dont need, just hides the menu if you right click it
               style={{
                 top: contextMenuPosition.y,
                 left: contextMenuPosition.x,
               }}
+              songData={contextMenuSongData}
+              hideContextMenu={hideContextMenu}
             />
           )}
           {/* Render the PlaylistMenu when playlistMenuIndex has a real index */}
-          {playlistMenuIndex >= 0 && (
+          {playlistMenuIndex != -1 && (
             <PlaylistMenu
               song={visibleSongs[playlistMenuIndex]}
               closePlaylistMenu={closePlaylistMenu}

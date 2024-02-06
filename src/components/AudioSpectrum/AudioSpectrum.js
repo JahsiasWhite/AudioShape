@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
 
+import './AudioSpectrum.css';
+
 /**
  * SHOUTOUT https://codepen.io/nfj525/pen/rVBaab
  */
@@ -29,10 +31,10 @@ const AudioSpectrum = ({ song }) => {
     const ctx = canvas.getContext('2d');
 
     const parent = document.getElementsByClassName('fullscreen-view')[0];
-    canvas.width = parent.clientWidth;
-    canvas.height = parent.clientHeight;
+    canvas.width = parent.clientWidth * 0.7;
+    canvas.height = parent.clientHeight * 0.5;
 
-    const barWidth = (canvas.width / bufferLength) * 2.5;
+    const barWidth = (canvas.width / bufferLength) * 1;
     let x = 0;
 
     function renderFrame() {
@@ -45,24 +47,51 @@ const AudioSpectrum = ({ song }) => {
       ctx.fillStyle = '#000';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      for (let i = 0; i < bufferLength; i++) {
-        const barHeight = dataArray[i];
+      let lastBarHeights = [];
+      const smoothnessFactor = 0.2;
 
-        const r = barHeight + 25 * (i / bufferLength);
+      for (let i = 0; i < bufferLength; i++) {
+        let barHeight = dataArray[i];
+        barHeight *= 4;
+
+        // Calculate the new smoothed bar height
+        if (lastBarHeights[i] === undefined) {
+          lastBarHeights[i] = 0;
+        }
+
+        // TODO: Is this really smoothing anything? It still looks a little choppy
+        // Apply smoothing to the current bar height
+        // const smoothedBarHeight = (barHeight + lastBarHeights[i]) * 0.5;
+        const smoothedBarHeight =
+          lastBarHeights[i] * (1 - smoothnessFactor) +
+          barHeight * smoothnessFactor;
+
+        // Store the smoothed height as the previous height for the next frame
+        lastBarHeights[i] = smoothedBarHeight;
+
+        // TODO: Add option for colors?
+        const r = barHeight / 2 + 25 * (i / bufferLength);
         const g = 250 * (i / bufferLength);
         const b = 50;
 
-        ctx.fillStyle = 'rgb(' + r + ',' + g + ',' + b + ')';
-        ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+        // ctx.fillStyle = 'rgb(' + r + ',' + g + ',' + b + ')';
+        ctx.fillStyle = '#FFFFFF';
 
-        x += barWidth + 1;
+        ctx.fillRect(
+          x,
+          canvas.height - smoothedBarHeight,
+          barWidth,
+          smoothedBarHeight
+        );
+
+        x += barWidth + 5;
       }
     }
 
     renderFrame();
 
     // Append the canvas to your component
-    const container = document.getElementById('canvas-container'); // Replace with the actual container element where you want to append the canvas
+    const container = document.getElementById('canvas-container');
     container.appendChild(canvas);
 
     return () => {

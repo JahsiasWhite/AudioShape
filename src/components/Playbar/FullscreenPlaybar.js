@@ -6,9 +6,11 @@ import PlayButton from './PlayButton/PlayButton';
 import NextButton from './NextButton/NextButton';
 import VolumeControl from './VolumeControl/VolumeControl'; // ! I don't know if I like this name
 import PlaybackTimer from './PlaybackTimer/PlaybackTimer';
+
+import SlowDownButtonSVG from './SlowDownButtonSVG';
 import SpeedupButtonSVG from './SpeedupButtonSVG';
 
-import { useAudioPlayer } from '../AudioContext';
+import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 function FullscreenPlaybar({ toggleFullscreen }) {
   const { toggleSpeedup, speedupIsEnabled, toggleSlowDown, slowDownIsEnabled } =
@@ -58,38 +60,14 @@ function FullscreenPlaybar({ toggleFullscreen }) {
         playbarVisible ? 'fullscreen-playbar-show' : ''
       }`}
     >
-      {/* <div className="current-song">
-         TODO Clean this up? 
-        {visibleSongs[currentSongIndex] &&
-          visibleSongs[currentSongIndex].albumImage && (
-            <img
-              className="playbar-image"
-              src={visibleSongs[currentSongIndex].albumImage}
-              alt={`${visibleSongs[currentSongIndex].album} cover`}
-            />
-          )}
-        <div className="song-details">
-          <span id="song-title">
-            {visibleSongs[currentSongIndex]
-              ? visibleSongs[currentSongIndex].title
-              : 'No song playing'}
-          </span>
-          <span id="artist">
-            {visibleSongs[currentSongIndex]
-              ? visibleSongs[currentSongIndex].artist
-              : ''}
-          </span>
-        </div>
-      </div> */}
-
       <div className="playbar-controls">
         <div className="buttons-container">
-          <SpeedupButtonSVG
-            speedupIsEnabled={slowDownIsEnabled}
+          <SlowDownButtonSVG
+            slowDownIsEnabled={slowDownIsEnabled}
             onClick={() => {
               toggleSlowDown();
             }}
-          ></SpeedupButtonSVG>
+          ></SlowDownButtonSVG>
           <PreviousButton />
           <PlayButton />
           <NextButton />

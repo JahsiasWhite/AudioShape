@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAudioPlayer } from '../AudioContext';
+import { useAudioPlayer } from '../../AudioController/AudioContext';
 import './Playlists.css'; // Import your CSS for styling
 
 const Playlists = ({ toggleSection }) => {
@@ -9,6 +9,7 @@ const Playlists = ({ toggleSection }) => {
     createPlaylist,
     setPlaylists,
     setVisibleSongs,
+    setCurrentScreen,
   } = useAudioPlayer();
 
   const [newPlaylistName, setNewPlaylistName] = useState('');
@@ -17,26 +18,32 @@ const Playlists = ({ toggleSection }) => {
    * Gets the playlists when the component first loads
    */
   useEffect(() => {
+    // Calls to the server to get the playlists
     window.electron.ipcRenderer.sendMessage('GET_PLAYLISTS');
 
+    // Response from the server
     window.electron.ipcRenderer.on('GRAB_PLAYLISTS', (playlists) => {
       setPlaylists(playlists);
     });
   }, []);
 
   const handlePlaylistClick = (playlist) => {
-    console.error(playlist.songs);
-    let newSongCollection = [];
+    let newSongCollection = {};
     for (let i = 0; i < playlist.songs.length; i++) {
       const songName = playlist.songs[i];
-      //TODO ! Make loadedSongs {} instead of [] so we dont have to loop...
-      for (let j = 0; j < loadedSongs.length; j++) {
-        if (loadedSongs[j].title === songName)
-          newSongCollection.push(loadedSongs[j]);
-      }
+      //TODO ! Make this not a loop, the id is randomly generated though
+      // for (let j = 0; j < loadedSongs.length; j++) {
+      //   if (loadedSongs[j].title === songName)
+      //     newSongCollection.push(loadedSongs[j]);
+      // }
+      // newSongCollection.push(loadedSongs[songName]);
+      newSongCollection[songName] = loadedSongs[songName];
     }
 
     setVisibleSongs(newSongCollection);
+
+    // ! Todo, probably want to clean this up
+    setCurrentScreen(playlist.name);
     toggleSection('songs');
   };
 
@@ -44,7 +51,10 @@ const Playlists = ({ toggleSection }) => {
    * Deletes the given playlist from the user's playlists
    * @param {*} playlistToDelete
    */
-  const deletePlaylist = (playlistToDelete) => {
+  const deletePlaylist = (playlistToDelete, event) => {
+    // Prevent the click event from propagating to the parent element
+    event.stopPropagation();
+
     // Send a message to the main process to delete the playlist
     window.electron.ipcRenderer.sendMessage(
       'DELETE_PLAYLIST',
@@ -66,6 +76,17 @@ const Playlists = ({ toggleSection }) => {
     setNewPlaylistName('');
   };
 
+  const getPlaylistImage = () => {
+    // console.error(loadedSongs);
+    // console.error(playlists);
+
+    playlists.forEach((playlist) => {
+      console.error(playlist);
+    });
+
+    // ! Should just have playlist.image, need to have add this when we add a new song to the playlist on the server side
+  };
+
   return (
     <div className="playlists-container">
       <h2>Playlists</h2>
@@ -80,24 +101,22 @@ const Playlists = ({ toggleSection }) => {
       </div>
 
       <div className="playlist-cards">
-        {/* <div className="playlist-card create-playlist">
-          <input
-            type="text"
-            placeholder="Enter playlist name"
-            value={newPlaylistName}
-            onChange={(e) => setNewPlaylistName(e.target.value)}
-          />
-          <button onClick={handleCreatePlaylistClick}>Create a Playlist</button>
-        </div> */}
         {playlists.map((playlist, index) => (
           <div
             key={index}
             className="playlist-card"
-            onDoubleClick={() => handlePlaylistClick(playlist)}
+            onClick={() => handlePlaylistClick(playlist)}
           >
-            <h3>{playlist.name}</h3>
-            <p>Songs: {playlist.songs.length}</p>
-            <button onClick={() => deletePlaylist(playlist)}>Delete</button>
+            <div
+              className="delete-button"
+              onClick={(event) => deletePlaylist(playlist, event)}
+            >
+              X
+            </div>
+            <div className="playlist-card-details">
+              <h3>{playlist.name}</h3>
+              <p>Songs: {playlist.songs.length}</p>
+            </div>
           </div>
         ))}
       </div>

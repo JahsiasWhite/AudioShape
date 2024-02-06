@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 
-import { useAudioPlayer } from '../../AudioContext';
+import { useAudioPlayer } from '../../../AudioController/AudioContext';
 
 function PlaybackTimer() {
-  const { currentSong } = useAudioPlayer();
+  const { currentSong, changeVideoTime } = useAudioPlayer();
 
   const [currentTime, setCurrentTime] = useState(0);
 
@@ -16,6 +16,7 @@ function PlaybackTimer() {
   }, [currentSong]);
 
   const updateTime = () => {
+    // TODO, this just refreshes the component, not really necessary to actually set anything??
     setCurrentTime(currentSong.currentTime);
   };
 
@@ -23,6 +24,9 @@ function PlaybackTimer() {
     const newTime = parseFloat(event.target.value);
     currentSong.currentTime = newTime;
     setCurrentTime(newTime);
+
+    // If video is playing
+    changeVideoTime(newTime);
   };
 
   // Helper function to format time (in seconds) as mm:ss
@@ -41,7 +45,7 @@ function PlaybackTimer() {
         <input
           type="range"
           min="0"
-          max={currentSong.duration}
+          max={currentSong.duration ? currentSong.duration : 0}
           value={currentTime}
           onChange={handleTimeChange}
           className="playback-bar"
