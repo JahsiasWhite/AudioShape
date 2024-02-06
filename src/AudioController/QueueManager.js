@@ -1,5 +1,11 @@
 import { useState } from 'react';
 
+/**
+ * Manages the queue of songs and provides functions for controlling playback.
+ * @param {Object} currentSong - The currently playing song.
+ * @param {Array} visibleSongs - List of visible songs.
+ * @returns {Object} - An object containing data to manage the queue.
+ */
 export const QueueManager = (currentSong, visibleSongs) => {
   const [currentSongId, setCurrentSongId] = useState(null);
   const [currentSongIndex, setCurrentSongIndex] = useState(null);
@@ -11,6 +17,8 @@ export const QueueManager = (currentSong, visibleSongs) => {
   // Record of all songs that played
   const [history, setHistory] = useState([]);
 
+  const [shuffleIsEnabled, setShuffleIsEnabled] = useState(false);
+
   /* When a song is double-clicked, change the current song to that one! */
   const handleSongSelect = (songId) => {
     // ! TODO: Don't love this
@@ -20,15 +28,23 @@ export const QueueManager = (currentSong, visibleSongs) => {
 
     setCurrentSongId(songId);
     setCurrentSongIndex(index);
-    // setHistory((oldHistory) => [...oldHistory, songId]);
 
-    const upNext = Object.keys(visibleSongs).slice(index + 1);
+    let upNext = Object.keys(visibleSongs);
+    if (shuffleIsEnabled) {
+      // SHUFFLE
+      for (let i = upNext.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [upNext[i], upNext[j]] = [upNext[j], upNext[i]];
+      }
+    } else {
+      // If we're not shuffling, add all songs after the current, consecutively
+      upNext = upNext.slice(index + 1);
+    }
     setNextSongs(upNext);
   };
 
   const playNextSong = () => {
     if (currentSong) {
-      console.error('HI');
       currentSong.removeEventListener('ended', onSongEnded);
     }
 
@@ -40,23 +56,14 @@ export const QueueManager = (currentSong, visibleSongs) => {
 
       setQueue(songQueue);
       setCurrentSongId(curSong);
-      // setHistory((oldHistory) => [...oldHistory, curSong]);
 
       // Else if we're not using the queue, and just playing the next song up in line
     } else {
-      const nextIndex =
-        (currentSongIndex + 1) % Object.keys(visibleSongs).length;
-      setCurrentSongIndex(nextIndex);
-      console.log('NEXT SONG IS : ', nextIndex, visibleSongs);
+      const nextSongId = nextSongs.shift();
 
-      // ! TODO: More modular, and I don't really like this
-      const songArray = Object.values(visibleSongs); // REALLY? I only need one, not the whole thing
-      const nextSongId = songArray[nextIndex].id;
-      setCurrentSongId(nextSongId);
-      // setHistory((oldHistory) => [...oldHistory, nextSongId]);
-
-      const upNext = Object.keys(visibleSongs).slice(nextIndex + 1);
-      setNextSongs(upNext);
+      setCurrentSongIndex(Object.keys(visibleSongs).indexOf(nextSongId));
+      setCurrentSongId(parseFloat(nextSongId));
+      setNextSongs(nextSongs);
     }
   };
 
@@ -69,11 +76,9 @@ export const QueueManager = (currentSong, visibleSongs) => {
       currentSong.removeEventListener('ended', onSongEnded);
     }
 
+    setNextSongs([currentSongId, ...nextSongs]);
     setCurrentSongIndex(Object.keys(visibleSongs).indexOf('' + previousId));
     setCurrentSongId(previousId);
-
-    // const upNext = Object.keys(visibleSongs).slice(previousIndex + 1);
-    // setNextSongs(upNext);
   };
 
   const onSongEnded = () => {
@@ -85,9 +90,26 @@ export const QueueManager = (currentSong, visibleSongs) => {
     // }
 
     console.log('SONG ENDED', currentSong, currentSongId);
-    // setHistory((oldHistory) => [...oldHistory, currentSongId]);
     // Automatically play the next song when the current song ends
     playNextSong();
+  };
+
+  const toggleShuffle = () => {
+    if (shuffleIsEnabled) {
+      setShuffleIsEnabled(false);
+      setNextSongs(Object.keys(visibleSongs).slice(currentSongIndex + 1));
+      return;
+    }
+
+    setShuffleIsEnabled(true);
+    let upNext = Object.keys(visibleSongs).filter(
+      (key) => parseFloat(key) !== currentSongId
+    );
+    for (let i = upNext.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [upNext[i], upNext[j]] = [upNext[j], upNext[i]];
+    }
+    setNextSongs(upNext);
   };
 
   const addToQueue = (songId) => {
@@ -159,5 +181,7 @@ export const QueueManager = (currentSong, visibleSongs) => {
     rearrangeQueue,
     songQueue,
     nextSongs,
+    toggleShuffle,
+    shuffleIsEnabled,
   };
 };

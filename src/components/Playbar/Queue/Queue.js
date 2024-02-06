@@ -42,13 +42,15 @@ const Queue = () => {
           <div className="test-queue">
             <div>
               <h3>Current Song</h3>
-              <div
-                key={songQueue[0]}
-                className={`queue-item current-song-queue
+              {currentSongId && (
+                <div
+                  key={songQueue[0]}
+                  className={`queue-item current-song-queue
                 }`}
-              >
-                {visibleSongs[currentSongId].title}
-              </div>
+                >
+                  {visibleSongs[currentSongId].title}
+                </div>
+              )}
             </div>
             <h3>Queue</h3>
             {songQueue.length > 0 &&

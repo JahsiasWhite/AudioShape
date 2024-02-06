@@ -136,6 +136,8 @@ export const AudioProvider = ({ children }) => {
     rearrangeQueue,
     songQueue,
     nextSongs,
+    toggleShuffle,
+    shuffleIsEnabled,
   } = QueueManager(currentSong, visibleSongs);
 
   // Handles all audio effects
@@ -209,25 +211,25 @@ export const AudioProvider = ({ children }) => {
    * Toggles shuffle
    * TODO: Should I not make a new list? Better to create a list and set currentSongIndex to the values.
    */
-  const toggleShuffle = () => {
-    setIsRandomMode(!isRandomMode);
+  // const toggleShuffle = () => {
+  //   setIsRandomMode(!isRandomMode);
 
-    if (!isRandomMode) {
-      // Shuffle the visibleSongs array if random mode is enabled
-      const shuffledSongs = [...visibleSongs];
-      for (let i = shuffledSongs.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffledSongs[i], shuffledSongs[j]] = [
-          shuffledSongs[j],
-          shuffledSongs[i],
-        ];
-      }
-      setVisibleSongs(shuffledSongs);
-    } else {
-      // Restore the original order of songs if random mode is disabled
-      setVisibleSongs(loadedSongs);
-    }
-  };
+  //   if (!isRandomMode) {
+  //     // Shuffle the visibleSongs array if random mode is enabled
+  //     const shuffledSongs = [...visibleSongs];
+  //     for (let i = shuffledSongs.length - 1; i > 0; i--) {
+  //       const j = Math.floor(Math.random() * (i + 1));
+  //       [shuffledSongs[i], shuffledSongs[j]] = [
+  //         shuffledSongs[j],
+  //         shuffledSongs[i],
+  //       ];
+  //     }
+  //     setVisibleSongs(shuffledSongs);
+  //   } else {
+  //     // Restore the original order of songs if random mode is disabled
+  //     setVisibleSongs(loadedSongs);
+  //   }
+  // };
 
   // ! I can put this in AudioEffects.js and it will work properly.
   // Current song changed! Update our variables
@@ -357,6 +359,8 @@ export const AudioProvider = ({ children }) => {
         addToQueue,
         songQueue,
         nextSongs,
+        toggleShuffle,
+        shuffleIsEnabled,
       }}
     >
       {children}

@@ -16,6 +16,7 @@ import FullscreenSVG from './Fullscreen.svg';
 
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 import LoadingSpinner from '../LoadingSpinner/LoadingSpinner';
+import ShuffleButtonSVG from './ShuffleButtonSVG';
 
 function Playbar({ toggleFullscreen }) {
   const {
@@ -23,6 +24,8 @@ function Playbar({ toggleFullscreen }) {
     currentSongId,
     toggleSpeedup,
     speedupIsEnabled,
+    toggleShuffle,
+    shuffleIsEnabled,
     toggleSlowDown,
     slowDownIsEnabled,
 
@@ -31,6 +34,11 @@ function Playbar({ toggleFullscreen }) {
   } = useAudioPlayer();
 
   console.error('HI THERE: ', loadingQueue.length, Object.keys(effects).length);
+
+  const shuffleHelper = () => {
+    console.error(shuffleIsEnabled);
+    toggleShuffle();
+  };
 
   return (
     <div className="playbar">
@@ -91,6 +99,12 @@ function Playbar({ toggleFullscreen }) {
       </div>
 
       <div className="playbar-right-side">
+        <ShuffleButtonSVG
+          shuffleIsEnabled={shuffleIsEnabled}
+          onClick={() => {
+            shuffleHelper();
+          }}
+        />
         <Queue />
         <img
           className="fullscreen-button"
