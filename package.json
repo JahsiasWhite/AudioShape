@@ -13,7 +13,6 @@
     "package-win": "electron-packager . MusicPlayer --platform=win32 --arch=x64 --out=release-builds",
     "react-build": "react-scripts build",
     "electron-build": "electron-builder",
-    "build": "npm react-build && npm electron-build",
     "test": "jest --silent",
     "start": "electron-forge start",
     "package": "electron-forge package",
