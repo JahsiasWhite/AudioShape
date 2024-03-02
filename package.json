@@ -1,5 +1,8 @@
 {
   "name": "musicplayer",
+  "productName": "Music Player",
+  "author": "Jahsias",
+  "license": "ISC",
   "version": "1.0.0",
   "description": "Music player with extra customizations",
   "homepage": "./",
@@ -11,19 +14,20 @@
     "react-build": "react-scripts build",
     "electron-build": "electron-builder",
     "build": "npm react-build && npm electron-build",
-    "test": "jest --silent"
+    "test": "jest --silent",
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make"
   },
-  "author": "",
-  "license": "ISC",
   "devDependencies": {
     "@babel/preset-env": "^7.23.6",
     "@babel/preset-react": "^7.23.3",
     "@testing-library/react": "^14.1.2",
     "babel-jest": "^29.7.0",
     "concurrently": "^8.2.0",
-    "electron": "^26.0.0",
     "jest": "^27.5.1",
-    "wait-on": "^7.0.1"
+    "wait-on": "^7.0.1",
+    "electron-prebuilt-compile": "26.0.0"
   },
   "jest": {
     "transform": {
@@ -41,9 +45,9 @@
     "glob": "^10.3.3",
     "music-metadata": "^8.1.4",
     "react-dom": "^18.2.0",
-    "react-scripts": "^5.0.1",
     "spotify-web-api-node": "^5.0.2",
     "tone": "^14.7.77",
+    "uuid": "^9.0.1",
     "yt-search": "^2.10.4",
     "ytdl-core": "^4.11.5"
   },
@@ -57,6 +61,18 @@
       "last 1 chrome version",
       "last 1 firefox version",
       "last 1 safari version"
+    ]
+  },
+  "build": {
+    "appId": "com.jahsias.MusicPlayer",
+    "files": [
+      "dist/**/*",
+      "package.json",
+      "./public/electron.js",
+      "./public/preload.js",
+      "./public/index.html",
+      "./public/index.css",
+      "src/**/*"
     ]
   }
 }

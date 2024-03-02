@@ -33,16 +33,14 @@ TODO:
    - Audio edit plugins
 9. Add ability to add image ! WILL WRITE TO THAT FILE THEN
 10. lazy loading
-11. Add a queue system
-12. Need to export to mp3, rn, exporting to WAV is creating audio files x10 as big as their original
-13. Shuffle
-14. Resturcture styles, does creating all of these extra folders take up a lot of storage??
-15. Start creating the new song before the current ends on auto play so the user doesnt have to wait for it to render
-16. Add tailwindCSS, it should reduce a lot of the duplicate CSS
-17. Progress bar for the youtube download
-18. Videos tab. Just another songList but showing only mp4 files
-19. Fix how Spotify songs are saved. Right now its doing extra stuff to get the artist. I should send data somehow of the song data (title, artist, album) to be used when its finished downloading from youtube. Maybe just use a callback?
-20. On spotify -> display if song/playlist is already downloaded
+11. Need to export to mp3, rn, exporting to WAV is creating audio files x10 as big as their original
+12. Resturcture styles, does creating all of these extra folders take up a lot of storage??
+13. Start creating the new song before the current ends on auto play so the user doesnt have to wait for it to render
+14. Add tailwindCSS, it should reduce a lot of the duplicate CSS
+15. Progress bar for the youtube download
+16. Videos tab. Just another songList but showing only mp4 files
+17. Fix how Spotify songs are saved. Right now its doing extra stuff to get the artist. I should send data somehow of the song data (title, artist, album) to be used when its finished downloading from youtube. Maybe just use a callback?
+18. On spotify -> display if song/playlist is already downloaded
 
 999 Easy file/song sharing
 

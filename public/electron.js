@@ -23,7 +23,7 @@ const ffmpegPath = require('ffmpeg-static');
 const cp = require('child_process');
 
 // For searching youtube videos. The spotify downloader requires this
-const yts = require('yt-search');
+const youtubeSearch = require('yt-search');
 
 // Adding metadata to newly created music files
 // const NodeID3 = require('node-id3');
@@ -752,7 +752,7 @@ app.on('ready', function () {
 
   ipcMain.on('DOWNLOAD_SPOTIFY_SONG', async (event, songDetails) => {
     // Get the song url
-    const result = await yts(songDetails.name + songDetails.artist);
+    const result = await youtubeSearch(songDetails.name + songDetails.artist);
     const url = result.all[0].url; // TODO: What happens if all is empty? Is that possible? 'all' is an array of the search results...
 
     // download the song from youtube
