@@ -68,6 +68,17 @@ To run the tests
 To see the coverage
 `npx jest --coverage`
 
+## Build and Run
+
+webpack
+`npm run watch`
+
+Build App
+`npm run electron-build`
+
+In /dist, run setup.exe
+!!! If can't build, makesure react-scripts is NOT installed
+
 #### EFFECTS TO ADD
 
 Equalizer (Tone.EQ3): Tone.js provides an EQ3 module that allows you to control the low, mid, and high-frequency bands of an audio signal. This can be used to shape the tonal balance of your audio.
