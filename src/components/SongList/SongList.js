@@ -33,7 +33,10 @@ function SongList({ handleSongEdit, toggleSection }) {
    * Once songs are loaded in, we know we are done loading
    */
   useEffect(() => {
+    // TODO: Do I need to show loading?
     if (Object.keys(visibleSongs).length > 0) {
+      setIsLoading(false);
+    } else {
       setIsLoading(false);
     }
   }, [visibleSongs]);

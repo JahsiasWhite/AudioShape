@@ -801,7 +801,7 @@ app.on('ready', function () {
 
     // Get the youtube video title
     const info = await ytdl.getInfo(url);
-    const videoTitle = info.videoDetails.title;
+    const videoTitle = info.videoDetails.title.replace('|', ''); // Must remove special characters or FFMPEG will crash
     console.log('Got video detail');
 
     // Get where we are saving the video to
@@ -928,7 +928,7 @@ app.on('ready', function () {
     console.log('Created ffmpeg process');
 
     // C O M B I N E
-    console.log('Combing video and audio...');
+    console.log('Combining video and audio...');
     audioStream.pipe(ffmpegProcess.stdio[4]);
     videoStream.pipe(ffmpegProcess.stdio[5]);
 
@@ -1021,6 +1021,10 @@ app.on('ready', function () {
           .output(outputFilePath)
           .on('progress', (progress) => {
             console.log(
+              `FFmpeg Progress: ${progress.percent}% done, ${progress.timemark}`
+            );
+            mainWindow.webContents.send(
+              'ffmpeg-progress',
               `FFmpeg Progress: ${progress.percent}% done, ${progress.timemark}`
             );
           })

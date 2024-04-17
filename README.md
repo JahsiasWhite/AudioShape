@@ -41,20 +41,20 @@ TODO:
 16. Videos tab. Just another songList but showing only mp4 files
 17. Fix how Spotify songs are saved. Right now its doing extra stuff to get the artist. I should send data somehow of the song data (title, artist, album) to be used when its finished downloading from youtube. Maybe just use a callback?
 18. On spotify -> display if song/playlist is already downloaded
+19. Toggle for when downloading, if you want audio only or audio + video
 
 999 Easy file/song sharing
 
 BUGS:
 
-1.  Playlists with 0 songs show all songs
-2.  Can't enter fullscreen multiple times
-3.  Force closing the program doesnt delete the temp song. This is expected but should it delete it when the program first starts?
-4.  Fixup all of the addEffect, runEffect stuff. Do they all have to be async?
-5.  Temp song is not always deleted when using custom effects. EX: Have speedup toggled, add any effect, there will be two temp songs. Each effect adds a new temp song but doesnt delete the previous
-6.  What quality are the mp4s being downloaded at from youtube
-7.  Queue display gets out of sync.
-8.  Playing multiple songs with an effect preset will not work. This is when clicking the songs, it works by skipping
-9.  Songs not autoplaying once they finish playing
+1. Can't enter fullscreen multiple times
+2. Force closing the program doesnt delete the temp song. This is expected but should it delete it when the program first starts?
+3. Fixup all of the addEffect, runEffect stuff. Do they all have to be async?
+4. Temp song is not always deleted when using custom effects. EX: Have speedup toggled, add any effect, there will be two temp songs. Each effect adds a new temp song but doesnt delete the previous
+5. What quality are the mp4s being downloaded at from youtube
+6. Queue display gets out of sync.
+7. Playing multiple songs with an effect preset will not work. This is when clicking the songs, it works by skipping
+8. Songs not autoplaying once they finish playing
 
 ## Launching
 

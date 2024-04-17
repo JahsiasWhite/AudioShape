@@ -18,6 +18,27 @@
   cursor: pointer;
 }
 
+.context-menu li:hover {
+  background-color: grey;
+}
+
 .context-menu-container.active .context-menu {
   display: block;
+}
+
+.popup-container::-webkit-scrollbar {
+  width: 10px; /* Width of the scrollbar */
+}
+
+.popup-container::-webkit-scrollbar-track {
+  background: var(--color-main); /* Background color of the track */
+}
+
+.popup-container::-webkit-scrollbar-thumb {
+  background-color: var(--color-text); /* Color of the thumb */
+  border-radius: 10px; /* Add rounded corners */
+}
+
+.popup-container::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-button); /* Color of the thumb on hover */
 }

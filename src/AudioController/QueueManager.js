@@ -59,7 +59,20 @@ export const QueueManager = (currentSong, visibleSongs) => {
 
       // Else if we're not using the queue, and just playing the next song up in line
     } else {
-      const nextSongId = nextSongs.shift();
+      let nextSongId = nextSongs.shift();
+
+      // If there is no nextSongId, we've reached the bottom of the playlist.
+      if (nextSongId === undefined) {
+        nextSongId = Object.keys(visibleSongs)[0]; // Get the first song in the playlist
+        handleSongSelect(parseFloat(nextSongId));
+        return;
+      }
+
+      // if (nextSongId === undefined) {
+      // nextSongId = Object.keys(visibleSongs)[0]; // Get the first song in the playlist
+      // handleSongSelect(parseFloat(nextSongId));
+      // return;
+      // }
 
       setCurrentSongIndex(Object.keys(visibleSongs).indexOf(nextSongId));
       setCurrentSongId(parseFloat(nextSongId));

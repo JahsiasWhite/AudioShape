@@ -33,7 +33,11 @@ function Playbar({ toggleFullscreen }) {
     effects,
   } = useAudioPlayer();
 
-  console.error('HI THERE: ', loadingQueue.length, Object.keys(effects).length);
+  console.error(
+    'LoadingQueue.length, Object.keys(effects).length : ',
+    loadingQueue.length,
+    Object.keys(effects).length
+  );
 
   const shuffleHelper = () => {
     console.error(shuffleIsEnabled);

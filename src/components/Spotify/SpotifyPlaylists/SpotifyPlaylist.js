@@ -122,6 +122,10 @@ const SpotifyPlaylist = ({ playlistId, unloadPlaylist }) => {
     });
   };
 
+  window.electron.ipcRenderer.on('ffmpeg-progress', (progressMsg) => {
+    console.error(progressMsg);
+  });
+
   const handleSongPlay = (song) => {
     // Make sure the song is loaded before trying to play it
     if (!isSongLoaded(song)) return;
