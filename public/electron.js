@@ -489,6 +489,9 @@ app.on('ready', function () {
     }
   }
 
+  // TODO: This only gets the first 100 songs...
+  // There is no way to increase the limit. But you can use {offset: 100}.
+  // Easy solution could be to add a 'next page' button to load the next set
   ipcMain.on('get-spotify-playlist', (event, playlistId) => {
     spotifyApi.getPlaylist(playlistId).then(
       function (data) {
@@ -549,17 +552,29 @@ app.on('ready', function () {
    * Gets all user settings. Called when the user navigates to the settings page
    */
   ipcMain.on('GET_SETTINGS', (event) => {
-    const settings = getSettings();
-    const songDirectory = settings.libraryDirectory;
+    // const settings = getSettings();
+    // const songDirectory = settings.libraryDirectory;
 
-    const outputDirectory = dataDirectory;
+    // const outputDirectory = dataDirectory;
 
-    const output = {
-      songDirectory: songDirectory,
-      outputDirectory: outputDirectory,
-    };
+    // const output = {
+    //   libraryDirectory: songDirectory,
+    //   dataDirectory: dataDirectory,
+    // };
 
-    mainWindow.webContents.send('GET_SETTINGS', output);
+    mainWindow.webContents.send('GET_SETTINGS', getSettings());
+  });
+
+  ipcMain.on('SAVE_SETTINGS', (event, updatedSettings) => {
+    // TODO Everywhere there is "settingsPath", should I modularize? Just make this a global variable...
+    const settingsPath = createSettingsPath();
+
+    let settings = getSettings();
+    for (let setting in updatedSettings) {
+      settings[setting] = updatedSettings[setting];
+    }
+
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
   });
 
   /**
@@ -1023,9 +1038,12 @@ app.on('ready', function () {
             console.log(
               `FFmpeg Progress: ${progress.percent}% done, ${progress.timemark}`
             );
+            console.log('DATA : ', metadata.name, progress);
             mainWindow.webContents.send(
               'ffmpeg-progress',
-              `FFmpeg Progress: ${progress.percent}% done, ${progress.timemark}`
+              `FFmpeg Progress: ${progress.percent}% done, ${progress.timemark}`,
+              progress.percent,
+              metadata.name
             );
           })
           .on('end', async () => {

@@ -62,6 +62,9 @@
   background-color: var(--color-button) !important;
 }
 
+.saved-effect-item {
+}
+
 .saved-effect-item-enabled {
   color: var(--color-button);
 }

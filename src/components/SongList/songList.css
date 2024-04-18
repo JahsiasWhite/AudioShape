@@ -74,6 +74,11 @@
   flex-direction: column;
 }
 
+.song-details span:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .song-title {
   font-size: 25px;
 }

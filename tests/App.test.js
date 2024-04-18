@@ -49,17 +49,19 @@ describe('App', () => {
     expect(container).toBeDefined();
   });
 
-  //   it('should initialize with default values', () => {
-  //     const { result } = renderHook(() =>
-  //       AudioControls({ play: jest.fn(), pause: jest.fn() })
-  //     );
+  // it('should add a custom defined effect', () => {
+  //   const { getByText } = render(
+  //     <AudioProvider>
+  //       <Artists toggleSection={toggleSectionMock} />
+  //     </AudioProvider>
+  //   );
 
-  //     // Destructure the values from the result
-  //     const { isPlaying, volume, isMuted } = result.current;
+  //   // Destructure the values from the result
+  //   const { isPlaying, volume, isMuted } = result.current;
 
-  //     // Assertions
-  //     expect(isPlaying).toBe(false);
-  //     expect(volume).toBe(1);
-  //     expect(isMuted).toBe(false);
-  //   });
+  //   // Assertions
+  //   expect(isPlaying).toBe(false);
+  //   expect(volume).toBe(1);
+  //   expect(isMuted).toBe(false);
+  // });
 });

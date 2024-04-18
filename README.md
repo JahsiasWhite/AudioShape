@@ -42,6 +42,7 @@ TODO:
 17. Fix how Spotify songs are saved. Right now its doing extra stuff to get the artist. I should send data somehow of the song data (title, artist, album) to be used when its finished downloading from youtube. Maybe just use a callback?
 18. On spotify -> display if song/playlist is already downloaded
 19. Toggle for when downloading, if you want audio only or audio + video
+20. Search bar
 
 999 Easy file/song sharing
 

@@ -75,6 +75,13 @@ export const AudioEffects = (
   };
 
   const addEffect = async (currentEffect, value, fL) => {
+    if (!currentSongId) {
+      console.error('No song selected, returning');
+      effects[currentEffect] = value;
+      setEffects(effects);
+      return;
+    }
+
     console.error('ADDING EFFECT: ' + currentEffect);
     /* Make effects unclickable while the current song is being edited */
     startLoading(currentEffect);
@@ -136,8 +143,25 @@ export const AudioEffects = (
   };
 
   const applySavedEffects = async (comboName) => {
+    // if (!currentSongId) {
+    //   return;
+    // }
+    // console.error('APPLYING ', comboName);
+    // if (effectsEnabled && currentEffectCombo === comboName) {
+    //   console.error(
+    //     'TODO! SHOULD DISABLE EFFECTS. WONT PLAY MUSIC CURRENTLY',
+    //     comboName,
+    //     savedEffects
+    //   );
+    //   setCurrentEffectCombo('');
+    //   setEffectsEnabled(false);
+    //   setEffects({});
+    //   finishLoading();
+    //   return;
+    // }
+
     // The first effect will be applied to the original file
-    fileLocation = visibleSongs[currentSongId].file;
+    if (currentSongId) fileLocation = visibleSongs[currentSongId].file;
 
     console.error(savedEffects, comboName, savedEffects[comboName]);
     if (savedEffects[comboName]) {

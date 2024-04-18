@@ -29,7 +29,7 @@ const SpotifyPlaylists = ({ playlists }) => {
                 <img
                   className="artist-image"
                   src={playlist.images[0].url}
-                  alt={`${artist} image`}
+                  alt={`${playlist.name} image`}
                 />
               )}
               {playlist.name}

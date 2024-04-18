@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 
 import DownloadSVG from './download.svg';
+import ProgressBar from '../../ProgressBar/ProgressBar';
 
 import { useAudioPlayer } from '../../../AudioController/AudioContext';
 
 const SpotifyPlaylist = ({ playlistId, unloadPlaylist }) => {
   const { loadedSongs, setVisibleSongs, handleSongSelect } = useAudioPlayer();
   const savedSongs = {};
+  const [progress, setProgress] = useState({});
 
   const getSavedSongs = (playlistData) => {
     // Convert loadedSongs object to an array
@@ -41,6 +43,7 @@ const SpotifyPlaylist = ({ playlistId, unloadPlaylist }) => {
     const loadedSongArray = Object.values(loadedSongs);
     return loadedSongArray.some(
       (loadedSong) =>
+        song.track &&
         loadedSong.title === song.track.name &&
         loadedSong.artist === song.track.artists[0].name
     );
@@ -107,6 +110,7 @@ const SpotifyPlaylist = ({ playlistId, unloadPlaylist }) => {
 
     window.electron.ipcRenderer.on('download-success', (message, songData) => {
       console.error('Success: ' + message, songData);
+      console.error('Object ID: ', [idx]);
       setDownloadStatus((prevStatus) => ({
         ...prevStatus,
         [idx]: 'success',
@@ -120,11 +124,14 @@ const SpotifyPlaylist = ({ playlistId, unloadPlaylist }) => {
         [idx]: 'error',
       }));
     });
-  };
 
-  window.electron.ipcRenderer.on('ffmpeg-progress', (progressMsg) => {
-    console.error(progressMsg);
-  });
+    window.electron.ipcRenderer.on(
+      'ffmpeg-progress',
+      (progressMsg, progressPercent, progressId) => {
+        setProgress({ ...progress, [progressId]: progressPercent }); // TODO Remove entry from object once done with using it
+      }
+    );
+  };
 
   const handleSongPlay = (song) => {
     // Make sure the song is loaded before trying to play it
@@ -155,30 +162,35 @@ const SpotifyPlaylist = ({ playlistId, unloadPlaylist }) => {
                 className={`song ${isSongLoaded(item) ? 'highlighted' : ''}`}
                 key={idx}
               >
-                <li
-                  className="list-item"
-                  onDoubleClick={() => handleSongPlay(item)}
-                >
-                  {item.track.album.images[0] && (
-                    <img
-                      className="list-image"
-                      src={item.track.album.images[0].url}
-                    />
-                  )}
-                  <div className="song-details">
-                    <div className={`song-title `}>{item.track.name}</div>
-                    <div>{item.track.album.name}</div>
-                    <div>{item.track.artists[0].name}</div>
-                  </div>
-                  <div className="right-side" style={{ flex: 'auto' }}>
-                    {downloadStatus[idx] && <>{downloadStatus[idx]}</>}
-                    <img
-                      className="plus-sign"
-                      src={DownloadSVG}
-                      onClick={() => downloadSong(item, idx)}
-                    ></img>
-                  </div>
-                </li>
+                {item.track && (
+                  <li
+                    className="list-item"
+                    onDoubleClick={() => handleSongPlay(item)}
+                  >
+                    {item.track.album.images[0] && (
+                      <img
+                        className="list-image"
+                        src={item.track.album.images[0].url}
+                      />
+                    )}
+                    <div className="song-details">
+                      <div className={`song-title `}>{item.track.name}</div>
+                      <div>{item.track.album.name}</div>
+                      <div>{item.track.artists[0].name}</div>
+                    </div>
+                    <div className="right-side" style={{ flex: 'auto' }}>
+                      {progress[item.track.name] && (
+                        <ProgressBar progress={progress[item.track.name]} />
+                      )}
+                      {downloadStatus[idx] && <>{downloadStatus[idx]}</>}
+                      <img
+                        className="plus-sign"
+                        src={DownloadSVG}
+                        onClick={() => downloadSong(item, idx)}
+                      ></img>
+                    </div>
+                  </li>
+                )}
               </div>
             ))}
           </ul>
