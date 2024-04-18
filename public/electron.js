@@ -43,6 +43,8 @@ let defaultSettings = JSON.stringify({
   loop: 'none',
   volume: 100,
   allowRemote: true,
+  mp4DownloadEnabled: false,
+  dataDirectory: '',
 });
 
 // TODO: I don't think I should even save these, at least not all. Is there a way to just access the directory so we don't have to do this?
@@ -157,6 +159,7 @@ app.on('ready', function () {
     let count = 0; // This is so we know when we ran out of files to parse and can return
     songs = {}; // ? Reset songs here?
 
+    console.error('Grabbing song data...');
     audios.forEach(async (file) => {
       try {
         const songData = await processSongMetadata(file, imageFiles);
@@ -167,13 +170,14 @@ app.on('ready', function () {
           mainWindow.webContents.send('GRAB_SONGS', songs);
         }
       } catch (error) {
-        console.error('ERROR AT', count, file, error);
+        console.error('ERROR AT', count, '\nFile: ', file, '\nError: ', error);
         mainWindow.webContents.send('ERROR_MESSAGE', {
           title: 'Error',
           description: error.message,
         });
       }
     });
+    console.error('Finished grabbing song data...');
 
     // audios.map((file) => {
     //   metadata
@@ -258,81 +262,95 @@ app.on('ready', function () {
 
   // Function to process song metadata
   const processSongMetadata = (file, imageFiles) => {
+    if (
+      file ===
+      'E:\\MUSIC\\spotify-White Reaper - Judy French [OFFICIAL MUSIC VIDEO].mp3'
+    )
+      console.error('TOP', file, imageFiles);
     return new Promise((resolve, reject) => {
-      metadata
-        .parseFile(file)
-        .then((data) => {
-          let title = data.common.title;
-          let artist = data.common.artist;
-          let album = data.common.album;
-          let duration = data.format.duration;
+      try {
+        metadata
+          .parseFile(file)
+          .then((data) => {
+            if (
+              file ===
+              'E:\\MUSIC\\spotify-White Reaper - Judy French [OFFICIAL MUSIC VIDEO].mp3'
+            )
+              console.error('INSIDE');
+            let title = data.common.title;
+            let artist = data.common.artist;
+            let album = data.common.album;
+            let duration = data.format.duration;
 
-          // Unique key, consider using a more robust method
-          let key = duration;
+            // Unique key, consider using a more robust method
+            let key = duration;
 
-          // To avoid empty fields, if the file doesn't have the appropriate metadata, use defaults
-          if (
-            typeof data.common.title === 'undefined' ||
-            data.common.title.trim() === ''
-          ) {
-            title = path.basename(file).split('.').slice(0, -1).join('.');
-          }
-
-          if (
-            typeof data.common.album === 'undefined' ||
-            data.common.album.trim() === ''
-          ) {
-            album = 'Unknown Album';
-          }
-
-          if (
-            typeof data.common.artist === 'undefined' ||
-            data.common.artist.trim() === ''
-          ) {
-            artist = 'Unknown Artist';
-          }
-
-          // A lot of songs on youtube are in the format of "artist - title", so we do a check here to
-          // Use a regular expression to split the string by "-"
-          const parts = title.split(/\s*-\s*/);
-
-          // Currently no support for multiple artists
-          if (parts.length === 2) {
-            // The first part (index 0) will be the artist, and the second part (index 1) will be the song title
-            const titleArtist = parts[0];
-            const songTitle = parts[1];
-
-            if (artist === 'Unknown Artist' && titleArtist !== undefined) {
-              artist = titleArtist;
+            // To avoid empty fields, if the file doesn't have the appropriate metadata, use defaults
+            if (
+              typeof data.common.title === 'undefined' ||
+              data.common.title.trim() === ''
+            ) {
+              title = path.basename(file).split('.').slice(0, -1).join('.');
             }
-          }
 
-          /* Gets image for the song/album */
-          const albumDir = path.dirname(file);
-          let savedImage = undefined;
-          for (const image in imageFiles) {
-            const imageDir = path.dirname(imageFiles[image]);
-            if (albumDir === imageDir) {
-              savedImage = imageFiles[image];
-              break;
+            if (
+              typeof data.common.album === 'undefined' ||
+              data.common.album.trim() === ''
+            ) {
+              album = 'Unknown Album';
             }
-          }
 
-          const songData = {
-            id: key,
-            file: file,
-            title: title,
-            artist: artist,
-            album: album,
-            duration: duration,
-            albumImage: savedImage, // Initialize image
-          };
+            if (
+              typeof data.common.artist === 'undefined' ||
+              data.common.artist.trim() === ''
+            ) {
+              artist = 'Unknown Artist';
+            }
 
-          resolve(songData);
-        })
-        .catch((error) => {
-          reject(error);
-        });
+            // A lot of songs on youtube are in the format of "artist - title", so we do a check here to
+            // Use a regular expression to split the string by "-"
+            const parts = title.split(/\s*-\s*/);
+
+            // Currently no support for multiple artists
+            if (parts.length === 2) {
+              // The first part (index 0) will be the artist, and the second part (index 1) will be the song title
+              const titleArtist = parts[0];
+              const songTitle = parts[1];
+
+              if (artist === 'Unknown Artist' && titleArtist !== undefined) {
+                artist = titleArtist;
+              }
+            }
+
+            /* Gets image for the song/album */
+            const albumDir = path.dirname(file);
+            let savedImage = undefined;
+            for (const image in imageFiles) {
+              const imageDir = path.dirname(imageFiles[image]);
+              if (albumDir === imageDir) {
+                savedImage = imageFiles[image];
+                break;
+              }
+            }
+
+            const songData = {
+              id: key,
+              file: file,
+              title: title,
+              artist: artist,
+              album: album,
+              duration: duration,
+              albumImage: savedImage, // Initialize image
+            };
+
+            resolve(songData);
+          })
+          .catch((error) => {
+            resolve(error);
+          });
+      } catch (err) {
+        console.error('ERROR', err);
+      }
     });
   };
 
@@ -831,24 +849,6 @@ app.on('ready', function () {
       merged: { frame: 0, speed: '0x', fps: 0 },
     };
 
-    // Use ytdl to download the video and audio separately
-    // This is necessary because for higher quality videos, Youtube downloads the audio and video separately
-    // Get audio and video streams
-    const audioStream = ytdl(url, { quality: 'highestaudio' }).on(
-      'progress',
-      (_, downloaded, total) => {
-        tracker.audio = { downloaded, total };
-        showProgress();
-      }
-    );
-    const videoStream = ytdl(url, { quality: 'highestvideo' }).on(
-      'progress',
-      (_, downloaded, total) => {
-        tracker.video = { downloaded, total };
-        showProgress();
-      }
-    );
-
     // Prepare the progress bar
     let progressbarHandle = null;
     const progressbarInterval = 1000;
@@ -897,6 +897,101 @@ app.on('ready', function () {
 
       readline.moveCursor(process.stdout, 0, -3);
     };
+
+    // Downloading audio only
+    console.error('Settings: ', settings); //todo delete me
+    if (!settings.mp4DownloadEnabled) {
+      const outputVagueFilePath = path.join(
+        songDirectory,
+        `spotify-vague-${videoTitle}.mp3`
+      );
+      const outputFilePath = path.join(
+        songDirectory,
+        `spotify-${videoTitle}.mp3`
+      );
+      const writeStream = fs.createWriteStream(outputVagueFilePath);
+
+      // let songData = await processSongMetadata(outputFilePath, []);
+      console.error('SONG DATA IS: ', spotifyDetails);
+
+      const audioStream = ytdl(url, { filter: 'audioonly' })
+        // .pipe(writeStream)
+        .on('progress', (_, downloaded, total) => {
+          tracker.audio = { downloaded, total };
+          showProgress();
+          mainWindow.webContents.send(
+            'ffmpeg-progress',
+            `FFmpeg Progress: ${downloaded / total}% done`,
+            (downloaded / total) * 100,
+            spotifyDetails.name
+          );
+        });
+
+      audioStream
+        .pipe(writeStream)
+        .on('close', async (msg) => {
+          // TODO
+          // if (attchingExtraDetails) {
+          //   mainWindow.webContents.send(
+          //     'download-success',
+          //     'Download completed!',
+          //     {}
+          //   );
+          // }
+          songData = await writeSpotifyDetails(
+            outputVagueFilePath,
+            // path.join(songDirectory, `TEST.mp3`),
+            outputFilePath,
+            spotifyDetails
+          );
+          mainWindow.webContents.send(
+            'download-success',
+            'Download completed!',
+            songData
+          );
+        })
+        .on('error', (err) => {
+          console.error('Error downloading song', err);
+        });
+
+      return new Promise((resolve, reject) => {
+        // audioStream.on('finish', () => {
+        //   console.error('SUCCESSFULLY DOWNLOADED');
+        //   resolve(outputFilePath);
+        //   mainWindow.webContents.send(
+        //     'download-success',
+        //     'Download completed!',
+        //     songData
+        //   );
+        // });
+        // audioStream.on('error', (error) => {
+        //   console.error('ERROR DOWNLOADING');
+        //   reject(error);
+        //   mainWindow.webContents.send(
+        //     'download-error',
+        //     `FFmpeg process exited with code ${code}`
+        //   );
+        // });
+      });
+    }
+
+    // Use ytdl to download the video and audio separately
+    // This is necessary because for higher quality videos, Youtube downloads the audio and video separately
+    // Get audio and video streams
+    const audioStream = ytdl(url, { quality: 'highestaudio' }).on(
+      'progress',
+      (_, downloaded, total) => {
+        tracker.audio = { downloaded, total };
+        showProgress();
+      }
+    );
+    const videoStream = ytdl(url, { quality: 'highestvideo' }).on(
+      'progress',
+      (_, downloaded, total) => {
+        tracker.video = { downloaded, total };
+        showProgress();
+      }
+    );
 
     // Construct the output file path using the video title and song directory
     const outputFilePath = path.join(songDirectory, `${videoTitle}.mp4`);

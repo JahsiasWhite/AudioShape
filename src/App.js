@@ -23,9 +23,6 @@ import { AudioProvider } from './AudioController/AudioContext'; // So we can tal
 function App() {
   const [selectedSongIndex, setSelectedSongIndex] = useState(null);
 
-  // const [loadedSongs, setLoadedSongs] = useState({}); // ? Can we use this as just visibleSongs ? Or should we have two objects?
-  // const [visibleSongs, setVisibleSongs] = useState([]);
-
   // Update the current song when a song is selected
   const handleSongSelect = (songIndex) => {
     setSelectedSongIndex(songIndex);
@@ -38,7 +35,6 @@ function App() {
   const toggleSection = (section) => {
     //TODO FIX THIS, Each page should be its own component... instead of SongList showing all types
     if (section === 'allSongs') {
-      // setVisibleSongs(loadedSongs);
       section = 'songs';
     }
     setCurrentSection(section);
