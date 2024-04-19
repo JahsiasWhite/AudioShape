@@ -122,9 +122,10 @@ export const AudioEffects = (
     } else {
       effects[currentEffect] = value;
     }
+
     setEffects(effects);
 
-    /* Annoying check, this will run if we aren't coming from applySavedEffects. IE: just editing one at a time and not using saved effects */
+    /* Annoying check, this will run if we aren't coming from applySavedEffects. IE: just editing one at a time and not using saved effects OR using a speed preset */
     if (fL === undefined) {
       // Check if there are multiple effects
       const hasMultipleEffects = Object.keys(effects).length > 1;
@@ -140,6 +141,12 @@ export const AudioEffects = (
 
     await runEffect(currentEffect, value);
     await getTempSong();
+  };
+
+  const toggleSavedEffectOff = () => {
+    console.error('Toggling off');
+    resetCurrentSong();
+    finishLoading();
   };
 
   const applySavedEffects = async (comboName) => {
@@ -160,13 +167,22 @@ export const AudioEffects = (
     //   return;
     // }
 
+    // Toggling off
+    if (currentEffectCombo === comboName) {
+      toggleSavedEffectOff();
+      return;
+    }
+
     // The first effect will be applied to the original file
     if (currentSongId) fileLocation = visibleSongs[currentSongId].file;
 
-    console.error(savedEffects, comboName, savedEffects[comboName]);
     if (savedEffects[comboName]) {
       setEffectsEnabled(true);
       setCurrentEffectCombo(comboName); // TODO ALSO REDUNDANT
+
+      // Disable any other effects
+      setSpeedupIsEnabled(false);
+      setSlowDownIsEnabled(false);
 
       // Start loading the all effects
       // startLoading(savedEffects[comboName]);
@@ -203,7 +219,9 @@ export const AudioEffects = (
       setSlowDownIsEnabled(false);
     }
 
-    fileLocation = visibleSongs[currentSongId].file; // TODO: Make this a function, set default fileLocation
+    // If there is a current playing, set the global file location to the unedited song
+    // TODO: I think this is useless? Check toggleSlowdown as well
+    // if (currentSongId !== null) fileLocation = visibleSongs[currentSongId].file; // TODO: Make this a function, set default fileLocation -- setSongFileDefaultLocation
 
     if (speedupIsEnabled) {
       setSpeedupIsEnabled(false);
@@ -213,6 +231,10 @@ export const AudioEffects = (
       setSpeedupIsEnabled(true);
       // handleSpeedChange(DEFAULT_SPEEDUP);
       addEffect('speed', DEFAULT_SPEEDUP);
+
+      // Disable all other current effects
+      setEffectsEnabled(false);
+      setCurrentEffectCombo('');
     }
   };
 
@@ -229,7 +251,7 @@ export const AudioEffects = (
       setSpeedupIsEnabled(false);
     }
 
-    fileLocation = visibleSongs[currentSongId].file;
+    // fileLocation = visibleSongs[currentSongId].file;
 
     if (slowDownIsEnabled) {
       setSlowDownIsEnabled(false);
@@ -399,6 +421,7 @@ export const AudioEffects = (
   const resetCurrentSong = () => {
     // Reset the songs effects
     setCurrentEffectCombo('');
+    setEffectsEnabled(false);
 
     // Change to the original file location
     currentSong.src = visibleSongs[currentSongId].file;

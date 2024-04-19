@@ -193,11 +193,15 @@ function SongList({ handleSongEdit, toggleSection }) {
                     >
                       {visibleSongs[key].title}
                     </div>
-                    <div onClick={() => goToArtistScreen(key)}>
-                      <span>{visibleSongs[key].artist}</span>
+                    <div>
+                      <span onClick={() => goToArtistScreen(key)}>
+                        {visibleSongs[key].artist}
+                      </span>
                     </div>
-                    <div onClick={() => goToAlbumScreen(key)}>
-                      <span>{visibleSongs[key].album}</span>
+                    <div>
+                      <span onClick={() => goToAlbumScreen(key)}>
+                        {visibleSongs[key].album}
+                      </span>
                     </div>
                   </div>
                   <div className="song-duration">

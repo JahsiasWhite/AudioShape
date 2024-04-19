@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './ContextMenu.css'; // Generic?
+
+import PlaylistMenu from '../../PlaylistMenu/PlaylistMenu';
 
 import { useAudioPlayer } from '../../../AudioController/AudioContext';
 
 function ContextMenu({ onContextMenu, style, songData, hideContextMenu }) {
-  const { addToQueue } = useAudioPlayer();
+  const { addToQueue, visibleSongs } = useAudioPlayer();
 
   const handleContextMenu = (event) => {
     event.preventDefault();
@@ -16,18 +18,33 @@ function ContextMenu({ onContextMenu, style, songData, hideContextMenu }) {
     hideContextMenu();
   };
 
+  const [showPlaylistMenu, setShowPlaylistMenu] = useState(false);
+  const addToPlaylist = (event) => {
+    setShowPlaylistMenu(true);
+  };
+
   return (
-    <div
-      className="context-menu-container"
-      style={style}
-      onContextMenu={handleContextMenu}
-    >
-      <ul className="context-menu">
-        <li>Add to playlist</li>
-        <li>Edit</li>
-        <li onClick={addSongToQueue}>Add to queue</li>
-      </ul>
-    </div>
+    <>
+      {showPlaylistMenu ? (
+        <PlaylistMenu
+          song={visibleSongs[songData.id]}
+          // closePlaylistMenu={closePlaylistMenu}
+          closePlaylistMenu={handleContextMenu}
+        />
+      ) : (
+        <div
+          className="context-menu-container"
+          style={style}
+          onContextMenu={handleContextMenu}
+        >
+          <ul className="context-menu">
+            <li onClick={addToPlaylist}>Add to playlist</li>
+            <li>Edit</li>
+            <li onClick={addSongToQueue}>Add to queue</li>
+          </ul>
+        </div>
+      )}
+    </>
   );
 }
 

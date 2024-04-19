@@ -1,7 +1,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { AudioEffects } from '../../src/AudioController/AudioEffects';
 
-// import * as Tone from 'tone';
+import * as Tone from 'tone';
 // jest.mock('tone');
 
 // Mock the ipcRenderer for testing
@@ -112,4 +112,84 @@ describe('AudioEffects', () => {
 
     // Other test cases can be added similarly
   });
+
+  it('should not crash when speedup is used with no song playing', async () => {
+    const { result } = renderHook(() =>
+      AudioEffects(
+        currentSong,
+        fileLocation,
+        jest.fn(),
+        visibleSongs,
+        currentSongId,
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        1,
+        0.5,
+        jest.fn()
+      )
+    );
+
+    act(() => {
+      result.current.toggleSpeedup();
+    });
+
+    // Initial state assertions
+    expect(result.current.speedupIsEnabled).toBe(true);
+  });
+
+  // it('should disable the current effect when a new effect is selected', async () => {
+  //   const getCurrentAudioBufferMock = jest.fn().mockResolvedValue({
+  //     duration: 100,
+  //   });
+  //   // jest.fn().mockResolvedValue({
+  //   //   duration: 100,
+  //   // })
+
+  //   const { result } = renderHook(() =>
+  //     AudioEffects(
+  //       currentSong,
+  //       fileLocation,
+  //       jest.fn(),
+  //       visibleSongs,
+  //       currentSongId,
+  //       jest.fn(),
+  //       jest.fn(),
+  //       jest.fn(),
+  //       jest.fn(),
+  //       jest.fn(),
+  //       1,
+  //       0.5,
+  //       getCurrentAudioBufferMock
+  //     )
+  //   );
+
+  //   jest.mock('tone', () => ({
+  //     Tone: jest.fn(() => ({
+  //       Offline: jest.fn(),
+  //     })),
+  //   }));
+
+  //   const comboName = 'effect';
+
+  //   act(() => {
+  //     result.current.setSavedEffects({ effect: { speed: 1.55 } });
+  //     result.current.toggleSpeedup();
+  //     // result.current.applySavedEffects(comboName);
+  //   });
+
+  //   act(() => {
+  //     result.current.applySavedEffects(comboName);
+  //   });
+
+  //   expect(mockToneOffline).toHaveBeenCalled();
+
+  //   expect(result.current.savedEffects).toEqual({ effect: { speed: 1.55 } });
+  //   expect(result.current.savedEffects[comboName]).toEqual({ speed: 1.55 });
+  //   expect(result.current.effectsEnabled).toBe(true);
+  //   expect(result.current.speedupIsEnabled).toBe(false);
+  //   expect(result.current.slowDownIsEnabled).toBe(false);
+  // });
 });

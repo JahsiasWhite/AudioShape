@@ -899,7 +899,6 @@ app.on('ready', function () {
     };
 
     // Downloading audio only
-    console.error('Settings: ', settings); //todo delete me
     if (!settings.mp4DownloadEnabled) {
       const outputVagueFilePath = path.join(
         songDirectory,

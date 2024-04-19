@@ -5,6 +5,11 @@ import './PlaylistMenu.css';
 // TODO: Instead of exit button, click on outside of menu to close
 // TODO: Add song.id !!!!
 
+/**
+ * The playlist popup menu
+ * @param {*} param0
+ * @returns
+ */
 function PlaylistMenu({ song, closePlaylistMenu }) {
   // const { playlists } = useContext(useAudioPlayer);
   const { playlists, createPlaylist, setPlaylists } = useAudioPlayer();
