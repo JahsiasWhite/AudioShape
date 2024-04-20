@@ -783,6 +783,7 @@ app.on('ready', function () {
     // }
   });
 
+  // TODO Rename, something like downloadFromYoutubeSearch
   ipcMain.on('DOWNLOAD_SPOTIFY_SONG', async (event, songDetails) => {
     // Get the song url
     const result = await youtubeSearch(songDetails.name + songDetails.artist);
@@ -922,32 +923,33 @@ app.on('ready', function () {
             'ffmpeg-progress',
             `FFmpeg Progress: ${downloaded / total}% done`,
             (downloaded / total) * 100,
-            spotifyDetails.name
+            spotifyDetails ? spotifyDetails.name : 'name'
           );
         });
 
       audioStream
         .pipe(writeStream)
         .on('close', async (msg) => {
-          // TODO
-          // if (attchingExtraDetails) {
-          //   mainWindow.webContents.send(
-          //     'download-success',
-          //     'Download completed!',
-          //     {}
-          //   );
-          // }
-          songData = await writeSpotifyDetails(
-            outputVagueFilePath,
-            // path.join(songDirectory, `TEST.mp3`),
-            outputFilePath,
-            spotifyDetails
-          );
-          mainWindow.webContents.send(
-            'download-success',
-            'Download completed!',
-            songData
-          );
+          // TODO toggle between this and the commented out bit
+          if (!settings.attchingExtraDetails) {
+            mainWindow.webContents.send(
+              'download-success',
+              'Download completed!',
+              {}
+            );
+          } else {
+            songData = await writeSpotifyDetails(
+              outputVagueFilePath,
+              // path.join(songDirectory, `TEST.mp3`),
+              outputFilePath,
+              spotifyDetails
+            );
+            mainWindow.webContents.send(
+              'download-success',
+              'Download completed!',
+              songData
+            );
+          }
         })
         .on('error', (err) => {
           console.error('Error downloading song', err);

@@ -54,8 +54,8 @@ BUGS:
 4. Temp song is not always deleted when using custom effects. EX: Have speedup toggled, add any effect, there will be two temp songs. Each effect adds a new temp song but doesnt delete the previous
 5. What quality are the mp4s being downloaded at from youtube
 6. Queue display gets out of sync.
-7. Playing multiple songs with an effect preset will not work. This is when clicking the songs, it works by skipping
-8. Songs not autoplaying once they finish playing
+7. Songs not autoplaying once they finish playing
+8. Cant download two spotify mp4s at the same time... before testing, remove the console logs of "FFmpegProgress" and "Data"
 
 ## Launching
 

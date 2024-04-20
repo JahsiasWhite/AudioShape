@@ -122,3 +122,17 @@
   width: 20px;
   cursor: pointer;
 }
+
+.playlist-header-2-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rightSide {
+  display: flex;
+  justify-content: flex-end;
+  width: 20%;
+  gap: 5px;
+  align-items: center;
+}

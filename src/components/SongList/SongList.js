@@ -5,6 +5,7 @@ import './songList.css';
 import FolderSelection from '../FolderSelection/FolderSelection';
 import ContextMenu from './ContextMenu/ContextMenu';
 import PlaylistMenu from '../PlaylistMenu/PlaylistMenu';
+import Searchbar from './Searchbar';
 
 import DownArrowSVG from './down-arrow.svg';
 import PlusButtonSVG from './add-svgrepo-com.svg';
@@ -39,6 +40,8 @@ function SongList({ handleSongEdit, toggleSection }) {
     } else {
       setIsLoading(false);
     }
+
+    setFilteredSongs(visibleSongs);
   }, [visibleSongs]);
 
   /**
@@ -143,9 +146,12 @@ function SongList({ handleSongEdit, toggleSection }) {
     return formattedDuration;
   }
 
+  const [filteredSongs, setFilteredSongs] = useState(visibleSongs);
+
   return (
     <div className="song-list-container">
       <div className="song-list-header">{currentScreen}</div>
+      <Searchbar setFilteredSongs={setFilteredSongs} />
       {isLoading ? (
         <p>Loading...</p>
       ) : visibleSongs.length === 0 ? (
@@ -155,11 +161,20 @@ function SongList({ handleSongEdit, toggleSection }) {
         </div>
       ) : (
         <div>
-          <div className="num-songs">
-            {Object.keys(visibleSongs).length} songs
+          <div className="playlist-header-2-container">
+            <div className="num-songs">
+              {Object.keys(filteredSongs).length} songs
+            </div>
+            <div className="right-side">
+              <div className="sort">
+                sort<div>Title</div>
+              </div>
+              <div className="filter">Filter</div>
+            </div>
           </div>
           <ul className="song-list">
-            {Object.keys(visibleSongs).map((key) => (
+            {/* {Object.keys(visibleSongs).map((key) => ( */}
+            {Object.keys(filteredSongs).map((key) => (
               <div className="song" key={key}>
                 <li
                   key={key} // TODO Fix this to be more appropriate/an actual unique key, when the page changes to artists for example, the indices are all messed up

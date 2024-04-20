@@ -1,0 +1,37 @@
+.search-bar {
+  display: flex; /* Allow centering of the input */
+  align-items: center; /* Center input vertically */
+  border: none; /* Remove default border */
+  background-color: transparent; /* Transparent background */
+  padding: 5px 10px; /* Add some padding */
+  border-bottom: 1px solid #ddd; /* Bottom border */
+  width: 30%;
+}
+
+.search-bar input {
+  flex: 1; /* Allow input to fill remaining space */
+  border: none; /* Remove default input border */
+  background-color: transparent; /* Transparent background for input */
+  color: rgba(
+    255,
+    255,
+    255,
+    0.7
+  ); /* Semi-transparent text color (adjust opacity as needed) */
+  font-size: 16px; /* Adjust font size as needed */
+  outline: none; /* Remove outline on focus */
+}
+
+.search-bar input::placeholder {
+  /* Style the placeholder text */
+  color: inherit; /* Inherit the text color from the input */
+  opacity: 0.7; /* Set placeholder opacity */
+}
+
+.search-term {
+  position: absolute;
+  left: 46%;
+  top: 35%;
+  font-size: 7em;
+  transition: all 1s ease-in-out;
+}
