@@ -5,7 +5,13 @@ import PlaylistMenu from '../../PlaylistMenu/PlaylistMenu';
 
 import { useAudioPlayer } from '../../../AudioController/AudioContext';
 
-function ContextMenu({ onContextMenu, style, songData, hideContextMenu }) {
+function ContextMenu({
+  onContextMenu,
+  style,
+  songData,
+  hideContextMenu,
+  handleSongEditClick,
+}) {
   const { addToQueue, visibleSongs } = useAudioPlayer();
 
   const handleContextMenu = (event) => {
@@ -21,6 +27,10 @@ function ContextMenu({ onContextMenu, style, songData, hideContextMenu }) {
   const [showPlaylistMenu, setShowPlaylistMenu] = useState(false);
   const addToPlaylist = (event) => {
     setShowPlaylistMenu(true);
+  };
+
+  const editSong = (event) => {
+    handleSongEditClick(songData.id);
   };
 
   return (
@@ -39,7 +49,7 @@ function ContextMenu({ onContextMenu, style, songData, hideContextMenu }) {
         >
           <ul className="context-menu">
             <li onClick={addToPlaylist}>Add to playlist</li>
-            <li>Edit</li>
+            <li onClick={editSong}>Edit</li>
             <li onClick={addSongToQueue}>Add to queue</li>
           </ul>
         </div>

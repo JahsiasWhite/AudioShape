@@ -45,7 +45,7 @@ export const QueueManager = (currentSong, visibleSongs) => {
 
   const playNextSong = () => {
     if (currentSong) {
-      currentSong.removeEventListener('ended', onSongEnded);
+      currentSong.removeEventListener('ended', onSongEnded); // TODO This is not working...
     }
 
     setHistory((oldHistory) => [...oldHistory, currentSongId]);

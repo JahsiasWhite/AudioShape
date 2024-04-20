@@ -4,6 +4,8 @@ import { AudioEffects } from '../../src/AudioController/AudioEffects';
 import * as Tone from 'tone';
 // jest.mock('tone');
 
+import ToneEffects from '../../src/AudioController/ToneEffects';
+
 // Mock the ipcRenderer for testing
 window.electron = {
   ipcRenderer: {
@@ -34,6 +36,23 @@ const mockAudioBuffer = jest.fn().mockResolvedValue({
   duration: 10,
 });
 
+jest.mock('../../src/AudioController/ToneEffects', () => {
+  return {
+    renderAudioWithEffect: jest.fn().mockResolvedValue({
+      getChannelData: jest.fn(),
+      numberOfChannels: 2,
+      sampleRate: 44100,
+      duration: 10,
+    }),
+    renderAudioWithSpeedChange: jest.fn().mockResolvedValue({
+      getChannelData: jest.fn(),
+      numberOfChannels: 2,
+      sampleRate: 44100,
+      duration: 10,
+    }),
+  };
+});
+
 describe('AudioEffects', () => {
   it('should initialize with default values', () => {
     const { result } = renderHook(() =>
@@ -62,66 +81,6 @@ describe('AudioEffects', () => {
     expect(result.current.slowDownIsEnabled).toBe(false);
   });
 
-  // it('should add and apply an effect', async () => {
-  //   const { result } = renderHook(() =>
-  //     AudioEffects({
-  //       currentSong: currentSong,
-  //       fileLocation: fileLocation,
-  //       onSongEnded: jest.fn(),
-  //       visibleSongs: visibleSongs,
-  //       currentSongId: currentSongId,
-  //       startLoading: jest.fn(),
-  //       finishLoading: jest.fn(),
-  //       downloadAudio: jest.fn(),
-  //       handleTempSongSaved: jest.fn(),
-  //       initCurrentSong: jest.fn(),
-  //       DEFAULT_SPEEDUP: 1,
-  //       DEFAULT_SLOWDOWN: 0.5,
-  //       getCurrentAudioBuffer: jest.fn(),
-  //     })
-  //   );
-
-  //   act(() => {
-  //       result.current.
-  //     });
-
-  //   // Initial state assertions
-  //   expect(result.current.effectsEnabled).toBe(false);
-  //   expect(result.current.currentEffectCombo).toBe('');
-  //   expect(result.current.currentSpeed).toBe(1);
-  //   expect(result.current.speedupIsEnabled).toBe(false);
-  //   expect(result.current.slowDownIsEnabled).toBe(false);
-
-  //   // Add an effect
-  //   // act(() => {
-  //   //   result.current.addEffect('reverb', 0.7, 'sample-file');
-  //   // });
-
-  //   // // Wait for effect to be applied
-  //   // await waitForNextUpdate();
-
-  //   // // Assertions after adding an effect
-  //   // expect(result.current.effectsEnabled).toBe(true);
-  //   // expect(result.current.currentEffectCombo).toBe('');
-  //   // expect(result.current.currentSpeed).toBe(1);
-  //   // expect(result.current.speedupIsEnabled).toBe(false);
-  //   // expect(result.current.slowDownIsEnabled).toBe(false);
-  //   // Add more assertions based on your logic
-
-  //   // Apply saved effects
-  //   // act(() => {
-  //   //   result.current.applySavedEffects('SavedCombo');
-  //   // });
-
-  //   // // Wait for saved effects to be applied
-  //   // await waitForNextUpdate();
-
-  //   // Assertions after applying saved effects
-  //   // Add your assertions based on the expected state after applying saved effects
-
-  //   // Other test cases can be added similarly
-  // });
-
   it('should not crash when speedup is used with no song playing', async () => {
     const { result } = renderHook(() =>
       AudioEffects(
@@ -147,5 +106,219 @@ describe('AudioEffects', () => {
 
     // Initial state assertions
     expect(result.current.speedupIsEnabled).toBe(true);
+  });
+
+  it('should add and apply a custom effect with speed', async () => {
+    const { result } = renderHook(() =>
+      AudioEffects(
+        currentSong,
+        fileLocation,
+        jest.fn(),
+        visibleSongs,
+        currentSongId,
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        1,
+        0.5,
+        jest.fn()
+      )
+    );
+
+    act(() => {
+      result.current.setSavedEffects({ effect: { speed: 1.5 } });
+    });
+
+    act(() => {
+      result.current.applySavedEffects('effect');
+    });
+
+    // Initial state assertions
+    expect(result.current.effectsEnabled).toBe(true);
+    expect(result.current.currentEffectCombo).toBe('effect');
+    expect(result.current.currentSpeed).toBe(1.5);
+    expect(result.current.speedupIsEnabled).toBe(false);
+    expect(result.current.slowDownIsEnabled).toBe(false);
+  });
+
+  it('should turn off the current effect', async () => {
+    const { result } = renderHook(() =>
+      AudioEffects(
+        currentSong,
+        fileLocation,
+        jest.fn(),
+        visibleSongs,
+        currentSongId,
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        1,
+        0.5,
+        jest.fn()
+      )
+    );
+
+    act(() => {
+      result.current.setSavedEffects({ effect: { reverb: 0.5 } });
+    });
+
+    act(() => {
+      result.current.applySavedEffects('effect');
+    });
+
+    act(() => {
+      result.current.applySavedEffects('effect');
+    });
+
+    // Initial state assertions
+    expect(result.current.effectsEnabled).toBe(false);
+    expect(result.current.currentEffectCombo).toBe('');
+    expect(result.current.currentSpeed).toBe(1);
+    expect(result.current.speedupIsEnabled).toBe(false);
+    expect(result.current.slowDownIsEnabled).toBe(false);
+  });
+
+  it('should reset current song', async () => {
+    const { result } = renderHook(() =>
+      AudioEffects(
+        currentSong,
+        fileLocation,
+        jest.fn(),
+        visibleSongs,
+        currentSongId,
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        1,
+        0.5,
+        jest.fn()
+      )
+    );
+
+    act(() => {
+      result.current.toggleSpeedup();
+    });
+
+    act(() => {
+      result.current.resetCurrentSong();
+    });
+
+    // Initial state assertions
+    expect(result.current.effectsEnabled).toBe(false);
+    expect(result.current.currentEffectCombo).toBe('');
+    expect(result.current.currentSpeed).toBe(1);
+    expect(result.current.speedupIsEnabled).toBe(false);
+    expect(result.current.slowDownIsEnabled).toBe(false);
+  });
+
+  it('should reset when no song is selected', async () => {
+    const currentSong = {
+      src: null,
+    };
+    const currentSongId = null;
+    const { result } = renderHook(() =>
+      AudioEffects(
+        currentSong,
+        fileLocation,
+        jest.fn(),
+        visibleSongs,
+        currentSongId,
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        1,
+        0.5,
+        jest.fn()
+      )
+    );
+
+    act(() => {
+      result.current.resetCurrentSong();
+    });
+
+    // Initial state assertions
+    expect(result.current.effectsEnabled).toBe(false);
+    expect(result.current.currentEffectCombo).toBe('');
+    expect(result.current.currentSpeed).toBe(1);
+    expect(result.current.speedupIsEnabled).toBe(false);
+    expect(result.current.slowDownIsEnabled).toBe(false);
+  });
+
+  it('should add and apply a custom effect with reverb', async () => {
+    const { result } = renderHook(() =>
+      AudioEffects(
+        currentSong,
+        fileLocation,
+        jest.fn(),
+        visibleSongs,
+        currentSongId,
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        1,
+        0.5,
+        jest.fn()
+      )
+    );
+
+    act(() => {
+      result.current.setSavedEffects({ effect: { reverb: 0.5 } });
+    });
+
+    act(() => {
+      result.current.applySavedEffects('effect');
+    });
+
+    // Initial state assertions
+    expect(result.current.effectsEnabled).toBe(true);
+    expect(result.current.currentEffectCombo).toBe('effect');
+    expect(result.current.currentSpeed).toBe(1);
+    expect(result.current.speedupIsEnabled).toBe(false);
+    expect(result.current.slowDownIsEnabled).toBe(false);
+  });
+
+  it('should add and apply a custom effect with delay', async () => {
+    const { result } = renderHook(() =>
+      AudioEffects(
+        currentSong,
+        fileLocation,
+        jest.fn(),
+        visibleSongs,
+        currentSongId,
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        1,
+        0.5,
+        jest.fn()
+      )
+    );
+
+    act(() => {
+      result.current.setSavedEffects({ effect: { delay: 0.5 } });
+    });
+
+    act(() => {
+      result.current.applySavedEffects('effect');
+    });
+
+    // Initial state assertions
+    expect(result.current.effectsEnabled).toBe(true);
+    expect(result.current.currentEffectCombo).toBe('effect');
+    expect(result.current.currentSpeed).toBe(1);
+    expect(result.current.speedupIsEnabled).toBe(false);
+    expect(result.current.slowDownIsEnabled).toBe(false);
   });
 });

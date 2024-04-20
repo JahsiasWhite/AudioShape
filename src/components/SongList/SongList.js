@@ -9,6 +9,7 @@ import Searchbar from './Searchbar';
 
 import DownArrowSVG from './down-arrow.svg';
 import PlusButtonSVG from './add-svgrepo-com.svg';
+import MixerSVG from '../LayoutBar/MixerButton/mixer.svg';
 
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
@@ -230,7 +231,7 @@ function SongList({ handleSongEdit, toggleSection }) {
                     ></img>
                     <img
                       className="dropdown-button"
-                      src={DownArrowSVG}
+                      src={MixerSVG}
                       onClick={() => handleSongEditClick(visibleSongs[key].id)}
                     ></img>
                   </div>
@@ -247,6 +248,7 @@ function SongList({ handleSongEdit, toggleSection }) {
               }}
               songData={contextMenuSongData}
               hideContextMenu={hideContextMenu}
+              handleSongEditClick={handleSongEditClick}
             />
           )}
           {/* Render the PlaylistMenu when playlistMenuIndex has a real index */}

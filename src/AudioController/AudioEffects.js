@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 
-// Very helpful audio processing library
-import * as Tone from 'tone';
+import {
+  renderAudioWithEffect,
+  renderAudioWithSpeedChange,
+} from './ToneEffects.js';
 
 export const AudioEffects = (
   currentSong,
@@ -35,38 +37,22 @@ export const AudioEffects = (
    * @param {*} value
    */
   const runEffect = async (effect, value) => {
+    if (!effect) {
+      console.error(`No effect given: ${effect}`);
+      return;
+    }
+
     // TODO: Does this one really have to be different
     if (effect === 'speed') {
       handleSpeedChange(value);
       return;
     }
 
-    // Find the current function for the corresponding effect
-    let effectFunction;
-    switch (effect) {
-      case 'reverb':
-      case 'reverbWetness':
-        effectFunction = applyReverb;
-        break;
-      case 'delay':
-        effectFunction = applyDelay;
-        break;
-      case 'bitCrusher':
-        effectFunction = applyBitCrusher;
-        break;
-      case 'pitchShift':
-        effectFunction = applyPitchShift;
-        break;
-      default:
-        console.error(`Unknown effect: ${effect}`);
-        return;
-    }
-
     // Get our new audio data
     const audioBuffer = await getCurrentAudioBuffer(fileLocation);
     const renderedBuffer = await renderAudioWithEffect(
       audioBuffer,
-      effectFunction,
+      effect,
       value
     );
 
@@ -75,6 +61,8 @@ export const AudioEffects = (
   };
 
   const addEffect = async (currentEffect, value, fL) => {
+    console.error('ADDING EFFECT: ' + currentEffect);
+
     if (!currentSongId) {
       console.error('No song selected, returning');
       effects[currentEffect] = value;
@@ -82,7 +70,6 @@ export const AudioEffects = (
       return;
     }
 
-    console.error('ADDING EFFECT: ' + currentEffect);
     /* Make effects unclickable while the current song is being edited */
     startLoading(currentEffect);
 
@@ -272,18 +259,6 @@ export const AudioEffects = (
     // handleSpeedChange(1.2);
   };
 
-  async function renderAudioWithEffect(
-    audioBuffer,
-    effectFunction,
-    effectParams
-  ) {
-    const duration = audioBuffer.duration;
-    return await Tone.Offline(async ({ transport }) => {
-      const source = effectFunction(audioBuffer, effectParams);
-      source.start();
-    }, duration);
-  }
-
   /**
    * Gets the updated temporary song
    */
@@ -349,76 +324,6 @@ export const AudioEffects = (
     downloadAudio(renderedBuffer);
     // getTempSong(); // ? Need an await here?
   };
-  function applySpeedChange(audioBuffer, speedChange) {
-    const player = new Tone.Player(audioBuffer).toDestination();
-    player.playbackRate = speedChange;
-    return player;
-  }
-  async function renderAudioWithSpeedChange(audioBuffer, speedChange) {
-    const duration = audioBuffer.duration / speedChange;
-    return await Tone.Offline(async ({ transport }) => {
-      const source = applySpeedChange(audioBuffer, speedChange);
-      source.start();
-    }, duration);
-  }
-
-  /* REVERB EFFECT */
-  function applyReverb(audioBuffer, wetValue) {
-    // const reverb = new Tone.Reverb().toDestination();
-    // const player = new Tone.Player(audioBuffer).connect(reverb);
-
-    const reverb = new Tone.Freeverb().toDestination();
-
-    // Defaults
-    const WET_VALUE = 0.5; // 0-1, determines how much the original signal is mixed with the reverb signal. 1 === 100%, 0 === 0% meaning it will be the original audio
-    const ROOM_SIZE = 0.5; // 0-1, how expansive the reverb sounds. 1 === large room/long decay time.
-    const DAMPENING_VALUE = 8000; // 1000-10000, controls how quickly high-frequency content decays over time. The lower the value, the 'brighter' and more reflective it sounds. High values make the reverb sound darker and less reflective
-    reverb.wet.value = WET_VALUE; // Also known as 'mix'
-    reverb.roomSize.value = ROOM_SIZE;
-    reverb.dampening = DAMPENING_VALUE; // Also known as 'Tone'
-
-    if (wetValue) {
-      reverb.wet.value = wetValue;
-    }
-
-    const player = new Tone.Player(audioBuffer).connect(reverb);
-
-    return player;
-  }
-
-  /* DELAY EFFECT */
-  function applyDelay(audioBuffer, delayTime, feedback) {
-    const delay = new Tone.FeedbackDelay({
-      delayTime: delayTime, // Adjust this value to set the delay time (in seconds)
-      feedback: 0.5, // Adjust this value to set the feedback amount (0 to 1). Determines how much is fedback, 1 indicates full feedback (infinitely recycled) and 0 meens no feedback (only original audio is heard)
-    }).toDestination();
-
-    const player = new Tone.Player(audioBuffer).connect(delay);
-
-    return player;
-  }
-
-  /* BIT CRUSHER EFFECT */
-  function applyBitCrusher(audioBuffer, bits, frequency) {
-    const bitCrusher = new Tone.BitCrusher({
-      bits: bits, // Number of bits to reduce the audio to (e.g., 4 bits for a lo-fi effect) ! 16 is CD quality
-      // frequency: 1000, // Sample rate reduction frequency (controls the downsampling effect) ! I THINK 44,100 is the typical frequency
-    }).toDestination();
-
-    const player = new Tone.Player(audioBuffer).connect(bitCrusher);
-
-    return player;
-  }
-
-  /* PITCH SHIFT EFFECT */
-  function applyPitchShift(audioBuffer, pitch) {
-    const pitchShift = new Tone.PitchShift().toDestination();
-    pitchShift.pitch = pitch; // +12 === one octave up
-
-    const player = new Tone.Player(audioBuffer).connect(pitchShift);
-
-    return player;
-  }
 
   /**
    * Resets the current song's effects to the default and restarts it
@@ -427,6 +332,10 @@ export const AudioEffects = (
     // Reset the songs effects
     setCurrentEffectCombo('');
     setEffectsEnabled(false);
+    setSpeedupIsEnabled(false);
+    setSlowDownIsEnabled(false);
+
+    if (!currentSongId) return;
 
     // Change to the original file location
     currentSong.src = visibleSongs[currentSongId].file;
@@ -447,7 +356,7 @@ export const AudioEffects = (
     applySavedEffects,
     toggleSpeedup,
     toggleSlowDown,
-    renderAudioWithEffect,
+    // renderAudioWithEffect,
     handleSpeedChange,
     saveEffects,
     resetCurrentSong,
