@@ -48,7 +48,7 @@ describe('DownloadManager', () => {
 
     // Assert: Ensure that ipcRenderer.sendMessage has been called with the expected arguments
     expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith(
-      'SAVE_TEMP_SONG',
+      'SAVE_SONG',
       expect.any(Uint8Array)
     );
   });
