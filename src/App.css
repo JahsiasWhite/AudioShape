@@ -78,10 +78,12 @@
 }
 
 .main-content::-webkit-scrollbar-thumb {
-  background-color: var(--color-text); /* Color of the thumb */
+  background-color: var(--color-text); /* Color of the moveable bar */
   border-radius: 10px; /* Add rounded corners */
 }
 
 .main-content::-webkit-scrollbar-thumb:hover {
-  background-color: var(--color-button); /* Color of the thumb on hover */
+  background-color: var(
+    --color-button
+  ); /* Color of the  moveable bar on hover */
 }

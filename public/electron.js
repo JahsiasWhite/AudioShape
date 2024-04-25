@@ -24,6 +24,7 @@ let defaultSettings = JSON.stringify({
   allowRemote: true,
   mp4DownloadEnabled: false,
   dataDirectory: '',
+  attchingExtraDetails: true,
 });
 
 /* Create the files to save settings */

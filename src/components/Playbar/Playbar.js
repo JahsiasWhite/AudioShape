@@ -44,6 +44,12 @@ function Playbar({ toggleFullscreen }) {
     toggleShuffle();
   };
 
+  const scrollToCurrentSong = () => {
+    document
+      .getElementById(currentSongId)
+      .scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
   return (
     <div className="playbar">
       <div className="current-song">
@@ -66,7 +72,7 @@ function Playbar({ toggleFullscreen }) {
           </>
         ) : (
           <div className="song-details">
-            <span id="song-title">
+            <span id="song-title" onClick={scrollToCurrentSong}>
               {visibleSongs[currentSongId]
                 ? visibleSongs[currentSongId].title
                 : 'No song playing'}

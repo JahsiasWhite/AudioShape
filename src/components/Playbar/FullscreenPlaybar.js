@@ -13,8 +13,13 @@ import SpeedupButtonSVG from './SpeedupButtonSVG';
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 function FullscreenPlaybar({ toggleFullscreen }) {
-  const { toggleSpeedup, speedupIsEnabled, toggleSlowDown, slowDownIsEnabled } =
-    useAudioPlayer();
+  const {
+    toggleSpeedup,
+    speedupIsEnabled,
+    toggleSlowDown,
+    slowDownIsEnabled,
+    currentSongId,
+  } = useAudioPlayer();
 
   const [playbarVisible, setPlaybarVisible] = useState(true);
   const [timeoutId, setTimeoutId] = useState(null);
@@ -32,6 +37,17 @@ function FullscreenPlaybar({ toggleFullscreen }) {
   const showPlaybar = () => {
     clearTimeout(timeoutId);
     setPlaybarVisible(true);
+  };
+
+  const exitFullscreen = () => {
+    toggleFullscreen();
+
+    // Scrolls to the current song // TODO: I dont like this here. SHould probably make all of these a function as well
+    setTimeout(() => {
+      const songDiv = document.getElementById(currentSongId);
+      if (songDiv)
+        songDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
   };
 
   // Add mousemove event listener to detect mouse position
@@ -84,7 +100,7 @@ function FullscreenPlaybar({ toggleFullscreen }) {
       <div
         className="fullscreen-button"
         onClick={() => {
-          toggleFullscreen();
+          exitFullscreen();
         }}
       >
         +

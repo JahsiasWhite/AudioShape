@@ -89,6 +89,13 @@ export const AudioProvider = ({ children }) => {
     }
     console.log('Finished loading', effect, queue);
     setLoadingQueue(queue);
+
+    // Keep the song centered
+    setTimeout(() => {
+      const songDiv = document.getElementById(currentSongId);
+      if (songDiv)
+        songDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
   };
 
   // Extra tools to help with stuff

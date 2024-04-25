@@ -1,5 +1,6 @@
 .popup-container {
   /* display: none; */
+  z-index: 1;
   position: fixed;
   top: 50px;
   right: 25%;
@@ -63,8 +64,24 @@
 }
 
 .saved-effect-item {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
 }
 
 .saved-effect-item-enabled {
   color: var(--color-button);
+}
+
+.combo-name {
+  align-self: baseline;
+  width: 50%;
+}
+
+.effect-tooltip {
+  /* width: 50%; */
+}
+
+.effect-tooltip ul {
+  margin: 0;
 }

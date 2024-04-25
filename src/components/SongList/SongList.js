@@ -13,7 +13,9 @@ import MixerSVG from '../LayoutBar/MixerButton/mixer.svg';
 
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
-function SongList({ handleSongEdit, toggleSection }) {
+let sortToggle = false;
+
+function SongList({ handleSongEdit }) {
   const {
     handleSongSelect,
     visibleSongs,
@@ -147,6 +149,24 @@ function SongList({ handleSongEdit, toggleSection }) {
     return formattedDuration;
   }
 
+  function sortSongs(sortBy) {
+    sortToggle = !sortToggle;
+
+    // 1. Convert object to an array of key-value pairs
+    const songEntries = Object.entries(filteredSongs);
+
+    // 2. Sort the entries based on the song property
+    songEntries.sort((a, b) => {
+      const comparison = a[1][sortBy].localeCompare(b[1][sortBy]);
+      return sortToggle ? comparison : -comparison;
+    });
+
+    // 3. Convert the sorted entries back to an object
+    const sortedSongs = Object.fromEntries(songEntries);
+
+    setFilteredSongs(sortedSongs);
+  }
+
   const [filteredSongs, setFilteredSongs] = useState(visibleSongs);
 
   return (
@@ -168,7 +188,14 @@ function SongList({ handleSongEdit, toggleSection }) {
             </div>
             <div className="right-side">
               <div className="sort">
-                sort<div>Title</div>
+                <div
+                  onClick={() => {
+                    sortSongs('title');
+                  }}
+                >
+                  sort
+                </div>
+                <div>Title</div>
               </div>
               <div className="filter">Filter</div>
             </div>
@@ -176,7 +203,7 @@ function SongList({ handleSongEdit, toggleSection }) {
           <ul className="song-list">
             {/* {Object.keys(visibleSongs).map((key) => ( */}
             {Object.keys(filteredSongs).map((key) => (
-              <div className="song" key={key}>
+              <div className="song" key={key} id={visibleSongs[key].id}>
                 <li
                   key={key} // TODO Fix this to be more appropriate/an actual unique key, when the page changes to artists for example, the indices are all messed up
                   onDoubleClick={() => {

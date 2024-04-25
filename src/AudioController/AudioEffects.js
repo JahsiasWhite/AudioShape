@@ -303,7 +303,7 @@ export const AudioEffects = (
       'SAVE_EFFECT_COMBO',
       handleEffectComboAdded
     );
-  }, [savedEffects]);
+  }, [savedEffects]); // TODO: Cant I just make this a function? No need for a useEffect
 
   /* SPEEDUP EFFECT */
   /**

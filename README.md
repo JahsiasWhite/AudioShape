@@ -37,12 +37,9 @@ TODO:
 12. Resturcture styles, does creating all of these extra folders take up a lot of storage??
 13. Start creating the new song before the current ends on auto play so the user doesnt have to wait for it to render
 14. Add tailwindCSS, it should reduce a lot of the duplicate CSS
-15. Progress bar for the youtube download
-16. Videos tab. Just another songList but showing only mp4 files
-17. Fix how Spotify songs are saved. Right now its doing extra stuff to get the artist. I should send data somehow of the song data (title, artist, album) to be used when its finished downloading from youtube. Maybe just use a callback?
-18. On spotify -> display if song/playlist is already downloaded
-19. Toggle for when downloading, if you want audio only or audio + video
-20. Search bar
+15. Videos tab. Just another songList but showing only mp4 files
+16. Fix how Spotify songs are saved. Right now its doing extra stuff to get the artist. I should send data somehow of the song data (title, artist, album) to be used when its finished downloading from youtube. Maybe just use a callback?
+17. On spotify -> display if song/playlist is already downloaded
 
 999 Easy file/song sharing
 

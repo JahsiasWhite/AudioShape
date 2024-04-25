@@ -650,6 +650,10 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
       .pipe(writeStream)
       .on('close', async (msg) => {
         // TODO toggle between this and the commented out bit
+        console.error(
+          'Attaching extra details? ',
+          settings.attchingExtraDetails
+        );
         if (!settings.attchingExtraDetails) {
           mainWindow.webContents.send(
             'download-success',
