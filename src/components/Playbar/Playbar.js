@@ -86,7 +86,11 @@ function Playbar({ toggleFullscreen }) {
         )}
       </div>
       <div className="playbar-controls">
-        <div className="buttons-container">
+        <div
+          className={`buttons-container ${
+            loadingQueue.length > 0 ? 'unclickable' : ''
+          }`}
+        >
           <SavedEffects />
 
           <SlowDownButtonSVG

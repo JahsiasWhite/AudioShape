@@ -185,7 +185,8 @@ export const AudioProvider = ({ children }) => {
     initCurrentSong,
     DEFAULT_SPEEDUP,
     DEFAULT_SLOWDOWN,
-    getCurrentAudioBuffer
+    getCurrentAudioBuffer,
+    loadingQueue
   );
 
   // Handles playlists
@@ -245,7 +246,7 @@ export const AudioProvider = ({ children }) => {
     // ? Can we do something here so if this is null, we never would even end up here
     if (currentSongId === null) return;
 
-    // TODO If we are on a non-song song, spotify playlist for example, and the song ends, visibleSongs will be []
+    // TODO If we are on a non songpage, spotify playlist for example, and the song ends, visibleSongs will be []
     // visibleSongs should NOT BE DEPENDENT on what screen is showing
     // Shouldn't need once I implement
     if (!visibleSongs[currentSongId]) return;

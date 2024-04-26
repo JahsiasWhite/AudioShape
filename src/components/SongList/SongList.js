@@ -24,6 +24,7 @@ function SongList({ handleSongEdit }) {
     currentSongId,
     currentScreen,
     setCurrentScreen,
+    loadingQueue,
   } = useAudioPlayer();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -203,7 +204,13 @@ function SongList({ handleSongEdit }) {
           <ul className="song-list">
             {/* {Object.keys(visibleSongs).map((key) => ( */}
             {Object.keys(filteredSongs).map((key) => (
-              <div className="song" key={key} id={visibleSongs[key].id}>
+              <div
+                className={`song ${
+                  loadingQueue.length > 0 ? 'unclickable' : ''
+                }`}
+                key={key}
+                id={visibleSongs[key].id}
+              >
                 <li
                   key={key} // TODO Fix this to be more appropriate/an actual unique key, when the page changes to artists for example, the indices are all messed up
                   onDoubleClick={() => {

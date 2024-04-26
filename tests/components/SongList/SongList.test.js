@@ -25,6 +25,7 @@ jest.mock('../../../src/AudioController/AudioContext', () => {
     loadedSongs: loadedSongs,
     visibleSongs: loadedSongs,
     handleSongSelect: (handleSongSelectMock = jest.fn()),
+    loadingQueue: [],
   });
 
   return {

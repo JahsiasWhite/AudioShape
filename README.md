@@ -20,39 +20,35 @@ WIP
 TODO:
 
 1. Loading screens/indicators on everything. (Applying current effect combo, changing songs, etc.)
-2. implement testing
-3. Watch the library directory for file changes so we don't need a manual refresh
-4. Themes
-5. Using remotely - server & remote
-6. Caching?
-7. Easy support for creating own themes
-8. Addon support
+2. Watch the library directory for file changes so we don't need a manual refresh
+3. Themes
+4. Using remotely - server & remote
+5. Caching?
+6. Easy support for creating own themes
+7. Addon support
    - Lyrics
    - Themes?
    - Youtube?
    - Audio edit plugins
-9. Add ability to add image ! WILL WRITE TO THAT FILE THEN
-10. lazy loading
-11. Need to export to mp3, rn, exporting to WAV is creating audio files x10 as big as their original
-12. Resturcture styles, does creating all of these extra folders take up a lot of storage??
-13. Start creating the new song before the current ends on auto play so the user doesnt have to wait for it to render
-14. Add tailwindCSS, it should reduce a lot of the duplicate CSS
-15. Videos tab. Just another songList but showing only mp4 files
-16. Fix how Spotify songs are saved. Right now its doing extra stuff to get the artist. I should send data somehow of the song data (title, artist, album) to be used when its finished downloading from youtube. Maybe just use a callback?
-17. On spotify -> display if song/playlist is already downloaded
+8. Add ability to add image ! WILL WRITE TO THAT FILE THEN
+9. lazy loading
+10. Need to export to mp3, rn, exporting to WAV is creating audio files x10 as big as their original
+11. Start creating the new song before the current ends on auto play so the user doesnt have to wait for it to render
+12. Add tailwindCSS, it should reduce a lot of the duplicate CSS. Or not tailwindCSS but just cleanup the CSS.
+13. Videos tab. Just another songList but showing only mp4 files
+14. Fix how Spotify songs are saved. Right now its doing extra stuff to get the artist. I should send data somehow of the song data (title, artist, album) to be used when its finished downloading from youtube. Maybe just use a callback?
+15. On spotify -> display if song/playlist is already downloaded
+16. What quality are the mp4s being downloaded at from youtube
 
 999 Easy file/song sharing
 
 BUGS:
 
 1. Can't enter fullscreen multiple times
-2. Force closing the program doesnt delete the temp song. This is expected but should it delete it when the program first starts?
-3. Fixup all of the addEffect, runEffect stuff. Do they all have to be async?
-4. Temp song is not always deleted when using custom effects. EX: Have speedup toggled, add any effect, there will be two temp songs. Each effect adds a new temp song but doesnt delete the previous
-5. What quality are the mp4s being downloaded at from youtube
-6. Queue display gets out of sync.
-7. Songs not autoplaying once they finish playing
-8. Cant download two spotify mp4s at the same time... before testing, remove the console logs of "FFmpegProgress" and "Data"
+2. Fixup all of the addEffect, runEffect stuff. Do they all have to be async?
+3. Queue display gets out of sync
+4. Cant download two spotify mp4s at the same time... before testing, remove the console logs of "FFmpegProgress" and "Data"
+5. When logging into spotify for the first time, you cant get past the login screen. You have to hard refresh and then youll be signed in
 
 ## Launching
 
