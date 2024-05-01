@@ -31,7 +31,7 @@ TODO:
    - Youtube?
    - Audio edit plugins
 8. Add ability to add image ! WILL WRITE TO THAT FILE THEN
-9. lazy loading
+9. lazy loading - 'react-window'
 10. Need to export to mp3, rn, exporting to WAV is creating audio files x10 as big as their original
 11. Start creating the new song before the current ends on auto play so the user doesnt have to wait for it to render
 12. Add tailwindCSS, it should reduce a lot of the duplicate CSS. Or not tailwindCSS but just cleanup the CSS.
