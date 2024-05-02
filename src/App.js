@@ -12,6 +12,7 @@ import Spotify from './components/Spotify/Spotify';
 import Youtube from './components/Youtube/Youtube';
 import LayoutBar from './components/LayoutBar/LayoutBar';
 import Mixer from './components/Mixer/Mixer';
+import PopupMenu from './components/PopupMenu/PopupMenu';
 
 import FullscreenView from './components/FullscreenView/FullscreenView';
 
@@ -106,7 +107,10 @@ function App() {
                 )}
               </div>
             </div>
-            <Playbar toggleFullscreen={enableFullscreen} />
+            <Playbar
+              toggleFullscreen={enableFullscreen}
+              setIsVisible={setIsVisible}
+            />
           </div>
         )}
 
@@ -115,6 +119,9 @@ function App() {
         )}
 
         <ErrorMessages />
+
+        {/* Popup menu */}
+        <PopupMenu />
       </div>
     </AudioProvider>
   );

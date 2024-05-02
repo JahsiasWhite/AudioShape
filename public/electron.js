@@ -201,11 +201,9 @@ app.on('ready', function () {
     }
   }
 
-  // TODO: This only gets the first 100 songs...
-  // There is no way to increase the limit. But you can use {offset: 100}.
-  // Easy solution could be to add a 'next page' button to load the next set
-  ipcMain.on('get-spotify-playlist', (event, playlistId) => {
-    spotifyApi.getPlaylist(playlistId).then(
+  ipcMain.on('get-spotify-playlist', (event, playlistId, offset) => {
+    console.log(playlistId);
+    spotifyApi.getPlaylistTracks(playlistId, { offset: offset }).then(
       function (data) {
         console.log('Some information about this playlist', data.body);
         mainWindow.webContents.send('get-spotify-playlist', data.body);

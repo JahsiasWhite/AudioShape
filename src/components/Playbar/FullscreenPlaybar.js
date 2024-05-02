@@ -1,25 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import './FullscreenPlaybar.css';
 
-import PreviousButton from './PreviousButton/PreviousButton';
-import PlayButton from './PlayButton/PlayButton';
-import NextButton from './NextButton/NextButton';
 import VolumeControl from './VolumeControl/VolumeControl'; // ! I don't know if I like this name
-import PlaybackTimer from './PlaybackTimer/PlaybackTimer';
-
-import SlowDownButtonSVG from './SlowDownButtonSVG';
-import SpeedupButtonSVG from './SpeedupButtonSVG';
+import CenterPlaybar from './CenterPlaybar';
 
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 function FullscreenPlaybar({ toggleFullscreen }) {
-  const {
-    toggleSpeedup,
-    speedupIsEnabled,
-    toggleSlowDown,
-    slowDownIsEnabled,
-    currentSongId,
-  } = useAudioPlayer();
+  const { currentSongId } = useAudioPlayer();
 
   const [playbarVisible, setPlaybarVisible] = useState(true);
   const [timeoutId, setTimeoutId] = useState(null);
@@ -76,7 +64,7 @@ function FullscreenPlaybar({ toggleFullscreen }) {
         playbarVisible ? 'fullscreen-playbar-show' : ''
       }`}
     >
-      <div className="playbar-controls">
+      {/* <div className="playbar-controls">
         <div className="buttons-container">
           <SlowDownButtonSVG
             slowDownIsEnabled={slowDownIsEnabled}
@@ -95,7 +83,9 @@ function FullscreenPlaybar({ toggleFullscreen }) {
           ></SpeedupButtonSVG>
         </div>
         <PlaybackTimer />
-      </div>
+      </div> */}
+      <CenterPlaybar />
+
       <VolumeControl />
       <div
         className="fullscreen-button"

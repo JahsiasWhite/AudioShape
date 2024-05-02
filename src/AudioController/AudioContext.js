@@ -200,6 +200,9 @@ export const AudioProvider = ({ children }) => {
   // ! Todo, should this be moved out of here? Is it in this context's scope?
   const [currentScreen, setCurrentScreen] = useState('All Songs');
 
+  /* Toggle showing popup menu */
+  const [togglePopup, setTogglePopup] = useState(false);
+
   /*
 
 ██████   █████  ███████ ██  ██████      ██████  ██████  ███    ██ ████████ ██████   ██████  ██      
@@ -375,6 +378,8 @@ export const AudioProvider = ({ children }) => {
         nextSongs,
         toggleShuffle,
         shuffleIsEnabled,
+        togglePopup,
+        setTogglePopup,
       }}
     >
       {children}

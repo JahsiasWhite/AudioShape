@@ -136,3 +136,12 @@
   gap: 5px;
   align-items: center;
 }
+
+.arrows-container {
+  display: flex;
+  justify-content: space-between;
+}
+
+.right-arrow {
+  margin-left: auto;
+}
