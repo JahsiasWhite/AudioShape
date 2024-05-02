@@ -109,6 +109,12 @@ const SETUP_SETINGS = (mainWindow, dataDirectory) => {
   ipcMain.on('GET_SETTINGS', (event) => {
     mainWindow.webContents.send('GET_SETTINGS', getSettings());
   });
+  ipcMain.on('GET_LAYOUT_SETTINGS', (event) => {
+    mainWindow.webContents.send(
+      'GET_LAYOUT_SETTINGS',
+      getSettings().spotifyEnabled
+    );
+  });
 
   ipcMain.on('SAVE_SETTINGS', (event, updatedSettings) => {
     // TODO Everywhere there is "settingsPath", should I modularize? Just make this a global variable...

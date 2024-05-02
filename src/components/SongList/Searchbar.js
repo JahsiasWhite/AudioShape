@@ -91,7 +91,6 @@ function SearchBar({ setFilteredSongs }) {
       <input
         id="outlined-basic"
         variant="outlined"
-        fullWidth
         label="Search"
         placeholder="Search..."
         onChange={(text) => setFilteredSongs(filterSongs(text))}

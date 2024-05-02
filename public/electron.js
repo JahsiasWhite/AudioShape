@@ -16,6 +16,9 @@ const {
   SETUP_GET_SONGS,
 } = require('./ipcMain');
 
+// TODO: Use these instead of 'path.join()'. I don't know why I have so many duplicates
+const dataDirectory = path.join(app.getPath('userData'), 'Data');
+
 /* Globals */
 let defaultSettings = JSON.stringify({
   libraryDirectory: '',
@@ -23,13 +26,12 @@ let defaultSettings = JSON.stringify({
   volume: 100,
   allowRemote: true,
   mp4DownloadEnabled: false,
-  dataDirectory: '',
+  spotifyEnabled: false,
+  dataDirectory: dataDirectory,
   attchingExtraDetails: true,
 });
 
 /* Create the files to save settings */
-// TODO: Use these instead of 'path.join()'. I don't know why I have so many duplicates
-const dataDirectory = path.join(app.getPath('userData'), 'Data');
 const settingsFile = dataDirectory + '\\settings.json';
 const playlistsFile = dataDirectory + '\\playlists.json';
 const effectCombosFile = dataDirectory + '\\effectCombos.json';

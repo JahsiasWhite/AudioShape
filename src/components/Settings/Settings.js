@@ -8,6 +8,7 @@ function Settings() {
     songDirectory: '',
     dataDirectory: '',
     mp4DownloadEnabled: false,
+    spotifyEnabled: false,
   });
 
   /**
@@ -17,7 +18,9 @@ function Settings() {
     fetchSettings();
   }, []);
 
+  // TODO: Turn into invoke maybe
   const fetchSettings = () => {
+    console.error('Getting settings...');
     window.electron.ipcRenderer.sendMessage('GET_SETTINGS');
 
     window.electron.ipcRenderer.on('GET_SETTINGS', (updatedSettings) => {
@@ -31,15 +34,16 @@ function Settings() {
     fetchSettings();
   };
 
-  // Toggles whether we download an MP4 or MP3 from Youtube or Spotify
-  // MP4 takes much more space and a lot longer to download
-  const toggleMP4 = () => {
-    settings.mp4DownloadEnabled = !settings.mp4DownloadEnabled;
+  const saveSettings = (setting) => {
+    settings[setting] = !settings[setting];
     setSettings({
       ...settings,
-      ['mp4DownloadEnabled']: settings.mp4DownloadEnabled,
     });
     window.electron.ipcRenderer.sendMessage('SAVE_SETTINGS', settings);
+
+    // Update the layout bar
+    if (setting === 'spotifyEnabled')
+      window.electron.ipcRenderer.sendMessage('GET_LAYOUT_SETTINGS');
   };
 
   return (
@@ -63,20 +67,29 @@ function Settings() {
       <div className="settings-container">
         <div className="song-title">Customizations</div>
 
-        <div className="setting-item">
+        {/* <div className="setting-item">
           <input type="checkbox" id="toggleMP4" />
           <label htmlFor="toggleMP4">
             Toggle showing image in fullscreen view{' '}
           </label>
-        </div>
+        </div> */}
         <div className="setting-item">
           <input
             type="checkbox"
             id="toggleMP4"
             checked={settings.mp4DownloadEnabled}
-            onChange={toggleMP4}
+            onChange={() => saveSettings('toggleMP4')}
           />
           <label htmlFor="toggleMP4"> Download songs as MP4s </label>
+        </div>
+        <div className="setting-item">
+          <input
+            type="checkbox"
+            id="spotifyEnabled"
+            checked={settings.spotifyEnabled}
+            onChange={() => saveSettings('spotifyEnabled')}
+          />
+          <label htmlFor="spotifyEnabled"> Enable Spotify </label>
         </div>
       </div>
     </div>
