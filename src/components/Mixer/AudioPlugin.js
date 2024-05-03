@@ -291,7 +291,9 @@ const AudioPlugin = () => {
                 onClick={toggleReverb}
               ></div>
             </div>
-            <div>REVERB</div>
+            <div className={`${reverbIsActive ? '' : 'inactive-module'}`}>
+              REVERB
+            </div>
           </div>
           <div
             className={`speed-body ${reverbIsActive ? '' : 'inactive-module'}`}

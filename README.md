@@ -72,6 +72,7 @@ Build App
 
 In /dist, run setup.exe
 !!! If can't build, makesure react-scripts is NOT installed
+// HAD -> "react-scripts": "^5.0.1",
 
 #### EFFECTS TO ADD
 

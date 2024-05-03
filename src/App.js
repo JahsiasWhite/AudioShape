@@ -73,6 +73,12 @@ function App() {
     setIsFullscreen(false);
   };
 
+  // const changeColor = () => {
+  // Get the root element
+  // var r = document.querySelector(':root');
+  // r.style.setProperty('--color-main', 'lightblue');
+  // };
+
   return (
     <AudioProvider>
       <div className="app-container">
@@ -107,10 +113,7 @@ function App() {
                 )}
               </div>
             </div>
-            <Playbar
-              toggleFullscreen={enableFullscreen}
-              setIsVisible={setIsVisible}
-            />
+            <Playbar toggleFullscreen={enableFullscreen} />
           </div>
         )}
 

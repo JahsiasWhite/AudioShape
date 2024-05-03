@@ -1,5 +1,7 @@
 import React from 'react';
 
+import './FolderSelection.css';
+
 function FolderSelection({ onSettingsUpdate }) {
   // Once a folder is selected, we call to the server to load the
   // file path to grab the songs
@@ -13,7 +15,7 @@ function FolderSelection({ onSettingsUpdate }) {
   };
 
   return (
-    <label htmlFor="folderInput" style={{ cursor: 'pointer', color: 'green' }}>
+    <label htmlFor="folderInput" className="folderInputLabel">
       <b>Choose Song Directory</b>
       <input
         id="folderInput"

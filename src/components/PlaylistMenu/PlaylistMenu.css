@@ -29,7 +29,9 @@
 
 .create-playlist button {
   padding: 8px 16px;
-  background-color: #4caf50; /* Green color for Create Playlist button */
+  background-color: var(
+    --color-button
+  ); /* Green color for Create Playlist button */
   color: var(--color-text);
   border: none;
   cursor: pointer;
@@ -37,5 +39,6 @@
 }
 
 .create-playlist button:hover {
-  background-color: #45a049; /* Darker green on hover */
+  /* background-color: #45a049; */
+  opacity: 90%;
 }

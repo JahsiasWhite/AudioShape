@@ -1,3 +1,4 @@
-label {
+.folderInputLabel {
   cursor: pointer;
+  color: var(--color-button-secondary);
 }

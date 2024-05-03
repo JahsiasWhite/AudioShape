@@ -3,7 +3,7 @@ const { ipcMain } = require('electron');
 const fs = require('fs');
 const fsPromises = require('fs').promises; // For deleting files
 const { v4: uuidv4 } = require('uuid');
-const { glob, globSync, Glob } = require('glob');
+const { glob } = require('glob');
 const ffmpeg = require('fluent-ffmpeg');
 
 // Annoying way to import this tbh
