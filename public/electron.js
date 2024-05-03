@@ -115,8 +115,8 @@ app.on('ready', function () {
 
   // var spotify_client_id = process.env.SPOTIFY_CLIENT_ID;
   // var spotify_client_secret = process.env.SPOTIFY_CLIENT_SECRET;
-  var spotify_client_id = '0f4a9e39a958421b8650f7a9142baefd';
-  var spotify_client_secret = 'd67ebb6b783e447c89d53175e8116752';
+  var spotify_client_id = '';
+  var spotify_client_secret = '';
 
   // my application redirect uri
   // const redirectUri = 'http://localhost:8888/call';
