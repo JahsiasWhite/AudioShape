@@ -15,6 +15,9 @@ import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 let sortToggle = false;
 
+const filters = ['Title', 'Duration'];
+var index = 0;
+
 function SongList({ handleSongEdit }) {
   const {
     handleSongSelect,
@@ -129,6 +132,14 @@ function SongList({ handleSongEdit }) {
     setCurrentScreen(album);
   };
 
+  const changeFilter = () => {
+    index = (index + 1) % filters.length;
+    const filter = filters[index % filters.length];
+
+    console.error(filter);
+    sortSongs(filter.toLowerCase());
+  };
+
   /**
    * Formats decimal duration to "mm:ss" format.
    * @param {number} decimalDuration - The decimal duration to be formatted.
@@ -150,17 +161,39 @@ function SongList({ handleSongEdit }) {
     return formattedDuration;
   }
 
-  function sortSongs(sortBy) {
+  function sortByDuration(songs, sortToggle) {
+    console.error(sortToggle);
+    return songs.sort((a, b) => {
+      const comparison = a[1]['duration'] < b[1]['duration'];
+      return sortToggle ? comparison : !comparison;
+    });
+  }
+
+  function sortSongs() {
+    const sortBy = filters[index % filters.length].toLowerCase();
+
     sortToggle = !sortToggle;
 
     // 1. Convert object to an array of key-value pairs
     const songEntries = Object.entries(filteredSongs);
 
     // 2. Sort the entries based on the song property
-    songEntries.sort((a, b) => {
-      const comparison = a[1][sortBy].localeCompare(b[1][sortBy]);
-      return sortToggle ? comparison : -comparison;
-    });
+    if (sortBy === 'duration') {
+      console.error(sortToggle);
+      songEntries.sort((a, b) => {
+        const comparison = sortToggle
+          ? a[1]['duration'] > b[1]['duration']
+          : a[1]['duration'] < b[1]['duration'];
+
+        return comparison ? 1 : -1;
+      });
+    } else {
+      songEntries.sort((a, b) => {
+        const comparison = a[1][sortBy].localeCompare(b[1][sortBy]);
+        return sortToggle ? comparison : -comparison;
+      });
+    }
+    console.error(sortBy, songEntries);
 
     // 3. Convert the sorted entries back to an object
     const sortedSongs = Object.fromEntries(songEntries);
@@ -190,15 +223,23 @@ function SongList({ handleSongEdit }) {
             <div className="right-side">
               <div className="sort">
                 <div
+                  className="sortByField"
                   onClick={() => {
-                    sortSongs('title');
+                    sortSongs();
                   }}
                 >
-                  sort
+                  Sort by
                 </div>
-                <div>Title</div>
+                <div
+                  className="sortByFilterField"
+                  onClick={() => {
+                    changeFilter();
+                  }}
+                >
+                  {filters[index]}
+                </div>
               </div>
-              <div className="filter">Filter</div>
+              {/* <div className="filter">Filter</div> */}
             </div>
           </div>
           <ul className="song-list">

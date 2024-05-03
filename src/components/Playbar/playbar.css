@@ -16,8 +16,8 @@
 }
 
 /* Each 'section' in the playbar */
-.playbar div {
-}
+/* .playbar div {
+} */
 
 .current-song {
   margin-left: 1%;
@@ -95,6 +95,7 @@ input[type='range'] {
   overflow: hidden;
   width: 80px;
   height: 5px;
+  appearance: none;
   -webkit-appearance: none;
   border-radius: 100px;
   background-color: var(--color-secondary);

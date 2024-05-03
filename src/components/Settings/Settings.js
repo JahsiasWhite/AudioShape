@@ -41,6 +41,8 @@ function Settings() {
     });
     window.electron.ipcRenderer.sendMessage('SAVE_SETTINGS', settings);
 
+    fetchSettings();
+
     // Update the layout bar
     if (setting === 'spotifyEnabled')
       window.electron.ipcRenderer.sendMessage('GET_LAYOUT_SETTINGS');
@@ -78,7 +80,7 @@ function Settings() {
             type="checkbox"
             id="toggleMP4"
             checked={settings.mp4DownloadEnabled}
-            onChange={() => saveSettings('toggleMP4')}
+            onChange={() => saveSettings('mp4DownloadEnabled')}
           />
           <label htmlFor="toggleMP4"> Download songs as MP4s </label>
         </div>

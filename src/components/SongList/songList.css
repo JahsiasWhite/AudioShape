@@ -145,3 +145,19 @@
 .right-arrow {
   margin-left: auto;
 }
+
+.sort {
+  cursor: pointer;
+  width: 7em;
+  flex-direction: column;
+  align-items: center;
+  display: flex;
+}
+
+.sortByField:hover {
+  opacity: 70%;
+}
+
+.sortByFilterField:hover {
+  opacity: 70%;
+}

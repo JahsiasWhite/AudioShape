@@ -67,6 +67,10 @@ app.on('ready', function () {
   const mainWindow = new BrowserWindow({
     width: app.isPackaged ? 800 : 1100, // If we are debugging, we want to double the width for the debug window
     height: 600,
+
+    // Hides the toolbar but it can still be reactived by pressing 'alt'
+    autoHideMenuBar: true,
+
     webPreferences: {
       // Set the path of an additional "preload" script that can be used to
       // communicate between node-land and browser-land.

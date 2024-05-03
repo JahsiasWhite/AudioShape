@@ -52,7 +52,8 @@ BUGS:
 
 ## Launching
 
-npm run all
+`npm install`
+`npm run all`
 
 ## Testing
 
@@ -63,6 +64,8 @@ To see the coverage
 `npx jest --coverage`
 
 ## Build and Run
+
+`npm install --production`
 
 webpack
 `npm run watch`

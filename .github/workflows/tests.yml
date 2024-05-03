@@ -1,12 +1,19 @@
-# name: Tests
+name: Tests
 
-# on: [push]
+on: push
 
-# jobs:
-#   build:
-#     runs-on: ubuntu-latest
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-#     steps:
-#       - uses: actions/checkout@v1
-#       - name: Run Jest
-#         uses: stefanoeb/jest-action@1.0.3
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v1
+
+      - name: Install Node.js, NPM and Yarn
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14
+
+      - name: Run tests
+        run: npm test
