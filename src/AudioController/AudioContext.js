@@ -193,7 +193,6 @@ export const AudioProvider = ({ children }) => {
   const { createPlaylist, playlists, setPlaylists } = PlaylistsManager();
 
   /* Settings */
-  const [isRandomMode, setIsRandomMode] = useState(false);
   const [isLooping, setIsLooping] = useState(false);
 
   /* Navigation */
@@ -217,30 +216,6 @@ export const AudioProvider = ({ children }) => {
   const changeVideoTime = (newVideoTime) => {
     setVideoTime(newVideoTime);
   };
-
-  /**
-   * Toggles shuffle
-   * TODO: Should I not make a new list? Better to create a list and set currentSongIndex to the values.
-   */
-  // const toggleShuffle = () => {
-  //   setIsRandomMode(!isRandomMode);
-
-  //   if (!isRandomMode) {
-  //     // Shuffle the visibleSongs array if random mode is enabled
-  //     const shuffledSongs = [...visibleSongs];
-  //     for (let i = shuffledSongs.length - 1; i > 0; i--) {
-  //       const j = Math.floor(Math.random() * (i + 1));
-  //       [shuffledSongs[i], shuffledSongs[j]] = [
-  //         shuffledSongs[j],
-  //         shuffledSongs[i],
-  //       ];
-  //     }
-  //     setVisibleSongs(shuffledSongs);
-  //   } else {
-  //     // Restore the original order of songs if random mode is disabled
-  //     setVisibleSongs(loadedSongs);
-  //   }
-  // };
 
   // ! I can put this in AudioEffects.js and it will work properly.
   // Current song changed! Update our variables
@@ -297,28 +272,6 @@ export const AudioProvider = ({ children }) => {
   window.electron.ipcRenderer.on('GRAB_SONGS', (retrievedSongs) => {
     initialSongLoad(retrievedSongs);
   });
-
-  // /* When a song is double-clicked, change the current song to that one! */
-  // const handleSongSelect = (songId) => {
-  //   // setCurrentSongIndex(songIndex);
-  //   setCurrentSongId(songId);
-
-  //   // ! TODO: Don't love this
-  //   const index = Object.keys(visibleSongs).findIndex(
-  //     (key) => visibleSongs[key].id === songId
-  //   );
-  //   setCurrentSongIndex(index);
-  // };
-
-  /*
-
-███████  █████  ██    ██ ██ ███    ██  ██████  
-██      ██   ██ ██    ██ ██ ████   ██ ██       
-███████ ███████ ██    ██ ██ ██ ██  ██ ██   ███ 
-     ██ ██   ██  ██  ██  ██ ██  ██ ██ ██    ██ 
-███████ ██   ██   ████   ██ ██   ████  ██████  
-
-  */
 
   /**
    * Adds a new song to the list of songs

@@ -10,6 +10,10 @@
   /* --color-button-secondary: #277da1; */
 }
 
+body {
+  overflow: hidden;
+}
+
 .app-container {
   display: flex;
   height: 100vh;
@@ -18,6 +22,8 @@
   flex-direction: initial;
   /* I dont like blurry text */
   font-weight: 300;
+
+  overflow: hidden;
 }
 
 .non-fullscreen {
