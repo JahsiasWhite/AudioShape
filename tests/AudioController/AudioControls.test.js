@@ -76,6 +76,10 @@ describe('AudioControls', () => {
     const mockCurrentSong = { play: jest.fn(), pause: jest.fn() };
     const { result } = renderHook(() => AudioControls(mockCurrentSong));
 
+    act(() => {
+      result.current.changeVolume(1);
+    });
+
     // Verify initial state
     expect(result.current.isMuted).toBe(false);
     expect(result.current.volume).toBe(1);

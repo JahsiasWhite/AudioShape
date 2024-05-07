@@ -39,7 +39,7 @@ function LayoutBar({ toggleSection }) {
   window.electron.ipcRenderer.on('GET_LAYOUT_SETTINGS', (spotifyEnabled) => {
     console.error('Updating layout settings...');
     if (spotifyEnabled && !sections.includes('spotify')) {
-      setSections([...sections.slice(0, 5), 'spotify', ...sections.slice(5)]); // TODO
+      setSections([...sections.slice(0, 5), 'spotify', ...sections.slice(5)]); // TODO make more modular
     } else if (!spotifyEnabled) {
       setSections(sections.filter((section) => section !== 'spotify'));
     }

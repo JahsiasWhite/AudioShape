@@ -132,7 +132,7 @@ const SpotifyPlaylist = ({ playlistId, unloadPlaylist }) => {
     // song.track.album.images[0].url
 
     window.electron.ipcRenderer.sendMessage(
-      'DOWNLOAD_SPOTIFY_SONG',
+      'DOWNLOAD_SONG_FROM_YOUTUBE_SEARCH',
       songDetails
     );
     setDownloadStatus((prevStatus) => ({

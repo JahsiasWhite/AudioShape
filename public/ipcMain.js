@@ -278,15 +278,17 @@ const SETUP_SONG_DOWNLOADS = (mainW) => {
     downloadYoutubeVideo(videoUrl);
   });
 
-  // TODO Rename, something like downloadFromYoutubeSearch
-  ipcMain.on('DOWNLOAD_SPOTIFY_SONG', async (event, songDetails) => {
-    // Get the song url
-    const result = await youtubeSearch(songDetails.name + songDetails.artist);
-    const url = result.all[0].url; // TODO: What happens if all is empty? Is that possible? 'all' is an array of the search results...
+  ipcMain.on(
+    'DOWNLOAD_SONG_FROM_YOUTUBE_SEARCH',
+    async (event, songDetails) => {
+      // Get the song url
+      const result = await youtubeSearch(songDetails.name + songDetails.artist);
+      const url = result.all[0].url; // TODO: What happens if all is empty? Is that possible? 'all' is an array of the search results...
 
-    // download the song from youtube
-    downloadYoutubeVideo(url, songDetails);
-  });
+      // download the song from youtube
+      downloadYoutubeVideo(url, songDetails);
+    }
+  );
 };
 
 const SETUP_GET_SONGS = (mainW) => {
@@ -636,8 +638,15 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
     );
     const writeStream = fs.createWriteStream(outputVagueFilePath);
 
-    // let songData = await processSongMetadata(outputFilePath, []);
-    console.error('SONG DATA IS: ', spotifyDetails);
+    // TODO ugly
+    if (spotifyDetails === undefined) {
+      spotifyDetails = {
+        name: videoTitle,
+        artist: 'Unknown Artist',
+        album: 'Unknown Album',
+      };
+    }
+    console.log('SPOTIFY DETAILS: ', spotifyDetails);
 
     const audioStream = ytdl(url, { filter: 'audioonly' })
       // .pipe(writeStream)
@@ -783,7 +792,7 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
       let songData;
       if (spotifyDetails) {
         //TODO I think since we have to download it a second time, it is reducing quality... Also doubles the time it takes to download
-        // So I should add a button in settings to toggle if spotifyDetails is used. Toggle it in DOWNLOAD_SPOTIFY_SONG
+        // So I should add a button in settings to toggle if spotifyDetails is used. Toggle it in DOWNLOAD_SONG_FROM_YOUTUBE_SEARCH
         songData = await writeSpotifyDetails(
           outputFilePath,
           path.join(songDirectory, `spotify-${videoTitle}.mp4`),
