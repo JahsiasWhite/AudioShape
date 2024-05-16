@@ -3,7 +3,7 @@ import { render, renderHook, fireEvent } from '@testing-library/react';
 import Playbar from '../../src/components/Playbar/Playbar.js';
 import AudioContext, {
   AudioProvider,
-} from '../../src/audioController/AudioContext';
+} from '../../src/AudioController/AudioContext';
 
 const loadedSongs = [
   {

@@ -1,10 +1,10 @@
 import { renderHook, act, fireEvent } from '@testing-library/react';
 import { AudioEffects } from '../../src/AudioController/AudioEffects';
 
-import * as Tone from 'tone';
+// import * as Tone from 'tone';
 // jest.mock('tone');
 
-import ToneEffects from '../../src/AudioController/ToneEffects';
+// import ToneEffects from '../../src/AudioController/ToneEffects';
 
 // Mock the ipcRenderer for testing
 window.electron = {
