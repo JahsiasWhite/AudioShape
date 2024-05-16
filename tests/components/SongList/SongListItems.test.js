@@ -8,7 +8,7 @@ import {
 import SongListItems from '../../../src/components/SongList/SongListItems.js';
 import AudioContext, {
   AudioProvider,
-} from '../../../src/audioController/AudioContext';
+} from '../../../src/AudioController/AudioContext';
 
 const loadedSongs = [
   {
