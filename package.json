@@ -46,7 +46,10 @@
     "moduleNameMapper": {
       "\\.(css|less|sass|scss)$": "<rootDir>/__mocks__/styleMock.js",
       "\\.(gif|ttf|eot|svg)$": "<rootDir>/__mocks__/fileMock.js"
-    }
+    },
+    "transformIgnorePatterns": [
+      "node_modules/(?!tone)"
+    ]
   },
   "dependencies": {
     "ffmpeg-static": "^5.2.0",
