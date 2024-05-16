@@ -232,8 +232,18 @@ export const AudioProvider = ({ children }) => {
     startLoading();
 
     /* Update the new file location */
-
+    // We need to fix some characters. Unfortunatley we cant use encodeURIComponent() because
+    // setting the src has its own encode :(
+    // So we have to manually fix these here
     fileLocation = visibleSongs[currentSongId].file;
+    fileLocation = fileLocation.replace(/[#\$]/g, function (match) {
+      // TODO This is used in multiple spots...
+      if (match === '#') {
+        return '%23';
+      } else {
+        return '$';
+      }
+    });
     console.error('SETTING FILE LOCATION TO : ' + fileLocation);
 
     /* If effects are enabled, apply them to the new song */

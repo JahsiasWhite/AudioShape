@@ -22,6 +22,7 @@ export default function SongListItems({
     loadedSongs,
     setVisibleSongs,
     setCurrentScreen,
+    handleSongEditClick,
   } = useAudioPlayer();
 
   /**
@@ -122,6 +123,7 @@ export default function SongListItems({
     // So we can still go to other playlists without playing them
   }
 
+  // ? TODO I had <div> here instead of <>... I can't remember if it fixed a small glitch...
   return (
     <>
       {Object.keys(filteredSongs).map((key) => (

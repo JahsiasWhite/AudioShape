@@ -291,6 +291,90 @@ const SETUP_SONG_DOWNLOADS = (mainW) => {
   );
 };
 
+// Function to process song metadata
+const processSongMetadata = (file, imageFiles) => {
+  return new Promise((resolve, reject) => {
+    try {
+      metadata
+        .parseFile(file)
+        .then((data) => {
+          let title = data.common.title;
+          let artist = data.common.artist;
+          let album = data.common.album;
+          let duration = data.format.duration;
+
+          // Unique key, consider using a more robust method
+          let key = duration;
+
+          // To avoid empty fields, if the file doesn't have the appropriate metadata, use defaults
+          if (
+            typeof data.common.title === 'undefined' ||
+            data.common.title.trim() === ''
+          ) {
+            title = path.basename(file).split('.').slice(0, -1).join('.');
+          }
+
+          if (
+            typeof data.common.album === 'undefined' ||
+            data.common.album.trim() === ''
+          ) {
+            album = 'Unknown Album';
+          }
+
+          if (
+            typeof data.common.artist === 'undefined' ||
+            data.common.artist.trim() === ''
+          ) {
+            artist = 'Unknown Artist';
+          }
+
+          // A lot of songs on youtube are in the format of "artist - title", so we do a check here to
+          // Use a regular expression to split the string by "-"
+          const parts = title.split(/\s*-\s*/);
+
+          // Currently no support for multiple artists
+          if (parts.length === 2) {
+            // The first part (index 0) will be the artist, and the second part (index 1) will be the song title
+            const titleArtist = parts[0];
+            const songTitle = parts[1];
+
+            if (artist === 'Unknown Artist' && titleArtist !== undefined) {
+              artist = titleArtist;
+            }
+          }
+
+          /* Gets image for the song/album */
+          const albumDir = path.dirname(file);
+          let savedImage = undefined;
+          for (const image in imageFiles) {
+            const imageDir = path.dirname(imageFiles[image]);
+            if (albumDir === imageDir) {
+              savedImage = imageFiles[image];
+              break;
+            }
+          }
+
+          const songData = {
+            id: key,
+            file: file,
+            title: title,
+            artist: artist,
+            album: album,
+            duration: duration,
+            albumImage: savedImage, // Initialize image
+          };
+
+          resolve(songData);
+        })
+        .catch((error) => {
+          resolve(error);
+        });
+    } catch (err) {
+      console.error('ERROR', err);
+    }
+  });
+};
+
 const SETUP_GET_SONGS = (mainW) => {
   mainWindow = mainW;
   ipcMain.on('GET_SONGS', async (event, folderPath) => {
@@ -347,90 +431,6 @@ const SETUP_GET_SONGS = (mainW) => {
     });
     console.error('Finished grabbing song data...');
   });
-
-  // Function to process song metadata
-  const processSongMetadata = (file, imageFiles) => {
-    return new Promise((resolve, reject) => {
-      try {
-        metadata
-          .parseFile(file)
-          .then((data) => {
-            let title = data.common.title;
-            let artist = data.common.artist;
-            let album = data.common.album;
-            let duration = data.format.duration;
-
-            // Unique key, consider using a more robust method
-            let key = duration;
-
-            // To avoid empty fields, if the file doesn't have the appropriate metadata, use defaults
-            if (
-              typeof data.common.title === 'undefined' ||
-              data.common.title.trim() === ''
-            ) {
-              title = path.basename(file).split('.').slice(0, -1).join('.');
-            }
-
-            if (
-              typeof data.common.album === 'undefined' ||
-              data.common.album.trim() === ''
-            ) {
-              album = 'Unknown Album';
-            }
-
-            if (
-              typeof data.common.artist === 'undefined' ||
-              data.common.artist.trim() === ''
-            ) {
-              artist = 'Unknown Artist';
-            }
-
-            // A lot of songs on youtube are in the format of "artist - title", so we do a check here to
-            // Use a regular expression to split the string by "-"
-            const parts = title.split(/\s*-\s*/);
-
-            // Currently no support for multiple artists
-            if (parts.length === 2) {
-              // The first part (index 0) will be the artist, and the second part (index 1) will be the song title
-              const titleArtist = parts[0];
-              const songTitle = parts[1];
-
-              if (artist === 'Unknown Artist' && titleArtist !== undefined) {
-                artist = titleArtist;
-              }
-            }
-
-            /* Gets image for the song/album */
-            const albumDir = path.dirname(file);
-            let savedImage = undefined;
-            for (const image in imageFiles) {
-              const imageDir = path.dirname(imageFiles[image]);
-              if (albumDir === imageDir) {
-                savedImage = imageFiles[image];
-                break;
-              }
-            }
-
-            const songData = {
-              id: key,
-              file: file,
-              title: title,
-              artist: artist,
-              album: album,
-              duration: duration,
-              albumImage: savedImage, // Initialize image
-            };
-
-            resolve(songData);
-          })
-          .catch((error) => {
-            resolve(error);
-          });
-      } catch (err) {
-        console.error('ERROR', err);
-      }
-    });
-  };
 
   /**
    * Takes in a directory path, typically of a file. This removes everything after the last '/'

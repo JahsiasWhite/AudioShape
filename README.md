@@ -49,6 +49,8 @@ BUGS:
 2. Queue display gets out of sync
 3. Cant download two spotify mp4s at the same time... before testing, remove the console logs of "FFmpegProgress" and "Data"
 4. When logging into spotify for the first time, you cant get past the login screen. You have to hard refresh and then youll be signed in
+5. If a song has a '#' in the title, it will error
+6. Some downloads from youtube will stop reporting their progress at ~99.8%. This results in the frontend not reporting that the song is downloaded
 
 ## Launching
 
