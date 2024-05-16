@@ -2,7 +2,7 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import AudioContext, {
   AudioProvider,
-} from '../../src/audioController/AudioContext';
+} from '../../src/AudioController/AudioContext';
 
 // Mock dependencies
 jest.mock('../../src/AudioController/AudioObject', () => ({

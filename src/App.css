@@ -3,9 +3,15 @@
   --color-main: black;
   /* --color-secondary: #2a4057; */
   --color-secondary: rgb(26, 25, 26);
-  --color-button: #e76f51;
+  --color-button: #294973;
   --color-text: white;
-  --color-button-secondary: #4caf50;
+  --color-button-secondary: #316baa;
+  /* --color-button-secondary: #e76f51; */
+  /* --color-button-secondary: #277da1; */
+}
+
+body {
+  overflow: hidden;
 }
 
 .app-container {
@@ -16,6 +22,8 @@
   flex-direction: initial;
   /* I dont like blurry text */
   font-weight: 300;
+
+  overflow: hidden;
 }
 
 .non-fullscreen {
@@ -78,10 +86,12 @@
 }
 
 .main-content::-webkit-scrollbar-thumb {
-  background-color: var(--color-text); /* Color of the thumb */
+  background-color: var(--color-text); /* Color of the moveable bar */
   border-radius: 10px; /* Add rounded corners */
 }
 
 .main-content::-webkit-scrollbar-thumb:hover {
-  background-color: var(--color-button); /* Color of the thumb on hover */
+  background-color: var(
+    --color-button
+  ); /* Color of the  moveable bar on hover */
 }

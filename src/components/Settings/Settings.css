@@ -8,6 +8,10 @@
   margin: 20px;
 }
 
+.settings-container label b:hover {
+  text-decoration: underline;
+}
+
 .setting-item {
   margin-top: 10px;
   margin-bottom: 10px;

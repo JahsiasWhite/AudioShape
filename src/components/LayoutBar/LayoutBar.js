@@ -15,6 +15,37 @@ function LayoutBar({ toggleSection }) {
   const { setVisibleSongs, loadedSongs, currentScreen, setCurrentScreen } =
     useAudioPlayer();
 
+  const [sections, setSections] = useState([
+    'allSongs',
+    'mixer',
+    'playlists',
+    'artists',
+    'youtube',
+    'settings',
+  ]);
+
+  /**
+   * Gets the settings when the component first loads
+   */
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  // TODO: Turn into invoke maybe
+  const fetchSettings = () => {
+    console.error('Getting layout settings...');
+    window.electron.ipcRenderer.sendMessage('GET_LAYOUT_SETTINGS');
+  };
+  window.electron.ipcRenderer.on('GET_LAYOUT_SETTINGS', (spotifyEnabled) => {
+    console.error('Updating layout settings...');
+    if (spotifyEnabled && !sections.includes('spotify')) {
+      setSections([...sections.slice(0, 5), 'spotify', ...sections.slice(5)]); // TODO make more modular
+    } else if (!spotifyEnabled) {
+      setSections(sections.filter((section) => section !== 'spotify'));
+    }
+    console.error(sections);
+  });
+
   /* Keeps track of which 'tab' we are currently viewing */
   const [currentSection, setCurrentSection] = useState('allSongs');
 
@@ -40,16 +71,6 @@ function LayoutBar({ toggleSection }) {
     modifiedToggleSection('mixer');
   }, [currentScreen]);
 
-  const sections = [
-    'allSongs',
-    'mixer',
-    'playlists',
-    'artists',
-    'youtube',
-    'spotify',
-    'settings',
-  ];
-
   return (
     <div className="layout-bar">
       <div className="centered-content">
@@ -57,7 +78,9 @@ function LayoutBar({ toggleSection }) {
           <div
             key={section}
             onClick={() => modifiedToggleSection(section)}
-            className={currentSection === section ? 'tab-selected' : ''}
+            className={
+              currentSection === section ? 'tab-selected' : 'layout-tab'
+            }
           >
             {section === 'allSongs' && <HomeButton />}
             {section === 'mixer' && <MixerButton />}

@@ -1,9 +1,9 @@
 import React from 'react';
 import { render, renderHook, fireEvent } from '@testing-library/react';
-import Artists from '../../src/components/Artists/Artists.js'; // Adjust the path accordingly
+import Artists from '../../src/components/Artists/Artists.js';
 import AudioContext, {
   AudioProvider,
-} from '../../src/audioController/AudioContext';
+} from '../../src/AudioController/AudioContext';
 
 const loadedSongs = [
   {

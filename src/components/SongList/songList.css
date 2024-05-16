@@ -4,7 +4,7 @@
 }
 
 .song-list-header {
-  height: 10%;
+  /* height: 10%; */
   font-size: 100px;
 }
 
@@ -74,6 +74,11 @@
   flex-direction: column;
 }
 
+.song-details span:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .song-title {
   font-size: 25px;
 }
@@ -83,7 +88,7 @@
 }
 
 .highlighted {
-  color: rgb(88, 192, 88);
+  color: var(--color-button-secondary);
   background-color: rgba(1, 1, 1, 0.5);
 }
 
@@ -116,4 +121,43 @@
   height: 20px;
   width: 20px;
   cursor: pointer;
+}
+
+.playlist-header-2-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rightSide {
+  display: flex;
+  justify-content: flex-end;
+  width: 20%;
+  gap: 5px;
+  align-items: center;
+}
+
+.arrows-container {
+  display: flex;
+  justify-content: space-between;
+}
+
+.right-arrow {
+  margin-left: auto;
+}
+
+.sort {
+  cursor: pointer;
+  width: 7em;
+  flex-direction: column;
+  align-items: center;
+  display: flex;
+}
+
+.sortByField:hover {
+  opacity: 70%;
+}
+
+.sortByFilterField:hover {
+  opacity: 70%;
 }

@@ -11,11 +11,13 @@
   display: flex;
   justify-content: flex-end;
   width: 20%;
+  gap: 5px;
+  align-items: center;
 }
 
 /* Each 'section' in the playbar */
-.playbar div {
-}
+/* .playbar div {
+} */
 
 .current-song {
   margin-left: 1%;
@@ -85,7 +87,7 @@
 }
 
 .playback-bar input[type='range']::-webkit-slider-thumb {
-  box-shadow: -200px 0 0 200px rgb(88, 192, 88);
+  box-shadow: -200px 0 0 200px var(--color-button-secondary);
 }
 
 /* Generic, applies to playback and volume */
@@ -93,6 +95,7 @@ input[type='range'] {
   overflow: hidden;
   width: 80px;
   height: 5px;
+  appearance: none;
   -webkit-appearance: none;
   border-radius: 100px;
   background-color: var(--color-secondary);
@@ -113,12 +116,10 @@ input[type='range']::-webkit-slider-thumb {
   /* border-radius: 50%; */
   /* cursor: ew-resize; */
   background: transparent;
-  box-shadow: -80px 0 0 80px rgb(88, 192, 88);
+  box-shadow: -80px 0 0 80px var(--color-button-secondary);
 }
 
 .fullscreen-button {
-  margin-right: 10px;
-  margin-top: 5px;
   height: 20px;
   width: 20px;
 }

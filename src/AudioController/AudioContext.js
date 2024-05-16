@@ -89,6 +89,13 @@ export const AudioProvider = ({ children }) => {
     }
     console.log('Finished loading', effect, queue);
     setLoadingQueue(queue);
+
+    // Keep the song centered
+    setTimeout(() => {
+      const songDiv = document.getElementById(currentSongId);
+      if (songDiv)
+        songDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
   };
 
   // Extra tools to help with stuff
@@ -178,19 +185,22 @@ export const AudioProvider = ({ children }) => {
     initCurrentSong,
     DEFAULT_SPEEDUP,
     DEFAULT_SLOWDOWN,
-    getCurrentAudioBuffer
+    getCurrentAudioBuffer,
+    loadingQueue
   );
 
   // Handles playlists
   const { createPlaylist, playlists, setPlaylists } = PlaylistsManager();
 
   /* Settings */
-  const [isRandomMode, setIsRandomMode] = useState(false);
   const [isLooping, setIsLooping] = useState(false);
 
   /* Navigation */
   // ! Todo, should this be moved out of here? Is it in this context's scope?
   const [currentScreen, setCurrentScreen] = useState('All Songs');
+
+  /* Toggle showing popup menu */
+  const [togglePopup, setTogglePopup] = useState(false);
 
   /*
 
@@ -207,30 +217,6 @@ export const AudioProvider = ({ children }) => {
     setVideoTime(newVideoTime);
   };
 
-  /**
-   * Toggles shuffle
-   * TODO: Should I not make a new list? Better to create a list and set currentSongIndex to the values.
-   */
-  // const toggleShuffle = () => {
-  //   setIsRandomMode(!isRandomMode);
-
-  //   if (!isRandomMode) {
-  //     // Shuffle the visibleSongs array if random mode is enabled
-  //     const shuffledSongs = [...visibleSongs];
-  //     for (let i = shuffledSongs.length - 1; i > 0; i--) {
-  //       const j = Math.floor(Math.random() * (i + 1));
-  //       [shuffledSongs[i], shuffledSongs[j]] = [
-  //         shuffledSongs[j],
-  //         shuffledSongs[i],
-  //       ];
-  //     }
-  //     setVisibleSongs(shuffledSongs);
-  //   } else {
-  //     // Restore the original order of songs if random mode is disabled
-  //     setVisibleSongs(loadedSongs);
-  //   }
-  // };
-
   // ! I can put this in AudioEffects.js and it will work properly.
   // Current song changed! Update our variables
   // Essentially create the new song :)
@@ -238,10 +224,26 @@ export const AudioProvider = ({ children }) => {
     // ? Can we do something here so if this is null, we never would even end up here
     if (currentSongId === null) return;
 
+    // TODO If we are on a non songpage, spotify playlist for example, and the song ends, visibleSongs will be []
+    // visibleSongs should NOT BE DEPENDENT on what screen is showing
+    // Shouldn't need once I implement
+    if (!visibleSongs[currentSongId]) return;
+
     startLoading();
 
     /* Update the new file location */
+    // We need to fix some characters. Unfortunatley we cant use encodeURIComponent() because
+    // setting the src has its own encode :(
+    // So we have to manually fix these here
     fileLocation = visibleSongs[currentSongId].file;
+    fileLocation = fileLocation.replace(/[#\$]/g, function (match) {
+      // TODO This is used in multiple spots...
+      if (match === '#') {
+        return '%23';
+      } else {
+        return '$';
+      }
+    });
     console.error('SETTING FILE LOCATION TO : ' + fileLocation);
 
     /* If effects are enabled, apply them to the new song */
@@ -280,28 +282,6 @@ export const AudioProvider = ({ children }) => {
   window.electron.ipcRenderer.on('GRAB_SONGS', (retrievedSongs) => {
     initialSongLoad(retrievedSongs);
   });
-
-  // /* When a song is double-clicked, change the current song to that one! */
-  // const handleSongSelect = (songId) => {
-  //   // setCurrentSongIndex(songIndex);
-  //   setCurrentSongId(songId);
-
-  //   // ! TODO: Don't love this
-  //   const index = Object.keys(visibleSongs).findIndex(
-  //     (key) => visibleSongs[key].id === songId
-  //   );
-  //   setCurrentSongIndex(index);
-  // };
-
-  /*
-
-███████  █████  ██    ██ ██ ███    ██  ██████  
-██      ██   ██ ██    ██ ██ ████   ██ ██       
-███████ ███████ ██    ██ ██ ██ ██  ██ ██   ███ 
-     ██ ██   ██  ██  ██  ██ ██  ██ ██ ██    ██ 
-███████ ██   ██   ████   ██ ██   ████  ██████  
-
-  */
 
   /**
    * Adds a new song to the list of songs
@@ -361,6 +341,8 @@ export const AudioProvider = ({ children }) => {
         nextSongs,
         toggleShuffle,
         shuffleIsEnabled,
+        togglePopup,
+        setTogglePopup,
       }}
     >
       {children}

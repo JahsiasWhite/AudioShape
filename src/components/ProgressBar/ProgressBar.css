@@ -1,0 +1,10 @@
+.progress-bar-container {
+  width: 300px; /* Adjust width as needed */
+  height: 10px; /* Adjust height as needed */
+  background-color: #ddd;
+}
+
+.progress-bar {
+  height: 100%; /* Match container height */
+  background-color: #007bff;
+}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAudioPlayer } from '../../AudioController/AudioContext';
-import './Playlists.css'; // Import your CSS for styling
+import './Playlists.css';
 
 const Playlists = ({ toggleSection }) => {
   const {

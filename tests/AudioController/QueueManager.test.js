@@ -278,4 +278,35 @@ describe('QueueManager', () => {
     expect(result.current.currentSongId).toBe('song2');
     expect(result.current.currentSongIndex).toBe(0); // Assuming 'song2' is at index 1 in mockVisibleSongs
   });
+
+  it('should play the first song when the last song ends', () => {
+    const mockCurrentSong = {
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+    };
+
+    const mockVisibleSongs = {
+      111: { title: 'Song 1' },
+      222: { title: 'Song 2' },
+      333: { title: 'Song 3' },
+    };
+
+    const { result } = renderHook(() =>
+      QueueManager(mockCurrentSong, mockVisibleSongs)
+    );
+
+    // Set initial state
+    act(() => {
+      result.current.handleSongSelect('song3');
+    });
+
+    // Simulate the ended event by triggering onSongEnded
+    act(() => {
+      result.current.onSongEnded();
+    });
+
+    // Assertions
+    expect(result.current.currentSongId).toBe(111);
+    expect(result.current.currentSongIndex).toBe(0);
+  });
 });

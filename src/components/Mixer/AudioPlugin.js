@@ -4,12 +4,15 @@ import React, { useState, useEffect } from 'react';
 import './AudioPlugin.css';
 
 import Knob from './Knob';
+import EffectNamePopup from '../Popups/EffectNamePopup';
 
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 // DREADBOX INSPIRED
 
 const AudioPlugin = () => {
+  const [showSavePopup, setShowSavePopup] = useState(false);
+
   // DEFAULT VALUES
   const initialKnobValues = {
     speedKnobValue: 50,
@@ -22,6 +25,7 @@ const AudioPlugin = () => {
 
   const {
     addEffect,
+    effects,
     resetCurrentSong,
     setIsLooping,
     currentEffectCombo,
@@ -193,7 +197,12 @@ const AudioPlugin = () => {
   };
 
   const saveSettings = () => {
-    saveEffects('Effect1');
+    // saveEffects('Effect1');
+    setShowSavePopup(true);
+  };
+
+  const closeNamePopup = () => {
+    setShowSavePopup(false);
   };
 
   const resetSong = () => {
@@ -260,6 +269,10 @@ const AudioPlugin = () => {
         </div>
       </div>
 
+      {showSavePopup && (
+        <EffectNamePopup effects={effects} closeNamePopup={closeNamePopup} />
+      )}
+
       <div className={`modifiers-container`}>
         <div className="module-container">
           <div className="header">SPEED</div>
@@ -278,7 +291,9 @@ const AudioPlugin = () => {
                 onClick={toggleReverb}
               ></div>
             </div>
-            <div>REVERB</div>
+            <div className={`${reverbIsActive ? '' : 'inactive-module'}`}>
+              REVERB
+            </div>
           </div>
           <div
             className={`speed-body ${reverbIsActive ? '' : 'inactive-module'}`}

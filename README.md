@@ -20,45 +20,43 @@ WIP
 TODO:
 
 1. Loading screens/indicators on everything. (Applying current effect combo, changing songs, etc.)
-2. implement testing
-3. Watch the library directory for file changes so we don't need a manual refresh
-4. Themes
-5. Using remotely - server & remote
-6. Caching?
-7. Easy support for creating own themes
-8. Addon support
+2. Watch the library directory for file changes so we don't need a manual refresh
+3. Themes
+4. Using remotely - server & remote
+5. Caching?
+6. Easy support for creating own themes
+7. Addon support
    - Lyrics
    - Themes?
    - Youtube?
    - Audio edit plugins
-9. Add ability to add image ! WILL WRITE TO THAT FILE THEN
-10. lazy loading
-11. Need to export to mp3, rn, exporting to WAV is creating audio files x10 as big as their original
-12. Resturcture styles, does creating all of these extra folders take up a lot of storage??
-13. Start creating the new song before the current ends on auto play so the user doesnt have to wait for it to render
-14. Add tailwindCSS, it should reduce a lot of the duplicate CSS
-15. Progress bar for the youtube download
-16. Videos tab. Just another songList but showing only mp4 files
-17. Fix how Spotify songs are saved. Right now its doing extra stuff to get the artist. I should send data somehow of the song data (title, artist, album) to be used when its finished downloading from youtube. Maybe just use a callback?
-18. On spotify -> display if song/playlist is already downloaded
+8. Add ability to add image ! WILL WRITE TO THAT FILE THEN
+9. lazy loading - 'react-window'
+10. Need to export to mp3, rn, exporting to WAV is creating audio files x10 as big as their original
+11. Start creating the new song before the current ends on auto play so the user doesnt have to wait for it to render
+12. Add tailwindCSS, it should reduce a lot of the duplicate CSS. Or not tailwindCSS but just cleanup the CSS.
+13. Videos tab. Just another songList but showing only mp4 files
+14. Fix how Spotify songs are saved. Right now its doing extra stuff to get the artist. I should send data somehow of the song data (title, artist, album) to be used when its finished downloading from youtube. Maybe just use a callback?
+15. On spotify -> display if song/playlist is already downloaded
+16. What quality are the mp4s being downloaded at from youtube
+17. Remove the data-testid tags from the production builds: https://github.com/coderas/babel-plugin-jsx-remove-data-test-id
+18. Add a cleanup when the app first starts. To see if there were any songs that weren't somehow deleted
 
 999 Easy file/song sharing
 
 BUGS:
 
-1.  Playlists with 0 songs show all songs
-2.  Can't enter fullscreen multiple times
-3.  Force closing the program doesnt delete the temp song. This is expected but should it delete it when the program first starts?
-4.  Fixup all of the addEffect, runEffect stuff. Do they all have to be async?
-5.  Temp song is not always deleted when using custom effects. EX: Have speedup toggled, add any effect, there will be two temp songs. Each effect adds a new temp song but doesnt delete the previous
-6.  What quality are the mp4s being downloaded at from youtube
-7.  Queue display gets out of sync.
-8.  Playing multiple songs with an effect preset will not work. This is when clicking the songs, it works by skipping
-9.  Songs not autoplaying once they finish playing
+1. Fixup all of the addEffect, runEffect stuff
+2. Queue display gets out of sync
+3. Cant download two spotify mp4s at the same time... before testing, remove the console logs of "FFmpegProgress" and "Data"
+4. When logging into spotify for the first time, you cant get past the login screen. You have to hard refresh and then youll be signed in
+5. Some downloads from youtube will stop reporting their progress at ~99.8%. This results in the frontend not reporting that the song is downloaded
+6. In fullscreen view, the name changes before the song is loaded when using effects
 
 ## Launching
 
-npm run all
+`npm install`
+`npm run all`
 
 ## Testing
 
@@ -70,6 +68,8 @@ To see the coverage
 
 ## Build and Run
 
+`npm install --production`
+
 webpack
 `npm run watch`
 
@@ -78,6 +78,7 @@ Build App
 
 In /dist, run setup.exe
 !!! If can't build, makesure react-scripts is NOT installed
+// HAD -> "react-scripts": "^5.0.1",
 
 #### EFFECTS TO ADD
 
@@ -86,9 +87,6 @@ const eq = new Tone.EQ3(-12, -6, -3).toDestination();
 
 Filter (Tone.Filter): You can use filters to remove or emphasize certain frequencies in your audio. Tone.js offers various filter types, including lowpass, highpass, bandpass, and more.
 const filter = new Tone.Filter(200, 'lowpass').toDestination();
-
-Delay (Tone.FeedbackDelay): Delay effects create echoes or repeats of the audio signal. You can adjust parameters like delay time and feedback to control the delay effect.
-const delay = new Tone.FeedbackDelay('8n', 0.5).toDestination();
 
 Compressor (Tone.Compressor): Compressors are used to control the dynamic range of audio signals, making loud sounds quieter and quiet sounds louder.
 const compressor = new Tone.Compressor(-30, 3).toDestination();

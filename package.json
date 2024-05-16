@@ -46,7 +46,10 @@
     "moduleNameMapper": {
       "\\.(css|less|sass|scss)$": "<rootDir>/__mocks__/styleMock.js",
       "\\.(gif|ttf|eot|svg)$": "<rootDir>/__mocks__/fileMock.js"
-    }
+    },
+    "transformIgnorePatterns": [
+      "node_modules/(?!tone)"
+    ]
   },
   "dependencies": {
     "ffmpeg-static": "^5.2.0",
@@ -55,7 +58,6 @@
     "music-metadata": "^8.1.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-scripts": "^5.0.1",
     "spotify-web-api-node": "^5.0.2",
     "tone": "^14.7.77",
     "uuid": "^9.0.1",
@@ -80,6 +82,7 @@
       "dist/**/*",
       "package.json",
       "./public/electron.js",
+      "./public/ipcMain.js",
       "./public/preload.js",
       "./public/index.html",
       "./public/index.css",

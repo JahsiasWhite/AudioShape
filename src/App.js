@@ -12,6 +12,7 @@ import Spotify from './components/Spotify/Spotify';
 import Youtube from './components/Youtube/Youtube';
 import LayoutBar from './components/LayoutBar/LayoutBar';
 import Mixer from './components/Mixer/Mixer';
+import PopupMenu from './components/PopupMenu/PopupMenu';
 
 import FullscreenView from './components/FullscreenView/FullscreenView';
 
@@ -22,9 +23,6 @@ import { AudioProvider } from './AudioController/AudioContext'; // So we can tal
 
 function App() {
   const [selectedSongIndex, setSelectedSongIndex] = useState(null);
-
-  // const [loadedSongs, setLoadedSongs] = useState({}); // ? Can we use this as just visibleSongs ? Or should we have two objects?
-  // const [visibleSongs, setVisibleSongs] = useState([]);
 
   // Update the current song when a song is selected
   const handleSongSelect = (songIndex) => {
@@ -38,7 +36,6 @@ function App() {
   const toggleSection = (section) => {
     //TODO FIX THIS, Each page should be its own component... instead of SongList showing all types
     if (section === 'allSongs') {
-      // setVisibleSongs(loadedSongs);
       section = 'songs';
     }
     setCurrentSection(section);
@@ -75,6 +72,12 @@ function App() {
   const disableFullscreen = () => {
     setIsFullscreen(false);
   };
+
+  // const changeColor = () => {
+  // Get the root element
+  // var r = document.querySelector(':root');
+  // r.style.setProperty('--color-main', 'lightblue');
+  // };
 
   return (
     <AudioProvider>
@@ -119,6 +122,9 @@ function App() {
         )}
 
         <ErrorMessages />
+
+        {/* Popup menu */}
+        <PopupMenu />
       </div>
     </AudioProvider>
   );

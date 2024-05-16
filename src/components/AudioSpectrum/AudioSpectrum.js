@@ -5,6 +5,7 @@ import './AudioSpectrum.css';
 /**
  * SHOUTOUT https://codepen.io/nfj525/pen/rVBaab
  */
+var context, src, analyser;
 
 /**
  *
@@ -12,16 +13,15 @@ import './AudioSpectrum.css';
  */
 const AudioSpectrum = ({ song }) => {
   useEffect(() => {
-    // Create an audio context
-    // ! TODO To fix this, just add this section to the custom context
-    const context = new AudioContext();
-    const src = context.createMediaElementSource(song);
-
-    const analyser = context.createAnalyser();
-    src.connect(analyser);
-    analyser.connect(context.destination);
-
-    analyser.fftSize = 256;
+    // Create an audio context. Only have to do this once
+    if (context === undefined) {
+      context = new AudioContext();
+      src = context.createMediaElementSource(song);
+      analyser = context.createAnalyser();
+      src.connect(analyser);
+      analyser.connect(context.destination);
+      analyser.fftSize = 256;
+    }
 
     const bufferLength = analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
