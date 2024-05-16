@@ -55,7 +55,6 @@ export const DownloadManager = (
 
   async function downloadAudio(audioBuffer) {
     const wavBytes = createWavBytes(audioBuffer);
-    console.error(wavBytes);
     window.electron.ipcRenderer.sendMessage('SAVE_TEMP_SONG', wavBytes);
     // getTempSong();
   }

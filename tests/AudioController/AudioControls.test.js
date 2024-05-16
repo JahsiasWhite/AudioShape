@@ -34,6 +34,21 @@ describe('AudioControls', () => {
     expect(currentSong.play).toHaveBeenCalled();
   });
 
+  it('should not crash if the current song is not loaded', () => {
+    const song = {
+      play: jest.fn(),
+    };
+    const { result } = renderHook(() => AudioControls(song));
+
+    // Trigger the playAudio function
+    act(() => {
+      result.current.playAudio();
+    });
+
+    // Assertion
+    expect(result.current.isPlaying).toBe(false);
+  });
+
   it('should pause audio when pauseAudio is called', () => {
     const pauseMock = jest.fn();
     const { result } = renderHook(() =>

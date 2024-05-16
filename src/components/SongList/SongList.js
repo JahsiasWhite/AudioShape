@@ -132,6 +132,7 @@ function SongList({ handleSongEdit }) {
               filteredSongs={filteredSongs}
               setFilteredSongs={setFilteredSongs}
               toggleRightClickMenu={toggleRightClickMenu}
+              setPlaylistMenuOpen={setPlaylistMenuOpen}
             />
           </ul>
           <RightClickMenu clickData={clicked} />

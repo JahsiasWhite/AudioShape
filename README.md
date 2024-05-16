@@ -39,7 +39,8 @@ TODO:
 14. Fix how Spotify songs are saved. Right now its doing extra stuff to get the artist. I should send data somehow of the song data (title, artist, album) to be used when its finished downloading from youtube. Maybe just use a callback?
 15. On spotify -> display if song/playlist is already downloaded
 16. What quality are the mp4s being downloaded at from youtube
-17. Add a cleanup when the app first starts. To see if there were any songs that weren't somehow deleted
+17. Remove the data-testid tags from the production builds: https://github.com/coderas/babel-plugin-jsx-remove-data-test-id
+18. Add a cleanup when the app first starts. To see if there were any songs that weren't somehow deleted
 
 999 Easy file/song sharing
 
@@ -49,8 +50,8 @@ BUGS:
 2. Queue display gets out of sync
 3. Cant download two spotify mp4s at the same time... before testing, remove the console logs of "FFmpegProgress" and "Data"
 4. When logging into spotify for the first time, you cant get past the login screen. You have to hard refresh and then youll be signed in
-5. If a song has a '#' in the title, it will error
-6. Some downloads from youtube will stop reporting their progress at ~99.8%. This results in the frontend not reporting that the song is downloaded
+5. Some downloads from youtube will stop reporting their progress at ~99.8%. This results in the frontend not reporting that the song is downloaded
+6. In fullscreen view, the name changes before the song is loaded when using effects
 
 ## Launching
 

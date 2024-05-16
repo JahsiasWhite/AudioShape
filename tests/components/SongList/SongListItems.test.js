@@ -14,14 +14,17 @@ const loadedSongs = [
   {
     title: 'title',
     artist: 'artist',
+    id: 'id',
   },
   {
     title: 'title2',
     artist: 'artist2',
+    id: 'id2',
   },
 ];
 var mockSetVisibleSongs;
 var handleSongSelectMock;
+var handleSongEditClick;
 jest.mock('../../../src/AudioController/AudioContext', () => {
   const useAudioPlayer = jest.fn();
   useAudioPlayer.mockReturnValue({
@@ -31,6 +34,7 @@ jest.mock('../../../src/AudioController/AudioContext', () => {
     visibleSongs: loadedSongs,
     handleSongSelect: (handleSongSelectMock = jest.fn()),
     loadingQueue: [],
+    handleSongEditClick: (handleSongEditClick = jest.fn()),
   });
 
   return {
@@ -62,25 +66,53 @@ describe('<Artists />', () => {
     expect(container).toBeDefined();
   });
 
-  // it('handles song click correctly', () => {
-  //   const { getByTestId } = render(
-  //     <AudioProvider>
-  //       <SongListItems
-  //         filteredSongs={[]}
-  //         setFilteredSongs={jest.fn()}
-  //         toggleRightClickMenu={jest.fn()}
-  //       />
-  //     </AudioProvider>
-  //   );
+  it('handles add to playlist button click correctly', () => {
+    let setPlaylistMenuOpen = jest.fn();
+    const { getByTestId } = render(
+      <AudioProvider>
+        <SongListItems
+          filteredSongs={[
+            {
+              title: 'title',
+              artist: 'artist',
+              id: 'id',
+            },
+          ]}
+          setFilteredSongs={jest.fn()}
+          toggleRightClickMenu={jest.fn()}
+          setPlaylistMenuOpen={setPlaylistMenuOpen}
+        />
+      </AudioProvider>
+    );
 
-  //   // Simulate a click on the edit button
-  //   // const editButton = getByRole('img', { name: /dropdown-button/i });
-  //   const editButton = getByTestId('dropdown-button');
-  //   fireEvent.click(editButton);
+    // Simulate a click on the playlist button
+    const playlistButton = getByTestId('plus-sign');
+    fireEvent.click(playlistButton);
 
-  //   expect(editButton).toHaveBeenCalled();
+    expect(setPlaylistMenuOpen).toHaveBeenCalled();
+  });
 
-  //   // const checkbox = getByRole('checkbox', { name: /Download songs as MP4s/i });
-  //   // expect(checkbox.checked).toBe(true);
-  // });
+  it('handles song edit button click correctly', () => {
+    const { getByTestId } = render(
+      <AudioProvider>
+        <SongListItems
+          filteredSongs={[
+            {
+              title: 'title',
+              artist: 'artist',
+              id: 'id',
+            },
+          ]}
+          setFilteredSongs={jest.fn()}
+          toggleRightClickMenu={jest.fn()}
+        />
+      </AudioProvider>
+    );
+
+    // Simulate a click on the edit button
+    const editButton = getByTestId('dropdown-button');
+    fireEvent.click(editButton);
+
+    expect(handleSongEditClick).toHaveBeenCalled();
+  });
 });

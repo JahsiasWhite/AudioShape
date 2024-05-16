@@ -13,6 +13,7 @@ export default function SongListItems({
   filteredSongs,
   setFilteredSongs,
   toggleRightClickMenu,
+  setPlaylistMenuOpen,
 }) {
   const {
     handleSongSelect,
@@ -180,11 +181,13 @@ export default function SongListItems({
             <div className="right-side">
               <img
                 className="plus-sign"
+                data-testid="plus-sign"
                 src={PlusButtonSVG}
                 onClick={() => handlePlaylistEdit(visibleSongs[key].id)}
               ></img>
               <img
                 className="dropdown-button"
+                data-testid="dropdown-button"
                 src={MixerSVG}
                 onClick={() => handleSongEditClick(visibleSongs[key].id)}
               ></img>
