@@ -162,6 +162,7 @@ const SpotifyPlaylist = ({ playlistId, unloadPlaylist }) => {
       (progressMsg, progressPercent, progressId) => {
         console.error(progressMsg);
         console.error(progressId);
+        if (progressPercent > 99.9) progressPercent = 100;
         setProgress({ ...progress, [progressId]: progressPercent }); // TODO Remove entry from object once done with using it
       }
     );

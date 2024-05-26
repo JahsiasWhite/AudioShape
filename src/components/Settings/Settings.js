@@ -75,7 +75,7 @@ function Settings() {
             Toggle showing image in fullscreen view{' '}
           </label>
         </div> */}
-        <div className="setting-item">
+        {/* <div className="setting-item">
           <input
             type="checkbox"
             id="toggleMP4"
@@ -83,7 +83,7 @@ function Settings() {
             onChange={() => saveSettings('mp4DownloadEnabled')}
           />
           <label htmlFor="toggleMP4"> Download songs as MP4s </label>
-        </div>
+        </div> */}
         <div className="setting-item">
           <input
             type="checkbox"

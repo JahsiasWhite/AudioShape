@@ -6,7 +6,7 @@ import SpotifyPlaylists from './SpotifyPlaylists/SpotifyPlaylists';
 import Login from './Login/Login';
 
 const Spotify = () => {
-  const [token, setToken] = useState('');
+  const [loggedIn, setLoggedIn] = useState(false);
   const [playlists, setPlaylists] = useState({});
   // useEffect(() => {
   //   async function getToken() {
@@ -19,23 +19,34 @@ const Spotify = () => {
   //   getToken();
   // }, []);
 
-  const handleLoggedIn = (code, playlists) => {
-    console.error('HI');
+  const handleLoggedIn = (playlists) => {
     console.error(playlists);
-    console.error(code);
-    setToken(code);
+    setLoggedIn(true);
     setPlaylists(playlists);
+
+    // Close the login window
+    // window.electron.ipcRenderer.send('close-login-window');
   };
 
   useEffect(() => {
     // ? useMemo ?
-    window.electron.ipcRenderer.once('start-spotify-login', handleLoggedIn);
+    window.electron.ipcRenderer.once('get-user-playlists', handleLoggedIn);
   });
 
   // <WebPlayback token={token} />
 
   return (
-    <>{token === '' ? <Login /> : <SpotifyPlaylists playlists={playlists} />}</>
+    <>
+      {!loggedIn ? (
+        <Login />
+      ) : (
+        // ) : token === '' ? (
+        //   <div>
+        //     <a onClick={() => handleLogin(url)}>TEST</a>
+        //   </div>
+        <SpotifyPlaylists playlists={playlists} />
+      )}
+    </>
   );
 };
 

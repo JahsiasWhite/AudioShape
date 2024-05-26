@@ -117,10 +117,8 @@ app.on('ready', function () {
    * Starts the spotify login with the user id
    */
 
-  // var spotify_client_id = process.env.SPOTIFY_CLIENT_ID;
-  // var spotify_client_secret = process.env.SPOTIFY_CLIENT_SECRET;
-  var spotify_client_id = '';
-  var spotify_client_secret = '';
+  var spotify_client_id = '0f4a9e39a958421b8650f7a9142baefd';
+  // var spotify_client_secret = '';
 
   // my application redirect uri
   // const redirectUri = 'http://localhost:8888/call';
@@ -134,75 +132,69 @@ app.on('ready', function () {
     // credentials are optional
     spotifyApi = new SpotifyWebApi({
       clientId: spotify_client_id,
-      clientSecret: spotify_client_secret,
+      // clientSecret: spotify_client_secret,
       redirectUri: redirectUri,
     });
     console.log('SETTING WITH : ', code);
 
-    // Retrieve an access token and a refresh token
-    spotifyApi.authorizationCodeGrant(code).then(
-      function (data) {
-        console.log('The token expires in ' + data.body['expires_in']);
-        console.log('The access token is ' + data.body['access_token']);
-        console.log('The refresh token is ' + data.body['refresh_token']);
-
-        // Set the access token on the API object to use it in later calls
-        spotifyApi.setAccessToken(data.body['access_token']);
-        spotifyApi.setRefreshToken(data.body['refresh_token']);
-
-        // getMe();
-        getUserPlaylists(code);
-      },
-      function (err) {
-        console.log('Something went wrong!', err);
-      }
+    // Create the authorization URL
+    const scopes = ['streaming', 'user-read-email', 'user-read-private'];
+    const state = generateRandomString(16);
+    const showDialog = true;
+    const responseType = 'token';
+    var authorizeURL = spotifyApi.createAuthorizeURL(
+      scopes,
+      state,
+      showDialog,
+      responseType
     );
+    console.log('URL  IS : ', authorizeURL);
+    return authorizeURL;
 
-    // Retrieve an access token.
-    // spotifyApi.clientCredentialsGrant().then(
+    // Retrieve an access token and a refresh token
+    // spotifyApi.authorizationCodeGrant(code).then(
     //   function (data) {
-    //     console.log('The access token expires in ' + data.body['expires_in']);
+    //     console.log('The token expires in ' + data.body['expires_in']);
     //     console.log('The access token is ' + data.body['access_token']);
+    //     console.log('The refresh token is ' + data.body['refresh_token']);
 
-    //     // Save the access token so that it's used in future calls
+    //     // Set the access token on the API object to use it in later calls
     //     spotifyApi.setAccessToken(data.body['access_token']);
+    //     spotifyApi.setRefreshToken(data.body['refresh_token']);
 
-    //     getUserPlaylists();
-    //     getMe();
+    //     // getMe();
+    //     getUserPlaylists(code);
     //   },
     //   function (err) {
-    //     console.log(
-    //       'Something went wrong when retrieving an access token',
-    //       err
-    //     );
+    //     console.log('Something went wrong!', err);
     //   }
     // );
 
-    function getMe() {
-      spotifyApi.getMe().then(
-        function (data) {
-          console.log(
-            'Some information about the authenticated user',
-            data.body
-          );
-        },
-        function (err) {
-          console.log('Something went wrong!', err);
-        }
-      );
-    }
+    // function getMe() {
+    //   spotifyApi.getMe().then(
+    //     function (data) {
+    //       console.log(
+    //         'Some information about the authenticated user',
+    //         data.body
+    //       );
+    //     },
+    //     function (err) {
+    //       console.log('Something went wrong!', err);
+    //     }
+    //   );
+    // }
 
-    function getUserPlaylists(code) {
-      spotifyApi.getUserPlaylists().then(
-        function (data) {
-          console.log('Retrieved playlists', data.body);
-          mainWindow.webContents.send('start-spotify-login', code, data.body);
-        },
-        function (err) {
-          console.log('Something went wrong!', err);
-        }
-      );
-    }
+    // function getUserPlaylists(code) {
+    //   spotifyApi.getUserPlaylists().then(
+    //     function (data) {
+    //       console.log('Retrieved playlists', data.body);
+    //       mainWindow.webContents.send('start-spotify-login', code, data.body);
+    //     },
+    //     function (err) {
+    //       console.log('Something went wrong!', err);
+    //     }
+    //   );
+    // }
   }
 
   ipcMain.on('get-spotify-playlist', (event, playlistId, offset) => {
@@ -221,33 +213,143 @@ app.on('ready', function () {
   // Handle custom protocol requests
   protocol.registerFileProtocol('myapp', (request, callback) => {
     // Handle custom protocol requests here
-    const url = new URL(request.url);
+    // const url = new URL(request.url);
     // Extract the 'code' parameter from the query string
-    const code = url.searchParams.get('code');
+    // const code = url.searchParams.get('code');
 
     // Handle the URL and perform necessary actions (e.g., extract tokens)
     // You may want to close the window and continue the OAuth flow in the main window.
-    console.log(code);
+    console.log('request IS: ', request);
+    const url = request.url;
 
-    createSpotifyClient(code);
+    // if (url.includes('error=access_denied')) {
+    //   mainWindow.webContents.send('start-spotify-login', 'quit');
+    //   return;
+    // }
+
+    const accessTokenData = url.split('#')[1];
+    console.log('accessTokenData   ', accessTokenData);
+    // Split the access token parameters by the ampersand (&) symbol
+    const paramPairs = accessTokenData.split('&');
+    console.log('paramPairs   ', paramPairs);
+    // Iterate through each parameter pair to find the access token
+    let accessToken;
+    for (const paramPair of paramPairs) {
+      console.log('paramPair   ', paramPair);
+      const [key, value] = paramPair.split('=');
+      if (key === 'access_token') {
+        accessToken = value;
+        break; // Stop iterating after finding the access token
+      }
+    }
+    console.log('ACCESS TOKEN IS: ', accessToken);
+    spotifyApi.setAccessToken(accessToken);
+    // mainWindow.webContents.send('spotify-get-user-playlists', code, data.body);
+    getUserPlaylists();
+
+    // Retrieve an access token and a refresh token
+    // spotifyApi.authorizationCodeGrant(accessToken).then(
+    //   function (data) {
+    //     console.log('The token expires in ' + data.body['expires_in']);
+    //     console.log('The access token is ' + data.body['access_token']);
+    //     console.log('The refresh token is ' + data.body['refresh_token']);
+
+    //     // Set the access token on the API object to use it in later calls
+    //     spotifyApi.setAccessToken(data.body['access_token']);
+    //     spotifyApi.setRefreshToken(data.body['refresh_token']);
+
+    //     // getMe();
+    //     getUserPlaylists(code);
+    //   },
+    //   function (err) {
+    //     console.log('Something went wrong!', err);
+    //   }
+    // );
+
+    // createSpotifyClient(code);
   });
 
+  function getUserPlaylists() {
+    spotifyApi.getUserPlaylists().then(
+      function (data) {
+        console.log('Retrieved playlists', data.body);
+        mainWindow.webContents.send('get-user-playlists', data.body);
+      },
+      function (err) {
+        console.log('Something went wrong!', err);
+      }
+    );
+  }
+
   ipcMain.on('start-spotify-login', (event) => {
-    const spotifyClientId = spotify_client_id;
-    const scope = 'streaming user-read-email user-read-private';
-    const state = generateRandomString(16);
-    const authUrl =
-      `https://accounts.spotify.com/authorize/?` +
-      `response_type=code&` +
-      `client_id=${spotifyClientId}&` +
-      `scope=${encodeURIComponent(scope)}&` +
-      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-      `state=${state}`;
+    // const spotifyClientId = spotify_client_id;
+    // const scopes = ['streaming', 'user-read-email', 'user-read-private'];
+    // const state = generateRandomString(16);
+    // const showDialog = true;
+    // const responseType = 'token';
+    // const authUrl =
+    //   `https://accounts.spotify.com/authorize/?` +
+    //   `response_type=code&` +
+    //   `client_id=${spotifyClientId}&` +
+    //   `scope=${encodeURIComponent(scope)}&` +
+    //   `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+    //   `state=${state}`;
+
+    // function getUserPlaylists(code) {
+    //   spotifyApi.getUserPlaylists().then(
+    //     function (data) {
+    //       console.log('Retrieved playlists', data.body);
+    //       mainWindow.webContents.send('get-user-playlists', code, data.body);
+    //     },
+    //     function (err) {
+    //       console.log('Something went wrong!', err);
+    //     }
+    //   );
+    // }
+    if (spotifyApi !== undefined) {
+      getUserPlaylists();
+      return;
+    }
+
+    const authUrl = createSpotifyClient();
+    console.log('AUTHURLIS: ', authUrl);
+
+    // mainWindow.webContents.send('start-spotify-login', authUrl);
+    // shell.openExternal(authUrl);
+    createLoginWindow(authUrl);
+    function createLoginWindow(url) {
+      const loginWindow = new BrowserWindow({
+        width: 800,
+        height: 600,
+        show: false, // Initially hide the window
+      });
+
+      loginWindow.loadURL(url);
+
+      // Listen for the window to be ready to receive messages
+      // loginWindow.webContents.on('did-finish-load', (e) => {
+      //   console.log('FINISHED LOADING:   ', e);
+      // loginWindow.webContents.send('start-spotify-login'); // Send a message to the login window
+
+      // getUserPlaylists('test');
+      // loginWindow.close();
+      // });
+
+      // Listen for messages from the login window
+      // ipcMain.on('did-navigate', (event, message) => {
+      //   console.log('MESSAGE IS: ', message);
+      //   // if (message.type === 'close-login-window') {
+      //   loginWindow.close(); // Close the login window
+      //   // }
+      // });
+
+      loginWindow.once('ready-to-show', () => {
+        loginWindow.show();
+      });
+    }
 
     // shell.openExternal(authUrl);
-    mainWindow.loadURL(authUrl);
-
-    // createSpotifyClient();
+    // mainWindow.loadURL(authUrl);
   });
 
   // Prepare to filter only the callbacks for my redirectUri

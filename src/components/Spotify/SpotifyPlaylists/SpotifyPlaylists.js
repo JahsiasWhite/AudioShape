@@ -17,7 +17,7 @@ const SpotifyPlaylists = ({ playlists }) => {
   return (
     <>
       Playlists
-      {!loadPlaylist ? (
+      {!loadPlaylist && playlistItems ? (
         <div className="playlist-cards">
           {playlistItems.map((playlist, idx) => (
             <div

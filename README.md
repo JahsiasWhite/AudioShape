@@ -49,13 +49,13 @@ BUGS:
 1. Fixup all of the addEffect, runEffect stuff
 2. Queue display gets out of sync
 3. Cant download two spotify mp4s at the same time... before testing, remove the console logs of "FFmpegProgress" and "Data"
-4. When logging into spotify for the first time, you cant get past the login screen. You have to hard refresh and then youll be signed in
-5. Some downloads from youtube will stop reporting their progress at ~99.8%. This results in the frontend not reporting that the song is downloaded
-6. In fullscreen view, the name changes before the song is loaded when using effects
+4. Some downloads from youtube will stop reporting their progress at ~99.8%. This results in the frontend not reporting that the song is downloaded
+5. In fullscreen view, the name changes before the song is loaded when using effects
 
 ## Launching
 
 `npm install`
+`npm i react-scripts`
 `npm run all`
 
 ## Testing
@@ -70,11 +70,13 @@ To see the coverage
 
 `npm install --production`
 
-webpack
+`npm install webpack-cli` ??
 `npm run watch`
+This will create a new folder titled 'build'
 
 Build App
 `npm run electron-build`
+This will create a new folder titled 'dist'. Inside is where the installer.exe is
 
 In /dist, run setup.exe
 !!! If can't build, makesure react-scripts is NOT installed
