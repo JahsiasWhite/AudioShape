@@ -19,11 +19,6 @@ export default function RightClickMenu({ clickData }) {
     setIsContextMenuActive(true);
   }, [clickData]);
 
-  /**
-   * Stuff to handle right click menu... this should be in its RightClickMenu component
-   * TODO: This should not be in SongList either because we will prob want to right click other
-   * stuff in the future
-   */
   const [isContextMenuActive, setIsContextMenuActive] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({
     x: 0,
@@ -37,7 +32,7 @@ export default function RightClickMenu({ clickData }) {
 
   function handleSongEditClick(id) {
     handleSongEdit(id);
-    setCurrentScreen('mixer');
+    setCurrentScreen('mixer'); // TODO Is there a way to get this working in handleSongEdit since this is in multiple spots? Its for updating the tab highlight
   }
 
   return (

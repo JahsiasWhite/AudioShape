@@ -7,32 +7,32 @@ function SearchBar({ setFilteredSongs }) {
   const { visibleSongs, currentSongId, currentSong } = useAudioPlayer();
   // const [searchTerm, setSearchTerm] = useState('');
 
-  console.error(visibleSongs);
   //   const searchInput = (e) => {
   // var lowerCase = e.target.value.toLowerCase();
   var searchTerm = '';
 
   const filterSongs = (e) => {
     searchTerm += e.target.value.toLowerCase();
-    return Object.fromEntries(
-      Object.entries(visibleSongs).filter(([key, value]) => {
-        if (searchTerm === '') {
-          return true; // Include all entries if no input
-        }
+    let filteredSongs = Object.entries(visibleSongs).filter(([key, value]) => {
+      if (searchTerm === '') {
+        return true; // Include all entries if no input
+      }
 
-        if (value.duration === undefined) {
-          // This is a rare one, but sometimes when downloading songs, their duration isn't set correctly
-          // TODO This is only like this while I use duration as a key, once I use actual keys, I can remove this
-          return false;
-        }
+      if (value.duration === undefined) {
+        // This is a rare one, but sometimes when downloading songs, their duration isn't set correctly
+        // TODO This is only like this while I use duration as a key, once I use actual keys, I can remove this
+        return false;
+      }
 
-        return (
-          value.title.toLowerCase().includes(searchTerm) ||
-          value.artist.toLowerCase().includes(searchTerm) ||
-          value.album.toLowerCase().includes(searchTerm)
-        );
-      })
-    );
+      return (
+        value.title.toLowerCase().includes(searchTerm) ||
+        value.artist.toLowerCase().includes(searchTerm) ||
+        value.album.toLowerCase().includes(searchTerm)
+      );
+    });
+
+    console.log('Filtered songs: ', filteredSongs);
+    return Object.fromEntries(filteredSongs);
   };
 
   // useEffect(() => {

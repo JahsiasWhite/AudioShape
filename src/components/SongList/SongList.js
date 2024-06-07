@@ -41,6 +41,8 @@ function SongList({ handleSongEdit }) {
     setPlaylistMenuOpen(-1);
   };
 
+  // Changes what we are filtering by
+  // 1. Title 2. Duration
   const changeFilter = () => {
     index = (index + 1) % filters.length;
     const filter = filters[index % filters.length];
@@ -49,6 +51,7 @@ function SongList({ handleSongEdit }) {
     sortSongs(filter.toLowerCase());
   };
 
+  // Toggles between showing songs from A-Z to Z-A, etc... depending on filter
   function sortSongs() {
     const sortBy = filters[index % filters.length].toLowerCase();
 
@@ -73,7 +76,8 @@ function SongList({ handleSongEdit }) {
         return sortToggle ? comparison : -comparison;
       });
     }
-    console.error(sortBy, songEntries);
+    console.log('Filter: ', sortBy);
+    console.log('Filtered logs: ', songEntries);
 
     // 3. Convert the sorted entries back to an object
     const sortedSongs = Object.fromEntries(songEntries);
@@ -133,6 +137,7 @@ function SongList({ handleSongEdit }) {
               setFilteredSongs={setFilteredSongs}
               toggleRightClickMenu={toggleRightClickMenu}
               setPlaylistMenuOpen={setPlaylistMenuOpen}
+              handleSongEditClick={handleSongEdit}
             />
           </ul>
           <RightClickMenu clickData={clicked} />

@@ -11,7 +11,7 @@ var context, src, analyser;
  *
  * @returns
  */
-const AudioSpectrum = ({ song }) => {
+const AudioSpectrum = ({ song, loading }) => {
   useEffect(() => {
     // Create an audio context. Only have to do this once
     if (context === undefined) {
@@ -44,8 +44,8 @@ const AudioSpectrum = ({ song }) => {
 
       analyser.getByteFrequencyData(dataArray);
 
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = 'rgb(13 14 18)'; // Background color
+      ctx.fillRect(0, 0, canvas.width, canvas.height); // (x, y, width, height)
 
       let lastBarHeights = [];
       const smoothnessFactor = 0.2;
@@ -110,7 +110,7 @@ const AudioSpectrum = ({ song }) => {
   }, [song]);
 
   return (
-    <div id="canvas-container">
+    <div className={`${loading ? 'hidden' : ''}`} id="canvas-container">
       {/* <div id="content">
         <input type="file" id="thefile" accept="audio/*" />
         <canvas id="canvas"></canvas>

@@ -21,8 +21,9 @@ function Playbar({ toggleFullscreen }) {
   } = useAudioPlayer();
 
   console.error(
-    'LoadingQueue.length, Object.keys(effects).length : ',
+    'LoadingQueue.length: ',
     loadingQueue.length,
+    'Object.keys(effects).length : ',
     Object.keys(effects).length
   );
 

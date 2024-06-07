@@ -46,7 +46,7 @@ const Queue = () => {
                 <div
                   key={songQueue[0]}
                   className={`queue-item current-song-queue
-                }`}
+                `}
                 >
                   {visibleSongs[currentSongId].title}
                 </div>
@@ -77,30 +77,6 @@ const Queue = () => {
                 </div>
               ))}
           </div>
-          {/* {isVisible && (
-            <div className="queue-content">
-              <h3>Queue</h3>
-              {Object.values(visibleSongs).map((song, index) =>
-                index === 0 ? (
-                  <div
-                    key={index}
-                    className={`queue-item current-song-queue
-                  }`}
-                  >
-                    {'Current Song: ' + song.title}
-                  </div>
-                ) : (
-                  <div
-                    key={index}
-                    className="queue-item"
-                    onDoubleClick={() => handleSongSelectQueue(song.id)}
-                  >
-                    {song.title}
-                  </div>
-                )
-              )}
-            </div>
-          )} */}
         </div>
       )}
     </div>

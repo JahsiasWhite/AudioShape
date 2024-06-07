@@ -9,11 +9,12 @@ import VideoPlayer from './VideoPlayer/VideoPlayer.js';
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 const FullscreenView = ({ toggleFullscreen }) => {
-  const { visibleSongs, currentSongId, currentSong } = useAudioPlayer(); // TODO: Do I have to import currentSong
+  const { visibleSongs, currentSongId, currentSong, loadingQueue } =
+    useAudioPlayer(); // TODO: Do I have to import currentSong
   const song = visibleSongs[currentSongId];
 
   // TODO: Changing volume rerenders this component...
-  console.error(song, currentSong);
+  console.log(song, currentSong);
 
   // Need to know if the current song has a video or not
   const isMP4 = song && song.file.endsWith('.mp4');
@@ -57,7 +58,7 @@ const FullscreenView = ({ toggleFullscreen }) => {
         {isMP4 ? (
           <VideoPlayer songFile={song.file} song={currentSong} />
         ) : (
-          <AudioSpectrum song={currentSong} />
+          <AudioSpectrum song={currentSong} loading={loadingQueue.length > 0} />
         )}
       </div>
 

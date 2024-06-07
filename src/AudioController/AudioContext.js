@@ -200,6 +200,7 @@ export const AudioProvider = ({ children }) => {
   const [currentScreen, setCurrentScreen] = useState('All Songs');
 
   /* Toggle showing popup menu */
+  // ! This is needed! So the popups work in fullscreen
   const [togglePopup, setTogglePopup] = useState(false);
 
   /*

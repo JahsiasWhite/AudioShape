@@ -900,6 +900,7 @@ function getPlaylists(playlistsFilePath) {
   let playlists = []; // Should I reget this everytime?
   try {
     const playlistsData = fs.readFileSync(playlistsFilePath, 'utf-8');
+    if (playlistsData === '') return playlists;
     playlists = JSON.parse(playlistsData);
   } catch (error) {
     console.error('Error reading playlists file:', error);

@@ -58,7 +58,7 @@ describe('<Settings />', () => {
     expect(container).toBeDefined();
   });
 
-  it('handles checkbox toggle correctly', () => {
+  it('handles toggle spotify correctly', () => {
     const { getByText, getByRole } = render(
       <AudioProvider>
         <Settings />
@@ -66,15 +66,15 @@ describe('<Settings />', () => {
     );
 
     // Simulate a click on an artist card
-    fireEvent.doubleClick(getByText('Download songs as MP4s'));
+    fireEvent.doubleClick(getByText('Enable Spotify'));
     expect(window.electron.ipcRenderer.on).toHaveBeenCalled();
 
     /* TEST */
     const updatedSettings = {
       songDirectory: '',
       dataDirectory: '',
-      mp4DownloadEnabled: true,
-      spotifyEnabled: false,
+      mp4DownloadEnabled: false,
+      spotifyEnabled: true,
     };
     act(() => {
       // Assuming 'GET_SETTINGS' is the 3rd registered 'on' callback
@@ -82,7 +82,7 @@ describe('<Settings />', () => {
       window.electron.ipcRenderer.on.mock.calls[2][1](updatedSettings);
     });
 
-    const checkbox = getByRole('checkbox', { name: /Download songs as MP4s/i });
+    const checkbox = getByRole('checkbox', { name: /Enable Spotify/i });
     expect(checkbox.checked).toBe(true);
   });
 });

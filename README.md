@@ -7,50 +7,11 @@ Experience music like never before with a real-time streaming and editing music 
 The most exciting feature is the song editing! Seamlessly edit the song you are listening to and keep the settings saved for all future songs. For example, are you a big fan of listening to sped up songs? Simply use the preset (or create your own preset) to have the currently plaing song become its sped-up version. If you're just listening to your playlist, the next song will also be sped up! Like how the song sounds? Export it to keep it saved forever.
 
 Don't have any local songs? No problem! Music Player also includes the ability to download songs directly from Youtube by providing the song's url.
-<br>SOON: Have a Spotify account? Download your songs or playlists or even stream directly from your account!
+<br>Have a Spotify account? Download your songs or playlists from your account!
 
 Music Player also has an extensive full-screen mode. Sit back and watch the audio spectrum of the current song. Listening to an MP4? Full-screen mode even lets you watch the accompanied music video!
 
-# IDEAS
-
-- Move the effects off of the tab. make the main screen slide up and the effect controller screen slides up.
-
-WIP
-
-TODO:
-
-1. Loading screens/indicators on everything. (Applying current effect combo, changing songs, etc.)
-2. Watch the library directory for file changes so we don't need a manual refresh
-3. Themes
-4. Using remotely - server & remote
-5. Caching?
-6. Easy support for creating own themes
-7. Addon support
-   - Lyrics
-   - Themes?
-   - Youtube?
-   - Audio edit plugins
-8. Add ability to add image ! WILL WRITE TO THAT FILE THEN
-9. lazy loading - 'react-window'
-10. Need to export to mp3, rn, exporting to WAV is creating audio files x10 as big as their original
-11. Start creating the new song before the current ends on auto play so the user doesnt have to wait for it to render
-12. Add tailwindCSS, it should reduce a lot of the duplicate CSS. Or not tailwindCSS but just cleanup the CSS.
-13. Videos tab. Just another songList but showing only mp4 files
-14. Fix how Spotify songs are saved. Right now its doing extra stuff to get the artist. I should send data somehow of the song data (title, artist, album) to be used when its finished downloading from youtube. Maybe just use a callback?
-15. On spotify -> display if song/playlist is already downloaded
-16. What quality are the mp4s being downloaded at from youtube
-17. Remove the data-testid tags from the production builds: https://github.com/coderas/babel-plugin-jsx-remove-data-test-id
-18. Add a cleanup when the app first starts. To see if there were any songs that weren't somehow deleted
-
-999 Easy file/song sharing
-
-BUGS:
-
-1. Fixup all of the addEffect, runEffect stuff
-2. Queue display gets out of sync
-3. Cant download two spotify mp4s at the same time... before testing, remove the console logs of "FFmpegProgress" and "Data"
-4. Some downloads from youtube will stop reporting their progress at ~99.8%. This results in the frontend not reporting that the song is downloaded
-5. In fullscreen view, the name changes before the song is loaded when using effects
+- Downloading MP4s only works in dev build currently
 
 ## Launching
 
@@ -70,7 +31,8 @@ To see the coverage
 
 `npm install --production`
 
-`npm install webpack-cli` ??
+// Bundle
+`npm install webpack-cli`
 `npm run watch`
 This will create a new folder titled 'build'
 
@@ -81,6 +43,41 @@ This will create a new folder titled 'dist'. Inside is where the installer.exe i
 In /dist, run setup.exe
 !!! If can't build, makesure react-scripts is NOT installed
 // HAD -> "react-scripts": "^5.0.1",
+
+# TODO
+
+1. Loading screens/indicators on everything. (Applying current effect combo, changing songs, etc.)
+2. Remove console logs on production build
+3. Watch the library directory for file changes so we don't need a manual refresh
+4. Themes
+5. Using remotely - server & remote
+6. Caching?
+7. Easy support for creating own themes
+8. Addon support
+   - Lyrics
+   - Themes?
+   - Youtube?
+   - Audio edit plugins
+9. Add ability to add image ! WILL WRITE TO THAT FILE THEN
+10. lazy loading - 'react-window'
+11. Need to export to mp3, rn, exporting to WAV is creating audio files x10 as big as their original
+12. Start creating the new song before the current ends on auto play so the user doesnt have to wait for it to render
+13. Add tailwindCSS, it should reduce a lot of the duplicate CSS. Or not tailwindCSS but just cleanup the CSS.
+14. Videos tab. Just another songList but showing only mp4 files... or maybe just filter on songlist screen?
+15. Fix how Spotify songs are saved. Right now its doing extra stuff to get the artist. I should send data somehow of the song data (title, artist, album) to be used when its finished downloading from youtube. Maybe just use a callback?
+16. On spotify -> display if song/playlist is already downloaded
+17. What quality are the mp4s being downloaded at from youtube
+18. Remove the data-testid tags from the production builds: https://github.com/coderas/babel-plugin-jsx-remove-data-test-id
+19. Add a cleanup when the app first starts. To see if there were any songs that weren't somehow deleted
+
+999 Easy file/song sharing
+
+## BUGS
+
+1. Fixup all of the addEffect, runEffect stuff
+2. Queue display gets out of sync
+3. Cant download two spotify mp4s at the same time... before testing, remove the console logs of "FFmpegProgress" and "Data"
+4. In fullscreen view, the name changes before the song is loaded when using effects
 
 #### EFFECTS TO ADD
 

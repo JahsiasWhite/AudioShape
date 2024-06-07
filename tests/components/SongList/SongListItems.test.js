@@ -24,17 +24,18 @@ const loadedSongs = [
 ];
 var mockSetVisibleSongs;
 var handleSongSelectMock;
-var handleSongEditClick;
+var currentScreenMock = '';
+var setCurrentScreen;
 jest.mock('../../../src/AudioController/AudioContext', () => {
   const useAudioPlayer = jest.fn();
   useAudioPlayer.mockReturnValue({
     setVisibleSongs: (mockSetVisibleSongs = jest.fn()),
-    setCurrentScreen: jest.fn(),
+    setCurrentScreen: (setCurrentScreen = jest.fn()),
     loadedSongs: loadedSongs,
     visibleSongs: loadedSongs,
     handleSongSelect: (handleSongSelectMock = jest.fn()),
     loadingQueue: [],
-    handleSongEditClick: (handleSongEditClick = jest.fn()),
+    currentScreen: currentScreenMock,
   });
 
   return {
@@ -93,6 +94,7 @@ describe('<Artists />', () => {
   });
 
   it('handles song edit button click correctly', () => {
+    let handleSongEditClick = jest.fn();
     const { getByTestId } = render(
       <AudioProvider>
         <SongListItems
@@ -105,6 +107,7 @@ describe('<Artists />', () => {
           ]}
           setFilteredSongs={jest.fn()}
           toggleRightClickMenu={jest.fn()}
+          handleSongEditClick={handleSongEditClick}
         />
       </AudioProvider>
     );
@@ -114,5 +117,6 @@ describe('<Artists />', () => {
     fireEvent.click(editButton);
 
     expect(handleSongEditClick).toHaveBeenCalled();
+    expect(setCurrentScreen).toHaveBeenCalled();
   });
 });

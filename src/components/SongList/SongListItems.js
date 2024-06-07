@@ -3,7 +3,6 @@
  */
 import React from 'react';
 
-import DownArrowSVG from './down-arrow.svg';
 import PlusButtonSVG from './add-svgrepo-com.svg';
 import MixerSVG from '../LayoutBar/MixerButton/mixer.svg';
 
@@ -14,6 +13,7 @@ export default function SongListItems({
   setFilteredSongs,
   toggleRightClickMenu,
   setPlaylistMenuOpen,
+  handleSongEditClick,
 }) {
   const {
     handleSongSelect,
@@ -23,7 +23,6 @@ export default function SongListItems({
     loadedSongs,
     setVisibleSongs,
     setCurrentScreen,
-    handleSongEditClick,
   } = useAudioPlayer();
 
   /**
@@ -55,7 +54,7 @@ export default function SongListItems({
     });
   }
 
-  // Handle the context menu here, e.g., show/hide the menu
+  // Handle the context menu here, e.g., show/hide the right-click menu
   const handleContextMenu = (event, songData) => {
     event.preventDefault();
 
@@ -189,7 +188,10 @@ export default function SongListItems({
                 className="dropdown-button"
                 data-testid="dropdown-button"
                 src={MixerSVG}
-                onClick={() => handleSongEditClick(visibleSongs[key].id)}
+                onClick={() => {
+                  handleSongEditClick(visibleSongs[key].id);
+                  setCurrentScreen('mixer');
+                }}
               ></img>
             </div>
           </li>
