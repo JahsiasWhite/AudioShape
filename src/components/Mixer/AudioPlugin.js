@@ -23,28 +23,37 @@ const AudioPlugin = () => {
   };
   let INIT_MULTIPLIER = 1;
 
+  // TODO Redundant put in constants file
+  const DEFAULT_SPEEDUP = 1.2;
+  const DEFAULT_SLOWDOWN = 0.8;
+
   const {
     addEffect,
     effects,
     resetCurrentSong,
-    setIsLooping,
     currentEffectCombo,
     savedEffects,
     saveEffects,
     loadingQueue,
     handleSongExport,
+    speedupIsEnabled,
+    slowdownIsEnabled,
+    toggleSpeedup,
   } = useAudioPlayer();
 
-  console.error('HMM', savedEffects[currentEffectCombo]);
   if (savedEffects[currentEffectCombo] !== undefined) {
     Object.keys(savedEffects[currentEffectCombo]).forEach((effect) => {
       if (effect === 'speed') {
         INIT_MULTIPLIER = savedEffects[currentEffectCombo][effect];
       }
     });
+  } else if (speedupIsEnabled) {
+    INIT_MULTIPLIER = DEFAULT_SPEEDUP;
+  } else if (slowdownIsEnabled) {
+    INIT_MULTIPLIER = DEFAULT_SLOWDOWN;
   }
 
-  console.error(initialKnobValues.speedKnobValue);
+  console.error('Init speed control value: ', initialKnobValues.speedKnobValue);
   const [speedKnobValue, setSpeedKnobValue] = useState(
     initialKnobValues.speedKnobValue * INIT_MULTIPLIER
   );
@@ -197,7 +206,6 @@ const AudioPlugin = () => {
   };
 
   const saveSettings = () => {
-    // saveEffects('Effect1');
     setShowSavePopup(true);
   };
 
@@ -225,15 +233,6 @@ const AudioPlugin = () => {
     setBitCrusherKnobValue(initialKnobValues.bitCrusherKnobValue);
     setPitchShiftKnobValue(initialKnobValues.pitchShiftKnobValue);
   };
-
-  /* When editing a song, we want it to stay */
-  // useEffect(() => {
-  //   setIsLooping(true);
-
-  //   return () => {
-  //     setIsLooping(false);
-  //   };
-  // }, []);
 
   return (
     <div

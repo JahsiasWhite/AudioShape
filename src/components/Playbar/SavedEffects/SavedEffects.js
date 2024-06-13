@@ -20,9 +20,9 @@ const SavedEffects = () => {
   //   window.electron.ipcRenderer.sendMessage('GRAB_EFFECT_COMBOS');
   // }, []);
 
-  useEffect(() => {
-    console.error('HMMM: ', currentEffectCombo);
-  }, [currentEffectCombo]);
+  // useEffect(() => {
+  //   console.error('HMMM: ', currentEffectCombo);
+  // }, [currentEffectCombo]);
 
   return (
     <div className="saved-effects">
