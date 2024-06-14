@@ -88,7 +88,7 @@ export const AudioProvider = ({ children }) => {
     if (effect !== undefined) {
       queue = loadingQueue.filter((curEffect) => curEffect !== effect);
     }
-    console.log('Finished loading', effect, queue);
+    console.log('Finished loading... Effect: ', effect, ' Queue: ', queue);
     setLoadingQueue(queue);
 
     // Keep the song centered

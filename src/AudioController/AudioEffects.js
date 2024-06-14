@@ -131,7 +131,7 @@ export const AudioEffects = (
   };
 
   const toggleSavedEffectOff = () => {
-    console.error('Toggling off');
+    console.log('Toggling saved effect off');
     resetCurrentSong();
     finishLoading();
   };

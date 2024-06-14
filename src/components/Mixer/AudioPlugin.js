@@ -10,6 +10,8 @@ import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 // DREADBOX INSPIRED
 
+// TODO This whole component is pretty ugly
+
 const AudioPlugin = () => {
   const [showSavePopup, setShowSavePopup] = useState(false);
 
@@ -39,21 +41,21 @@ const AudioPlugin = () => {
     speedupIsEnabled,
     slowdownIsEnabled,
     toggleSpeedup,
+    currentSpeed,
+    effectsEnabled,
   } = useAudioPlayer();
 
   if (savedEffects[currentEffectCombo] !== undefined) {
     Object.keys(savedEffects[currentEffectCombo]).forEach((effect) => {
+      console.error('SETTING KNOB FOR ', effect);
       if (effect === 'speed') {
         INIT_MULTIPLIER = savedEffects[currentEffectCombo][effect];
       }
     });
-  } else if (speedupIsEnabled) {
-    INIT_MULTIPLIER = DEFAULT_SPEEDUP;
-  } else if (slowdownIsEnabled) {
-    INIT_MULTIPLIER = DEFAULT_SLOWDOWN;
+  } else {
+    INIT_MULTIPLIER = currentSpeed;
   }
 
-  console.error('Init speed control value: ', initialKnobValues.speedKnobValue);
   const [speedKnobValue, setSpeedKnobValue] = useState(
     initialKnobValues.speedKnobValue * INIT_MULTIPLIER
   );
@@ -129,11 +131,16 @@ const AudioPlugin = () => {
     // Round to two decimal places
     const roundedMappedValue = parseFloat(mappedValue.toFixed(2));
 
+    // Make sure the input value isn't outside of the range
+    // This really shouldn't happen but the sliders are annoying sometimes
+    if (roundedMappedValue < range[0]) return range[0];
+    if (roundedMappedValue > range[1]) return range[1];
+
     return roundedMappedValue;
   };
 
   /**
-   * Default speedup is 1.2, default slowdown is .8
+   * Default buttons for speedup is 1.2, default slowdown is .8
    *
    * Here, we will let the range be from .1 to 2. Where '2' is the fasted, and '.1' is the slowest
    * @param {*} newValue - The value coming from the knob
@@ -193,15 +200,11 @@ const AudioPlugin = () => {
     }
 
     setBitCrusherKnobValue(newValue);
-    // setBitCrusherValue(newValue);
-
     addEffect('bitCrusher', newValue);
   };
 
   const mapValueToPitchShift = (newValue) => {
     setPitchShiftKnobValue(newValue);
-    // setPitchShiftValue(mappedValue);
-
     addEffect('pitchShift', newValue);
   };
 
@@ -329,6 +332,28 @@ const AudioPlugin = () => {
               onChange={mapValueToPitchShift}
             />
             <p>SHIFT: {pitchShiftKnobValue}</p>
+          </div>
+        </div>
+        <div className="module-container">
+          <div className="header">EQ</div>
+          <div className="speed-body">
+            <Knob
+              customProps={pitchShiftKnobStyles}
+              onChange={mapValueToPitchShift}
+            />
+            <p>LOW: {pitchShiftKnobValue}</p>
+
+            <Knob
+              customProps={pitchShiftKnobStyles}
+              onChange={mapValueToPitchShift}
+            />
+            <p>MID: {pitchShiftKnobValue}</p>
+
+            <Knob
+              customProps={pitchShiftKnobStyles}
+              onChange={mapValueToPitchShift}
+            />
+            <p>HIGH: {pitchShiftKnobValue}</p>
           </div>
         </div>
       </div>

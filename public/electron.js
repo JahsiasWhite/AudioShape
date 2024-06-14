@@ -17,7 +17,7 @@ const {
 } = require('./ipcMain');
 
 // TODO: Use these instead of 'path.join()'. I don't know why I have so many duplicates
-const dataDirectory = path.join(app.getPath('userData'), 'Data');
+const dataDirectory = path.join(app.getPath('userData'), 'Data'); // Gets the path to the data folder
 
 /* Globals */
 let defaultSettings = JSON.stringify({
@@ -35,8 +35,12 @@ let defaultSettings = JSON.stringify({
 const settingsFile = dataDirectory + '\\settings.json';
 const playlistsFile = dataDirectory + '\\playlists.json';
 const effectCombosFile = dataDirectory + '\\effectCombos.json';
+const tempSongFolder = dataDirectory + '\\temp-songs';
 if (!fs.existsSync(dataDirectory)) {
   fs.mkdirSync(dataDirectory);
+}
+if (!fs.existsSync(tempSongFolder)) {
+  fs.mkdirSync(tempSongFolder);
 }
 if (!fs.existsSync(settingsFile)) {
   fs.writeFileSync(settingsFile, defaultSettings);
@@ -104,7 +108,7 @@ app.on('ready', function () {
 
   /* Init ipcMain functions. This is so the server and client can communicate */
   SETUP_GET_SONGS(mainWindow);
-  SAVE_TEMP_SONG(dataDirectory, mainWindow);
+  SAVE_TEMP_SONG(tempSongFolder, mainWindow);
   DELETE_TEMP_SONG();
   SAVE_SONG(dataDirectory);
   SETUP_SETINGS(mainWindow, app.getPath('userData'));

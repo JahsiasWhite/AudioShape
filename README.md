@@ -1,17 +1,25 @@
 # Music Player
 
+<!-- ![screenshot](images/main.png) -->
+
+<p align="center">
+  <img src="images/main.png" alt="main screen" width="650">
+</p
+
 ! Warning, this is currently in beta version 0.2. Errors and glitches likely to occur !
 
 Experience music like never before with a real-time streaming and editing music player.
 
 The most exciting feature is the song editing! Seamlessly edit the song you are listening to and keep the settings saved for all future songs. For example, are you a big fan of listening to sped up songs? Simply use the preset (or create your own preset) to have the currently plaing song become its sped-up version. If you're just listening to your playlist, the next song will also be sped up! Like how the song sounds? Export it to keep it saved forever.
 
+<p align="center">
+  <img src="images/edit-screen.png" alt="main screen" width="650">
+</p
+
 Don't have any local songs? No problem! Music Player also includes the ability to download songs directly from Youtube by providing the song's url.
 <br>Have a Spotify account? Download your songs or playlists from your account!
 
 Music Player also has an extensive full-screen mode. Sit back and watch the audio spectrum of the current song. Listening to an MP4? Full-screen mode even lets you watch the accompanied music video!
-
-- Downloading MP4s only works in dev build currently
 
 ## Launching
 
@@ -44,7 +52,14 @@ In /dist, run setup.exe
 !!! If can't build, makesure react-scripts is NOT installed
 // HAD -> "react-scripts": "^5.0.1",
 
-# TODO
+## BUGS
+
+1. Fixup all of the addEffect, runEffect stuff
+2. Queue display gets out of sync
+3. Cant download two spotify mp4s at the same time... before testing, remove the console logs of "FFmpegProgress" and "Data"
+4. In fullscreen view, the name changes before the song is loaded when using effects
+
+## TODO
 
 1. Change song key to something unique... not duration
 2. Loading screens/indicators on everything. (Applying current effect combo, changing songs, etc.)
@@ -73,13 +88,6 @@ In /dist, run setup.exe
 21. Add a cleanup when the app first starts. To see if there were any songs that weren't somehow deleted
 
 999 Easy file/song sharing
-
-## BUGS
-
-1. Fixup all of the addEffect, runEffect stuff
-2. Queue display gets out of sync
-3. Cant download two spotify mp4s at the same time... before testing, remove the console logs of "FFmpegProgress" and "Data"
-4. In fullscreen view, the name changes before the song is loaded when using effects
 
 #### EFFECTS TO ADD
 
