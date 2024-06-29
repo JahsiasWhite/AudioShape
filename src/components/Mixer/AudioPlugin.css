@@ -8,13 +8,13 @@
 }
 
 .audio-plugin .module-container {
-  border: 1px rgb(181 197 217) solid;
+  /* border: 1px rgb(181 197 217) solid; */
   border-radius: 10px;
 
   top: 10px;
   position: relative;
   margin: auto;
-  width: 30%;
+  width: 90%;
   min-width: 169px;
 }
 
@@ -75,7 +75,7 @@ p {
 
 .header-button {
   position: absolute;
-  left: 3%;
+  right: 60%;
 }
 
 .synth-button {
@@ -87,7 +87,6 @@ p {
 
   transition: all 0.2s linear;
   box-shadow: -1px 0px 6px rgba(0, 0, 0, 0.5);
-  /* box-shadow: -4px 0px 1px rgba(0, 0, 0, 0.5); */
   box-shadow: inset -2px 0 1px 1px rgba(255, 255, 255, 0.2),
     inset 0 0 8px 8px rgba(128, 128, 128, 0.1),
     inset -10px 4px 10px 2px rgba(0, 0, 0, 0.05), -4px 2px rgba(0, 0, 0, 0.1),
@@ -119,11 +118,16 @@ p {
 }
 
 .modifiers-container {
-  display: flex;
+  /* display: flex;
   flex: 1;
   height: 120%;
-  flex-wrap: wrap;
+  flex-wrap: wrap; */
   row-gap: 40px;
+  display: grid;
+  justify-items: stretch;
+  grid-auto-flow: row;
+  /* grid-gap: 2rem; */
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .inactive-module {

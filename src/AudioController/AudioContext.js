@@ -14,6 +14,7 @@ export const useAudioPlayer = () => useContext(AudioContext);
 
 var fileLocation;
 
+// TODO Put these in a Constants file
 const DEFAULT_SPEEDUP = 1.2;
 const DEFAULT_SLOWDOWN = 0.8;
 
@@ -87,7 +88,7 @@ export const AudioProvider = ({ children }) => {
     if (effect !== undefined) {
       queue = loadingQueue.filter((curEffect) => curEffect !== effect);
     }
-    console.log('Finished loading', effect, queue);
+    console.log('Finished loading... Effect: ', effect, ' Queue: ', queue);
     setLoadingQueue(queue);
 
     // Keep the song centered
@@ -193,7 +194,7 @@ export const AudioProvider = ({ children }) => {
   const { createPlaylist, playlists, setPlaylists } = PlaylistsManager();
 
   /* Settings */
-  const [isLooping, setIsLooping] = useState(false);
+  // const [isLooping, setIsLooping] = useState(false);
 
   /* Navigation */
   // ! Todo, should this be moved out of here? Is it in this context's scope?
@@ -253,7 +254,7 @@ export const AudioProvider = ({ children }) => {
       return;
     }
 
-    /* If speed up is enabled, edit the song first and then play */
+    /* If speed is changed, edit the song first and then play */
     if (speedupIsEnabled) {
       // handleSpeedChange(DEFAULT_SPEEDUP);
       addEffect('speed', DEFAULT_SPEEDUP);
@@ -262,9 +263,9 @@ export const AudioProvider = ({ children }) => {
       // handleSpeedChange(DEFAULT_SLOWDOWN);
       addEffect('speed', DEFAULT_SLOWDOWN);
       return;
-    } else {
-      currentSong.src = fileLocation;
     }
+
+    currentSong.src = fileLocation;
 
     /* (Re)Initializes the current song */
     initCurrentSong();
@@ -336,7 +337,6 @@ export const AudioProvider = ({ children }) => {
         playlists,
         setPlaylists,
         createPlaylist,
-        setIsLooping,
         addToQueue,
         songQueue,
         nextSongs,

@@ -126,12 +126,13 @@ export const AudioEffects = (
       }
     }
 
+    console.error('Running effect: ', currentEffect, value);
     await runEffect(currentEffect, value);
     await getTempSong();
   };
 
   const toggleSavedEffectOff = () => {
-    console.error('Toggling off');
+    console.log('Toggling saved effect off');
     resetCurrentSong();
     finishLoading();
   };

@@ -9,10 +9,12 @@ const loadedSongs = [
   {
     title: 'title',
     artist: 'artist',
+    id: '1',
   },
   {
     title: 'title2',
     artist: 'artist2',
+    id: '2',
   },
 ];
 var mockSetVisibleSongs;
@@ -23,9 +25,10 @@ jest.mock('../../src/AudioController/AudioContext', () => {
     removeEventListener: jest.fn(),
   };
   useAudioPlayer.mockReturnValue({
-    visibleSongs: [],
+    visibleSongs: loadedSongs,
     // setVisibleSongs: (mockSetVisibleSongs = jest.fn()),
     // setCurrentScreen: jest.fn(),
+    currentSongId: 0, // Index in the array
     currentSong: mockCurrentSong,
     loadedSongs: loadedSongs,
     loadingQueue: [],
@@ -56,5 +59,18 @@ describe('<Playbar />', () => {
     );
 
     expect(container).toBeDefined();
+  });
+
+  it('handles name click on a non-songlist screen', () => {
+    const { getByText } = render(
+      <AudioProvider>
+        <Playbar />
+      </AudioProvider>
+    );
+
+    fireEvent.click(getByText('title'));
+
+    // Make sure the function 'scrollToCurrentSong' doesn't crash
+    expect(AudioProvider).toBeDefined();
   });
 });
