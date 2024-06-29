@@ -6,7 +6,7 @@ export async function renderAudioWithEffect(
   effectParams
 ) {
   switch (effectFunction) {
-    case 'reverb':
+    case 'reverbIsActive':
     case 'reverbWetness':
       effectFunction = applyReverb;
       break;
@@ -19,11 +19,24 @@ export async function renderAudioWithEffect(
     case 'pitchShift':
       effectFunction = applyPitchShift;
       break;
+    case 'high':
+    case 'mid':
+    case 'low':
+      effectFunction = applyEQ;
+      break;
+    case 'autowah':
+      effectFunction = applyAutoWah;
+      break;
+    case 'chorus':
+      effectFunction = applyChorus;
+      break;
+
     default:
       console.error(`Unknown effect: ${effect}`);
       return;
   }
 
+  console.error('EFFECT PARAMS: ', effectParams);
   const duration = audioBuffer.duration;
   return await Tone.Offline(async ({ transport }) => {
     const source = effectFunction(audioBuffer, effectParams);
@@ -98,6 +111,35 @@ function applyPitchShift(audioBuffer, pitch) {
   pitchShift.pitch = pitch; // +12 === one octave up
 
   const player = new Tone.Player(audioBuffer).connect(pitchShift);
+
+  return player;
+}
+
+/* Equalizer stuff */
+// const eqValues = [1, 1, 1];
+function applyEQ(audioBuffer, eqValues) {
+  // [low, mid, high]
+  const [low, mid, high] = eqValues;
+  const eq = new Tone.EQ3(low, mid, high).toDestination();
+  console.error('EQ: ', eqValues, eq);
+
+  const player = new Tone.Player(audioBuffer).connect(eq);
+
+  return player;
+}
+
+function applyAutoWah(audioBuffer, value) {
+  const autoWah = new Tone.AutoWah(value, 6, 0).toDestination();
+
+  const player = new Tone.Player(audioBuffer).connect(autoWah);
+
+  return player;
+}
+
+function applyChorus(audioBuffer, value) {
+  const autoWah = new Tone.Chorus(value, 2.5, 0.5).toDestination(); // 1.5, 3.5, 0.7
+
+  const player = new Tone.Player(audioBuffer).connect(autoWah);
 
   return player;
 }

@@ -147,7 +147,7 @@ const Knob = ({ customProps, onChange }) => {
       iStyle.transform = 'rotate(' + this.state.deg + 'deg)';
 
       return (
-        <div className="knob" style={{ top: 5 + 'vh' }}>
+        <div className="knob" style={{ top: '3vh' }}>
           <div className="ticks">
             {this.props.numTicks
               ? this.renderTicks().map((tick, i) => (

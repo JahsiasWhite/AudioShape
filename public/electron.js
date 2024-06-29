@@ -122,13 +122,7 @@ app.on('ready', function () {
    */
 
   var spotify_client_id = '0f4a9e39a958421b8650f7a9142baefd';
-  // var spotify_client_secret = '';
-
-  // my application redirect uri
-  // const redirectUri = 'http://localhost:8888/call';
-  // const redirectUri = 'http://localhost/auth/callback';
   const redirectUri = 'myapp://oauth-callback';
-
   var SpotifyWebApi = require('spotify-web-api-node');
   var spotifyApi;
 

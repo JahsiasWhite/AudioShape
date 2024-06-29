@@ -18,6 +18,8 @@ function Playbar({ toggleFullscreen }) {
     shuffleIsEnabled,
     loadingQueue,
     effects,
+    setVisibleSongs,
+    setCurrentScreen,
   } = useAudioPlayer();
 
   console.error(
@@ -33,9 +35,10 @@ function Playbar({ toggleFullscreen }) {
   };
 
   const scrollToCurrentSong = () => {
-    document
-      .getElementById(currentSongId)
-      .scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const songElement = document.getElementById(currentSongId);
+
+    if (songElement)
+      songElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
   return (

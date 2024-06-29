@@ -126,6 +126,7 @@ export const AudioEffects = (
       }
     }
 
+    console.error('Running effect: ', currentEffect, value);
     await runEffect(currentEffect, value);
     await getTempSong();
   };

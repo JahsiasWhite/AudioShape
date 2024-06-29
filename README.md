@@ -1,12 +1,17 @@
 # Music Player
 
-<!-- ![screenshot](images/main.png) -->
+## Project Status
 
-<p align="center">
-  <img src="images/main.png" alt="main screen" width="650">
-</p
+<table class="no-border">
+  <tr>
+    <td><a href="https://github.com/JahsiasWhite/MusicPlayer/actions/workflows/tests.yml" alt="tests"><img src="https://github.com/JahsiasWhite/MusicPlayer/actions/workflows/tests.yml/badge.svg" alt="tests"/></a></td>
+  </tr>
+  <tr>
+    <td><img src="https://img.shields.io/badge/OS-windows-blue?style=flat&labelColor=363D44" alt="Operating systems"/></td>
+  </tr>
+</table>
 
-! Warning, this is currently in beta version 0.2. Errors and glitches likely to occur !
+## Introduction
 
 Experience music like never before with a real-time streaming and editing music player.
 
@@ -21,6 +26,31 @@ Don't have any local songs? No problem! Music Player also includes the ability t
 
 Music Player also has an extensive full-screen mode. Sit back and watch the audio spectrum of the current song. Listening to an MP4? Full-screen mode even lets you watch the accompanied music video!
 
+! Warning, this is currently in beta version 0.26. Errors and glitches likely to occur !
+
+## Build and Run
+
+#### Install dependencies
+
+`npm install --production`<br>
+`npm install webpack-cli`<br>
+
+#### Run webpack
+
+`npm run watch` <br>
+This will create a new folder titled 'build'
+
+#### Build App
+
+`npm run electron-build`
+This will create a new folder titled 'dist'. Inside is where the installer.exe is
+
+- If you can't build, make sure react-scripts is not installed
+
+#### Run the app :)
+
+In /dist, run setup.exe <br>
+
 ## Launching
 
 `npm install`
@@ -34,23 +64,6 @@ To run the tests
 
 To see the coverage
 `npx jest --coverage`
-
-## Build and Run
-
-`npm install --production`
-
-// Bundle
-`npm install webpack-cli`
-`npm run watch`
-This will create a new folder titled 'build'
-
-Build App
-`npm run electron-build`
-This will create a new folder titled 'dist'. Inside is where the installer.exe is
-
-In /dist, run setup.exe
-!!! If can't build, makesure react-scripts is NOT installed
-// HAD -> "react-scripts": "^5.0.1",
 
 ## BUGS
 
@@ -91,9 +104,6 @@ In /dist, run setup.exe
 
 #### EFFECTS TO ADD
 
-Equalizer (Tone.EQ3): Tone.js provides an EQ3 module that allows you to control the low, mid, and high-frequency bands of an audio signal. This can be used to shape the tonal balance of your audio.
-const eq = new Tone.EQ3(-12, -6, -3).toDestination();
-
 Filter (Tone.Filter): You can use filters to remove or emphasize certain frequencies in your audio. Tone.js offers various filter types, including lowpass, highpass, bandpass, and more.
 const filter = new Tone.Filter(200, 'lowpass').toDestination();
 
@@ -105,28 +115,3 @@ const distortion = new Tone.Distortion(0.4).toDestination();
 
 Chorus (Tone.Chorus): Chorus effects create a thicker and richer sound by modulating the pitch of the audio signal.
 const chorus = new Tone.Chorus(4, 2.5, 0.5).toDestination();
-
-Bitcrusher (Tone.BitCrusher): Bitcrushing is a lo-fi effect that reduces the bit depth of an audio signal.
-const bitcrusher = new Tone.BitCrusher(4).toDestination();
-
-// COMBOS ?????
-
-Reverb + Delay: Combine reverb and delay effects to create lush, atmospheric soundscapes. Reverb adds space and depth to your audio, while delay introduces echoes and repeats.
-
-Distortion + Filter: Apply distortion to your audio source to add grit and harmonic richness, and then use a filter to shape the tone by emphasizing or attenuating specific frequency ranges.
-
-Phaser + Flanger: Phaser and flanger effects modulate the phase of the audio signal to create sweeping, swirling, and jet-like sounds. These effects are great for adding motion and character to your audio.
-
-Chorus + Tremolo: Chorus adds depth and thickness to your sound by creating multiple slightly detuned copies of the original audio. Pair it with tremolo for rhythmic volume modulation, adding a pulsating or "wobbly" quality to your audio.
-
-Bit Crusher + Sample Rate Reducer: Create lo-fi and retro effects by reducing the bit depth and sample rate of your audio. These effects can make your audio sound like it's coming from old video games or vintage equipment.
-
-Pitch Shift + Time Stretch: Pitch shift allows you to change the pitch of your audio, while time stretch alters the playback speed while maintaining pitch. Combining these effects can create surreal and otherworldly sounds.
-
-Compressor + Limiter: Use a compressor to control dynamic range and even out the volume of your audio, and then add a limiter to prevent clipping and ensure a consistent output level.
-
-Auto-Pan + Auto-Wah: Auto-pan automatically pans the audio between the left and right channels, creating a stereo motion effect. Auto-wah adds dynamic filtering based on the audio's amplitude, creating expressive "wah-wah" effects.
-
-Ring Modulator + Frequency Shifter: These effects can introduce dissonance and unusual harmonic content to your audio. They are often used for experimental and avant-garde sound design.
-
-Granular Synthesis + Modulation: Explore granular synthesis to break audio into tiny grains and manipulate them in various ways. Combine it with modulation effects like LFOs to create evolving and evolving textures.
