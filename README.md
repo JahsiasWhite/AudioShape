@@ -1,10 +1,10 @@
-# Music Player
+# AudioShape
 
 ## Project Status
 
 <table class="no-border">
   <tr>
-    <td><a href="https://github.com/JahsiasWhite/MusicPlayer/actions/workflows/tests.yml" alt="tests"><img src="https://github.com/JahsiasWhite/MusicPlayer/actions/workflows/tests.yml/badge.svg" alt="tests"/></a></td>
+    <td><a href="https://github.com/JahsiasWhite/AudioShape/actions/workflows/tests.yml" alt="tests"><img src="https://github.com/JahsiasWhite/AudioShape/actions/workflows/tests.yml/badge.svg" alt="tests"/></a></td>
   </tr>
   <tr>
     <td><img src="https://img.shields.io/badge/OS-windows-blue?style=flat&labelColor=363D44" alt="Operating systems"/></td>
@@ -21,10 +21,10 @@ The most exciting feature is the song editing! Seamlessly edit the song you are 
   <img src="images/edit-screen.png" alt="main screen" width="650">
 </p
 
-Don't have any local songs? No problem! Music Player also includes the ability to download songs directly from Youtube by providing the song's url.
+Don't have any local songs? No problem! AudioShape also includes the ability to download songs directly from Youtube by providing the song's url.
 <br>Have a Spotify account? Download your songs or playlists from your account!
 
-Music Player also has an extensive full-screen mode. Sit back and watch the audio spectrum of the current song. Listening to an MP4? Full-screen mode even lets you watch the accompanied music video!
+AudioShape also has an extensive full-screen mode. Sit back and watch the audio spectrum of the current song. Listening to an MP4? Full-screen mode even lets you watch the accompanied music video!
 
 ! Warning, this is currently in beta version 0.26. Errors and glitches likely to occur !
 

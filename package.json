@@ -1,6 +1,6 @@
 {
-  "name": "musicplayer",
-  "productName": "Music Player",
+  "name": "audioshape",
+  "productName": "AudioShape",
   "author": "Jahsias",
   "license": "ISC",
   "version": "1.0.0",
@@ -10,7 +10,7 @@
   "scripts": {
     "react-start": "react-scripts start",
     "all": "concurrently -k \" npm run react-start\" \"wait-on http://localhost:3000 && electron .\"",
-    "package-win": "electron-packager . MusicPlayer --platform=win32 --arch=x64 --out=release-builds",
+    "package-win": "electron-packager . AudioShape --platform=win32 --arch=x64 --out=release-builds",
     "react-build": "react-scripts build",
     "electron-build": "electron-builder",
     "test": "jest --silent",
@@ -78,7 +78,7 @@
     ]
   },
   "build": {
-    "appId": "com.jahsias.MusicPlayer",
+    "appId": "com.jahsias.AudioShape",
     "files": [
       "dist/**/*",
       "package.json",

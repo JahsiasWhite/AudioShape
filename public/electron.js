@@ -52,7 +52,7 @@ if (!fs.existsSync(effectCombosFile)) {
   fs.writeFileSync(effectCombosFile, JSON.stringify({}));
 }
 
-app.name = 'Music Player';
+app.name = 'AudioShape';
 
 // Register the custom protocol handler
 protocol.registerSchemesAsPrivileged([
