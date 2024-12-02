@@ -18,7 +18,7 @@ const readline = require('readline');
 // For searching youtube videos. The spotify downloader requires this
 const youtubeSearch = require('yt-search');
 
-const ytdl = require('ytdl-core');
+const ytdl = require('@distube/ytdl-core');
 const ffmpegPath = require('ffmpeg-static');
 const cp = require('child_process');
 
@@ -701,11 +701,11 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
       audioStream.on('finish', () => {
         console.error('SUCCESSFULLY DOWNLOADED');
         resolve(outputFilePath);
-        mainWindow.webContents.send(
-          'download-success',
-          'Download completed!',
-          songData
-        );
+        // mainWindow.webContents.send(
+        //   'download-success',
+        //   'Download completed!',
+        //   songData
+        // );
       });
       audioStream.on('error', (error) => {
         console.error('ERROR DOWNLOADING');
