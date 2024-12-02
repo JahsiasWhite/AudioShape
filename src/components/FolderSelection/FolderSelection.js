@@ -6,9 +6,22 @@ function FolderSelection({ onSettingsUpdate }) {
   // Once a folder is selected, we call to the server to load the
   // file path to grab the songs
   const handleFolderSelection = (event) => {
-    const filePath = event.target.files[0].path;
+    const file = event.target.files[0];
+    if (!file) return;
 
-    window.electron.ipcRenderer.sendMessage('GET_SONGS', filePath);
+    // Get the first folder from the relative path
+    const firstFolder = file.webkitRelativePath.split('/')[0];
+
+    // Remove everything after and including the first folder from the absolute path
+    const fullPath = file.path;
+    const selectedFolderPath = fullPath.substring(
+      0,
+      fullPath.indexOf(firstFolder) + firstFolder.length
+    );
+
+    console.error('Selected folder path:', selectedFolderPath);
+
+    window.electron.ipcRenderer.sendMessage('GET_SONGS', selectedFolderPath);
 
     // Notify the parent component about the folder selection
     onSettingsUpdate();

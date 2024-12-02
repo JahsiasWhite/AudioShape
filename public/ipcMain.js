@@ -378,16 +378,17 @@ const processSongMetadata = (file, imageFiles) => {
 const SETUP_GET_SONGS = (mainW) => {
   mainWindow = mainW;
   ipcMain.on('GET_SONGS', async (event, folderPath) => {
-    folderPath = getParentDirectory(folderPath);
+    console.error('FOLDER PATH: ', folderPath);
+    // folderPath = getParentDirectory(folderPath);
+    // console.error('FOLDER PATH2: ', folderPath);
 
     let correctedPath = '';
     // If folderPath is empty, use the default path
     if (folderPath === '') {
-      const settingsPath = createSettingsPath();
-
-      const settings = getSettings(settingsPath);
+      const settings = getSettings();
 
       correctedPath = settings.libraryDirectory;
+      console.error('FOLDERPATH 3: ', correctedPath);
     } else {
       // Our string has '\' instead of '/' so we gotta fix that
       correctedPath = folderPath.replace(/\\/g, '/');
@@ -397,7 +398,8 @@ const SETUP_GET_SONGS = (mainW) => {
     }
 
     // Get all songs in the given directory as well as all subdirectories
-    const audios = await glob(correctedPath + '/**/*.{mp3,wav,ogg,mp4}');
+    const audioTypes = 'mp3,wav,ogg,mp4,flac';
+    const audios = await glob(correctedPath + '/**/*.{' + audioTypes + '}');
     const imageFiles = await glob(correctedPath + '/**/*.{jpg,jpeg,png}');
 
     // Make sure we have at least one song in the directory
@@ -659,6 +661,7 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
           (downloaded / total) * 100,
           spotifyDetails ? spotifyDetails.name : 'name'
         );
+        console.error('DOWNLOADING');
       });
 
     audioStream
@@ -694,23 +697,21 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
       });
 
     return new Promise((resolve, reject) => {
-      // audioStream.on('finish', () => {
-      //   console.error('SUCCESSFULLY DOWNLOADED');
-      //   resolve(outputFilePath);
-      //   mainWindow.webContents.send(
-      //     'download-success',
-      //     'Download completed!',
-      //     songData
-      //   );
-      // });
-      // audioStream.on('error', (error) => {
-      //   console.error('ERROR DOWNLOADING');
-      //   reject(error);
-      //   mainWindow.webContents.send(
-      //     'download-error',
-      //     `FFmpeg process exited with code ${code}`
-      //   );
-      // });
+      console.error('RETURNING?');
+      audioStream.on('finish', () => {
+        console.error('SUCCESSFULLY DOWNLOADED');
+        resolve(outputFilePath);
+        mainWindow.webContents.send(
+          'download-success',
+          'Download completed!',
+          songData
+        );
+      });
+      audioStream.on('error', (error) => {
+        console.error('ERROR DOWNLOADING');
+        reject(error);
+        mainWindow.webContents.send('download-error', `${error}`);
+      });
     });
   }
 
@@ -928,6 +929,8 @@ function getSettings(settingsPath) {
   if (settingsPath === undefined) {
     settingsPath = createSettingsPath();
   }
+
+  console.error('SETTINGSPATH: ', settingsPath);
 
   const settingsData = fs.readFileSync(settingsPath, 'utf-8');
   return JSON.parse(settingsData);

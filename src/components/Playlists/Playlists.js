@@ -44,7 +44,7 @@ const Playlists = ({ toggleSection }) => {
 
     // ! Todo, probably want to clean this up
     setCurrentScreen(playlist.name);
-    toggleSection('songs');
+    toggleSection('allSongs');
   };
 
   /**
@@ -89,7 +89,7 @@ const Playlists = ({ toggleSection }) => {
 
   return (
     <div className="playlists-container">
-      <h2>Playlists</h2>
+      <h1>Playlists</h1>
       <div className="create-playlist">
         <input
           type="text"

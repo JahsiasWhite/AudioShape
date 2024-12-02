@@ -84,7 +84,6 @@ const AudioPlugin = () => {
     numTicks: 6,
     min: 1,
     max: 100,
-    value: knobs.speed,
   };
   const reverbKnobStyles = {
     degrees: 260,
@@ -200,6 +199,8 @@ const AudioPlugin = () => {
   };
 
   const resetSong = () => {
+    console.log('Resetting song...');
+
     // Reset knob values to their initial values
     resetKnobValues();
 
@@ -264,7 +265,11 @@ const AudioPlugin = () => {
         <div className="module-container">
           <div className="header">SPEED</div>
           <div className="speed-body">
-            <Knob customProps={speedKnobStyles} onChange={mapValueToSpeed} />
+            <Knob
+              customProps={speedKnobStyles}
+              knobValue={knobs.speed}
+              onChange={mapValueToSpeed}
+            />
             <p>MULTIPLIER: {multiplier}x</p>
           </div>
         </div>

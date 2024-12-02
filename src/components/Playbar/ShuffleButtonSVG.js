@@ -7,7 +7,7 @@ const ShuffleButtonSVG = ({ shuffleIsEnabled, onClick }) => {
         className="speedup-button"
         height="800px"
         width="800px"
-        fill={shuffleIsEnabled ? '#316baa' : '#FFF'}
+        fill={shuffleIsEnabled ? '#316baa' : '#D3D3D3'}
         version="1.1"
         id="shuffle"
         xmlns="http://www.w3.org/2000/svg"

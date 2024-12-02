@@ -42,7 +42,7 @@ export const AudioEffects = (
       return;
     }
 
-    // TODO: Does this one really have to be different
+    // Speed works differently from all other effects
     if (effect === 'speed') {
       handleSpeedChange(value);
       return;
@@ -138,23 +138,6 @@ export const AudioEffects = (
   };
 
   const applySavedEffects = async (comboName) => {
-    // if (!currentSongId) {
-    //   return;
-    // }
-    // console.error('APPLYING ', comboName);
-    // if (effectsEnabled && currentEffectCombo === comboName) {
-    //   console.error(
-    //     'TODO! SHOULD DISABLE EFFECTS. WONT PLAY MUSIC CURRENTLY',
-    //     comboName,
-    //     savedEffects
-    //   );
-    //   setCurrentEffectCombo('');
-    //   setEffectsEnabled(false);
-    //   setEffects({});
-    //   finishLoading();
-    //   return;
-    // }
-
     // Toggling off
     console.error(fileLocation, visibleSongs[currentSongId]);
     // TODO: Do I need the first part of this statement?

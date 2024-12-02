@@ -22,6 +22,7 @@ export const AudioProvider = ({ children }) => {
   /* General songs */
   const [loadedSongs, setLoadedSongs] = useState({});
   const [visibleSongs, setVisibleSongs] = useState({}); // ! TODO, I think this would work better as an array
+  const [initSongsLoading, setInitSongsLoading] = useState(true);
 
   /* General */
   const [loadingQueue, setLoadingQueue] = useState([]);
@@ -279,9 +280,11 @@ export const AudioProvider = ({ children }) => {
   const initialSongLoad = (songs) => {
     setLoadedSongs(songs);
     setVisibleSongs(songs);
+    setInitSongsLoading(false);
   };
 
   window.electron.ipcRenderer.on('GRAB_SONGS', (retrievedSongs) => {
+    console.error('GOT SONGS: ', retrievedSongs);
     initialSongLoad(retrievedSongs);
   });
 
@@ -305,6 +308,7 @@ export const AudioProvider = ({ children }) => {
         currentScreen,
         setCurrentScreen,
         setVisibleSongs,
+        initSongsLoading,
         currentSong,
         currentSongIndex,
         currentSongId,

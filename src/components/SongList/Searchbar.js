@@ -24,6 +24,21 @@ function SearchBar({ setFilteredSongs }) {
         return false;
       }
 
+      if (searchTerm === '.mp4') {
+        if (visibleSongs[key].file.endsWith('.mp4')) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+      if (searchTerm === '.mp3') {
+        if (visibleSongs[key].file.endsWith('.mp3')) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+
       return (
         value.title.toLowerCase().includes(searchTerm) ||
         value.artist.toLowerCase().includes(searchTerm) ||

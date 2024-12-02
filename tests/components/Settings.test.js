@@ -40,6 +40,7 @@ window.electron = {
     on: jest.fn(),
     once: jest.fn(),
     sendMessage: jest.fn(),
+    removeAllListeners: jest.fn(),
   },
 };
 

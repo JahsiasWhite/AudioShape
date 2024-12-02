@@ -65,7 +65,7 @@ const Queue = () => {
               ))}
           </div>
           <div className="secondary-queue">
-            <h3>After</h3>
+            <h3>Next</h3>
             {nextSongs &&
               nextSongs.map((id, index) => (
                 <div

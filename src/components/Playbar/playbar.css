@@ -11,7 +11,7 @@
   display: flex;
   justify-content: flex-end;
   width: 20%;
-  gap: 5px;
+  gap: 0.8vw;
   align-items: center;
 }
 
@@ -53,6 +53,7 @@
   flex-direction: column;
   margin-left: auto;
   margin-right: auto;
+  margin-top: 1vh;
 }
 
 .playbar-controls button {
@@ -66,16 +67,17 @@
 
 .buttons-container {
   display: flex;
-  gap: 5px;
+  /* gap: 1vw; */
   align-items: center;
+  margin-right: 3vw;
 }
 
 .playback-timer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 14px;
-  color: var(--color-text);
+  font-size: 13px;
+  color: lightgrey;
 }
 
 .playback-bar {
@@ -83,11 +85,11 @@
 }
 
 .playback-bar input[type='range'] {
-  width: 200px;
+  width: 34vw;
 }
 
 .playback-bar input[type='range']::-webkit-slider-thumb {
-  box-shadow: -200px 0 0 200px var(--color-button-secondary);
+  box-shadow: -400px 0 0 400px #1b84f7;
 }
 
 /* Generic, applies to playback and volume */

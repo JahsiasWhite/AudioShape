@@ -26,6 +26,7 @@ function Settings() {
     window.electron.ipcRenderer.on('GET_SETTINGS', (updatedSettings) => {
       setSettings(updatedSettings);
       console.error(updatedSettings);
+      window.electron.ipcRenderer.removeAllListeners('GET_SETTINGS');
     });
   };
 

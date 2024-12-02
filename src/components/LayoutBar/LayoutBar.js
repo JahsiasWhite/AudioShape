@@ -11,7 +11,7 @@ import SettingsButton from './SettingsButton/SettingsButton';
 
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
-function LayoutBar({ toggleSection }) {
+function LayoutBar({ toggleSection, currentSection, setCurrentSection }) {
   const { setVisibleSongs, loadedSongs, currentScreen, setCurrentScreen } =
     useAudioPlayer();
 
@@ -35,19 +35,22 @@ function LayoutBar({ toggleSection }) {
   const fetchSettings = () => {
     console.error('Getting layout settings...');
     window.electron.ipcRenderer.sendMessage('GET_LAYOUT_SETTINGS');
+
+    window.electron.ipcRenderer.on('GET_LAYOUT_SETTINGS', (spotifyEnabled) => {
+      if (spotifyEnabled && !sections.includes('spotify')) {
+        setSections([...sections.slice(0, 5), 'spotify', ...sections.slice(5)]); // TODO make less ugly
+      } else if (!spotifyEnabled) {
+        setSections(sections.filter((section) => section !== 'spotify'));
+      }
+      console.error('Updating layout settings...', sections);
+
+      // TODO We need to remove only when entering fullscreen. If we exit fullscreen, another object is created :(
+      // window.electron.ipcRenderer.removeAllListeners('GET_LAYOUT_SETTINGS');
+    });
   };
-  window.electron.ipcRenderer.on('GET_LAYOUT_SETTINGS', (spotifyEnabled) => {
-    console.error('Updating layout settings...');
-    if (spotifyEnabled && !sections.includes('spotify')) {
-      setSections([...sections.slice(0, 5), 'spotify', ...sections.slice(5)]); // TODO make more modular
-    } else if (!spotifyEnabled) {
-      setSections(sections.filter((section) => section !== 'spotify'));
-    }
-    console.error(sections);
-  });
 
   /* Keeps track of which 'tab' we are currently viewing */
-  const [currentSection, setCurrentSection] = useState('allSongs');
+  // const [currentSection, setCurrentSection] = useState('allSongs');
 
   /* We have to do this here which is kinda annoying but I dont know how to call the context in App.js */
   const modifiedToggleSection = (section) => {
@@ -56,6 +59,7 @@ function LayoutBar({ toggleSection }) {
       setCurrentScreen('All Songs');
     }
 
+    console.error(currentSection, section);
     setCurrentSection(section);
 
     // Call the original toggleSection with the modified section

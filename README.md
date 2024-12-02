@@ -1,5 +1,11 @@
 # AudioShape
 
+## v0.27 notes
+
+- added .flac support
+- minor UI rework
+- lots of bug fixes
+
 ## Project Status
 
 <table class="no-border">

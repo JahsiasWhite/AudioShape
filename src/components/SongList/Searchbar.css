@@ -6,6 +6,7 @@
   padding: 5px 10px; /* Add some padding */
   border-bottom: 1px solid #ddd; /* Bottom border */
   width: 30%;
+  margin-top: 10px;
 }
 
 .search-bar input {

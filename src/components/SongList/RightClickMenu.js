@@ -4,8 +4,8 @@ import ContextMenu from './ContextMenu/ContextMenu';
 
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
-export default function RightClickMenu({ clickData }) {
-  const { setCurrentScreen } = useAudioPlayer();
+export default function RightClickMenu({ clickData, handleSongEditClick }) {
+  const { setCurrentScreen, handleSongSelect } = useAudioPlayer();
 
   useEffect(() => {
     // No data or toggled off
@@ -30,9 +30,10 @@ export default function RightClickMenu({ clickData }) {
     setIsContextMenuActive(false);
   };
 
-  function handleSongEditClick(id) {
-    handleSongEdit(id);
-    setCurrentScreen('mixer'); // TODO Is there a way to get this working in handleSongEdit since this is in multiple spots? Its for updating the tab highlight
+  function handleSongEdit(id) {
+    handleSongEditClick(id);
+    handleSongSelect(id);
+    // setCurrentScreen('mixer'); // TODO Is there a way to get this working in handleSongEdit since this is in multiple spots? Its for updating the tab highlight
   }
 
   return (
@@ -46,7 +47,7 @@ export default function RightClickMenu({ clickData }) {
           }}
           songData={contextMenuSongData}
           hideContextMenu={hideContextMenu}
-          handleSongEditClick={handleSongEditClick}
+          handleSongEditClick={handleSongEdit}
         />
       )}
     </>

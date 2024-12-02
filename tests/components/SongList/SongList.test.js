@@ -42,8 +42,8 @@ window.electron = {
   },
 };
 
-describe('<Artists />', () => {
-  it('renders artists correctly', () => {
+describe('Song List', () => {
+  it('renders song list correctly', () => {
     const { container } = render(
       <AudioProvider>
         <SongList handleSongEdit={jest.fn()} />

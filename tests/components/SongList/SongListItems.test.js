@@ -52,7 +52,7 @@ window.electron = {
   },
 };
 
-describe('<Artists />', () => {
+describe('Song List Items', () => {
   it('renders artists correctly', () => {
     const { container } = render(
       <AudioProvider>

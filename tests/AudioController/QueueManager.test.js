@@ -214,11 +214,11 @@ describe('QueueManager', () => {
 
     // Assertions
     expect(result.current.songQueue).toEqual([]); // No changes to the queue
-    expect(result.current.currentSongId).toBe(111.111); // 'song1' should be the previous song
+    expect(result.current.currentSongId).toBe('111.111'); // 'song1' should be the previous song
     expect(result.current.currentSongIndex).toBe(0); // 'song1' index in mockVisibleSongs
   });
 
-  it('should play the previous song when there is no current song and update state', () => {
+  it('should play the previous song when there is no current song and update state when song id is a string', () => {
     const mockVisibleSongs = {
       song1: { id: 'song1', title: 'Song 1' },
       song2: { id: 'song2', title: 'Song 2' },
@@ -241,8 +241,35 @@ describe('QueueManager', () => {
 
     // Assertions
     expect(result.current.songQueue).toEqual([]);
-    expect(result.current.currentSongId).toBe('song2');
-    expect(result.current.currentSongIndex).toBe(1);
+    expect(result.current.currentSongId).toBe('song1');
+    expect(result.current.currentSongIndex).toBe(0);
+  });
+
+  it('should play the previous song when there is no current song and update state when song id is a number', () => {
+    const mockVisibleSongs = {
+      song1: { id: 1, title: 'Song 1' },
+      song2: { id: 2, title: 'Song 2' },
+      song3: { id: 3, title: 'Song 3' },
+    };
+
+    const { result } = renderHook(() =>
+      QueueManager(undefined, mockVisibleSongs)
+    );
+
+    // Set initial state
+    act(() => {
+      result.current.handleSongSelect('song2');
+    });
+
+    // Trigger playing the next song
+    act(() => {
+      result.current.playPreviousSong();
+    });
+
+    // Assertions
+    expect(result.current.songQueue).toEqual([]);
+    expect(result.current.currentSongId).toBe('song1');
+    expect(result.current.currentSongIndex).toBe(0);
   });
 
   it('should play the next song when the current song ends', () => {
@@ -252,7 +279,7 @@ describe('QueueManager', () => {
     };
 
     const mockVisibleSongs = {
-      song1: { id: 'song1', title: 'Song 1' },
+      song1: { id: 'song1', title: 'Song 1', duration: 120 },
       song2: { id: 'song2', title: 'Song 2' },
       song3: { id: 'song3', title: 'Song 3' },
     };
@@ -274,6 +301,7 @@ describe('QueueManager', () => {
     });
 
     // Assertions
+    console.error(result.current.songQueue, result.current);
     expect(result.current.songQueue).toEqual(['song3']);
     expect(result.current.currentSongId).toBe('song2');
     expect(result.current.currentSongIndex).toBe(0); // Assuming 'song2' is at index 1 in mockVisibleSongs

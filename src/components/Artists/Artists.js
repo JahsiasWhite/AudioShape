@@ -56,7 +56,7 @@ function Artists({ toggleSection }) {
     }
     setVisibleSongs(songsById);
 
-    toggleSection('songs');
+    toggleSection('allSongs');
     setCurrentScreen(artist);
   };
 
@@ -65,7 +65,7 @@ function Artists({ toggleSection }) {
 
   return (
     <div className="artists">
-      <h2>Artists</h2>
+      <h1>Artists</h1>
       <ul>
         <div className="playlist-cards">
           {Object.keys(artistsBySongs).map((artist) => (

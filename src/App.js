@@ -19,7 +19,7 @@ import FullscreenView from './components/FullscreenView/FullscreenView';
 import ErrorMessages from './components/ErrorMessages/ErrorMessages';
 
 // CONTEXT
-import { AudioProvider } from './AudioController/AudioContext'; // So we can talk to the editor directly, NO PROP DRILLING YAY!!
+import { AudioProvider } from './AudioController/AudioContext';
 
 function App() {
   const [selectedSongIndex, setSelectedSongIndex] = useState(null);
@@ -31,31 +31,20 @@ function App() {
   };
 
   // Current showing content in 'main-content'
-  const [currentSection, setCurrentSection] = useState('songs');
+  const [currentSection, setCurrentSection] = useState('allSongs');
+
   // Function to toggle between SongList and Playlists
   const toggleSection = (section) => {
-    //TODO FIX THIS, Each page should be its own component... instead of SongList showing all types
-    if (section === 'allSongs') {
-      section = 'songs';
-    }
     setCurrentSection(section);
   };
 
   /**
    * When the app first loads, we make a call to the server to grab the songs. It will pull any songs if a
-   * previous directory was given in the past. Once the server is done processing, it sends the songs back
-   * here where they are saved.
+   * previous directory was given in the past. Once the server is done processing, it sends the songs to our songList component
    */
   useEffect(() => {
     // Fetch initial songs when the component mounts
     window.electron.ipcRenderer.sendMessage('GET_SONGS', '');
-
-    // // ! GET_SONGS loads from the dir, while GRAB_SONGS gets songs to show on the frontend
-    // window.electron.ipcRenderer.on('GRAB_SONGS', (retrievedSongs) => {
-    //   // handleSongLoad(mp3Files);
-    //   console.error('SETTING NEW SONGS');
-    //   // setLoadedSongs(retrievedSongs); // ! should I actually call initialSongLoad?
-    // });
   }, []);
 
   /**
@@ -85,9 +74,13 @@ function App() {
         {!isFullscreen && (
           <div className="non-fullscreen">
             <div className="middle-content">
-              <LayoutBar toggleSection={toggleSection} />
+              <LayoutBar
+                toggleSection={toggleSection}
+                currentSection={currentSection}
+                setCurrentSection={setCurrentSection}
+              />
               <div className="main-content">
-                {currentSection === 'songs' ? (
+                {currentSection === 'allSongs' ? (
                   <SongList
                     // handleSongLoad={loadedSongs}
                     handleSongEdit={handleSongSelect}
