@@ -6,6 +6,7 @@ function FolderSelection({ onSettingsUpdate }) {
   // Once a folder is selected, we call to the server to load the
   // file path to grab the songs
   const handleFolderSelection = (event) => {
+    console.error('ENTERED');
     const file = event.target.files[0];
     if (!file) return;
 

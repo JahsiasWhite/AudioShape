@@ -24,15 +24,13 @@ Experience music like never before with a real-time streaming and editing music 
 The most exciting feature is the song editing! Seamlessly edit the song you are listening to and keep the settings saved for all future songs. For example, are you a big fan of listening to sped up songs? Simply use the preset (or create your own preset) to have the currently plaing song become its sped-up version. If you're just listening to your playlist, the next song will also be sped up! Like how the song sounds? Export it to keep it saved forever.
 
 <p align="center">
-  <img src="images/edit-screen.png" alt="main screen" width="650">
+  <img src="images/edit-screen1.png" alt="main screen" width="650">
 </p
 
 Don't have any local songs? No problem! AudioShape also includes the ability to download songs directly from Youtube by providing the song's url.
 <br>Have a Spotify account? Download your songs or playlists from your account!
 
 AudioShape also has an extensive full-screen mode. Sit back and watch the audio spectrum of the current song. Listening to an MP4? Full-screen mode even lets you watch the accompanied music video!
-
-! Warning, this is currently in beta version 0.26. Errors and glitches likely to occur !
 
 ## Build and Run
 
@@ -107,17 +105,3 @@ To see the coverage
 21. Add a cleanup when the app first starts. To see if there were any songs that weren't somehow deleted
 
 999 Easy file/song sharing
-
-#### EFFECTS TO ADD
-
-Filter (Tone.Filter): You can use filters to remove or emphasize certain frequencies in your audio. Tone.js offers various filter types, including lowpass, highpass, bandpass, and more.
-const filter = new Tone.Filter(200, 'lowpass').toDestination();
-
-Compressor (Tone.Compressor): Compressors are used to control the dynamic range of audio signals, making loud sounds quieter and quiet sounds louder.
-const compressor = new Tone.Compressor(-30, 3).toDestination();
-
-Distortion (Tone.Distortion): Distortion effects add harmonics and alter the timbre of an audio signal. You can control parameters like distortion type and amount.
-const distortion = new Tone.Distortion(0.4).toDestination();
-
-Chorus (Tone.Chorus): Chorus effects create a thicker and richer sound by modulating the pitch of the audio signal.
-const chorus = new Tone.Chorus(4, 2.5, 0.5).toDestination();

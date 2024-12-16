@@ -39,6 +39,38 @@ function SearchBar({ setFilteredSongs }) {
         }
       }
 
+      // If the search is enclosed in quotations, make an exact search on the words
+      if (searchTerm.startsWith('"') && searchTerm.endsWith('"')) {
+        const exactMatch = searchTerm.slice(1, -1); // Extract the exact match value
+        const negate = exactMatch.startsWith('!'); // If the search starts with a '!', we negate the search
+
+        const comparisonValue = negate ? exactMatch.slice(1) : exactMatch; // Remove '!' if negated
+        const matches =
+          value.title.toLowerCase() === comparisonValue ||
+          value.artist.toLowerCase() === comparisonValue ||
+          value.album.toLowerCase() === comparisonValue;
+
+        return negate ? !matches : matches; // Negate the result if required
+      }
+
+      // Regex with single quotes :)
+      if (searchTerm.startsWith("'") && searchTerm.endsWith("'")) {
+        const regexPattern = searchTerm.slice(1, -1); // Extract pattern between quotes
+
+        try {
+          const regex = new RegExp(regexPattern, 'i'); // Create case-insensitive regex
+
+          return (
+            regex.test(value.title) ||
+            regex.test(value.artist) ||
+            regex.test(value.album)
+          );
+        } catch (error) {
+          console.error('Invalid regex pattern:', regexPattern, error);
+          return false; // Gracefully handle invalid regex by returning false
+        }
+      }
+
       return (
         value.title.toLowerCase().includes(searchTerm) ||
         value.artist.toLowerCase().includes(searchTerm) ||

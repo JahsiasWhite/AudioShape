@@ -139,7 +139,7 @@ describe('QueueManager', () => {
     };
 
     const { result } = renderHook(() =>
-      QueueManager(mockCurrentSong, mockVisibleSongs)
+      QueueManager(mockCurrentSong, mockVisibleSongs, mockVisibleSongs)
     );
 
     // Set initial state
@@ -166,7 +166,7 @@ describe('QueueManager', () => {
     };
 
     const { result } = renderHook(() =>
-      QueueManager(undefined, mockVisibleSongs)
+      QueueManager(undefined, mockVisibleSongs, mockVisibleSongs)
     );
 
     // Set initial state
@@ -198,7 +198,7 @@ describe('QueueManager', () => {
     };
 
     const { result } = renderHook(() =>
-      QueueManager(mockCurrentSong, mockVisibleSongs)
+      QueueManager(mockCurrentSong, mockVisibleSongs, mockVisibleSongs)
     );
 
     // Set initial state
@@ -320,7 +320,7 @@ describe('QueueManager', () => {
     };
 
     const { result } = renderHook(() =>
-      QueueManager(mockCurrentSong, mockVisibleSongs)
+      QueueManager(mockCurrentSong, mockVisibleSongs, mockVisibleSongs)
     );
 
     // Set initial state

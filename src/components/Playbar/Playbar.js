@@ -13,6 +13,7 @@ import ShuffleButtonSVG from './ShuffleButtonSVG';
 function Playbar({ toggleFullscreen }) {
   const {
     visibleSongs,
+    loadedSongs,
     currentSongId,
     toggleShuffle,
     shuffleIsEnabled,
@@ -45,12 +46,12 @@ function Playbar({ toggleFullscreen }) {
     <div className="playbar">
       <div className="current-song">
         {/* TODO Clean this up? */}
-        {visibleSongs[currentSongId] &&
-          visibleSongs[currentSongId].albumImage && (
+        {loadedSongs[currentSongId] &&
+          loadedSongs[currentSongId].albumImage && (
             <img
               className="playbar-image"
-              src={visibleSongs[currentSongId].albumImage}
-              alt={`${visibleSongs[currentSongId].album} cover`}
+              src={loadedSongs[currentSongId].albumImage}
+              alt={`${loadedSongs[currentSongId].album} cover`}
             />
           )}
         {loadingQueue.length > 0 ? (
@@ -64,13 +65,13 @@ function Playbar({ toggleFullscreen }) {
         ) : (
           <div className="song-details">
             <span id="song-title" onClick={scrollToCurrentSong}>
-              {visibleSongs[currentSongId]
-                ? visibleSongs[currentSongId].title
+              {loadedSongs[currentSongId]
+                ? loadedSongs[currentSongId].title
                 : 'No song playing'}
             </span>
             <span id="artist">
-              {visibleSongs[currentSongId]
-                ? visibleSongs[currentSongId].artist
+              {loadedSongs[currentSongId]
+                ? loadedSongs[currentSongId].artist
                 : ''}
             </span>
           </div>

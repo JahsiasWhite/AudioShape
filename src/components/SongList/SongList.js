@@ -87,6 +87,11 @@ function SongList({ handleSongEdit }) {
 
     // 3. Convert the sorted entries back to an object
     const sortedSongs = Object.fromEntries(songEntries);
+    // const sortedSongs = songEntries.reduce((acc, [_, song], index) => {
+    //   acc[index] = song;
+    //   return acc;
+    // }, {});
+    console.log('Sorted songs: ', sortedSongs);
 
     setFilteredSongs(sortedSongs);
   }
@@ -101,6 +106,8 @@ function SongList({ handleSongEdit }) {
   // Use the first song to set the image
   // TODO: Make this better
   let firstKey = Object.keys(filteredSongs)[0];
+
+  console.error('TEST: ', filteredSongs);
 
   return (
     <div className="song-list-container">

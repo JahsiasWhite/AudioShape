@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 
-export const QueueManager = (currentSong, visibleSongs) => {
+export const QueueManager = (currentSong, visibleSongs, loadedSongs) => {
   const [currentSongId, setCurrentSongId] = useState(null);
   const [currentSongIndex, setCurrentSongIndex] = useState(null);
   const [songQueue, setQueue] = useState([]);
@@ -23,6 +23,7 @@ export const QueueManager = (currentSong, visibleSongs) => {
         setCurrentSongId(nextSong);
         return remainingQueue;
       } else {
+        console.log('SETTING NEXT SONGS:');
         setNextSongs((currentNextSongs) => {
           let nextSongId = currentNextSongs[0];
           const remainingNextSongs = currentNextSongs.slice(1);
@@ -33,14 +34,14 @@ export const QueueManager = (currentSong, visibleSongs) => {
             return remainingNextSongs;
           }
 
-          setCurrentSongIndex(Object.keys(visibleSongs).indexOf(nextSongId));
+          setCurrentSongIndex(Object.keys(loadedSongs).indexOf(nextSongId)); // TODO: Not loadedSongs or visibleSongs but visibleSongs when the player selected play on a song
           setCurrentSongId(parseFloat(nextSongId));
           return remainingNextSongs;
         });
       }
       return currentQueue;
     });
-  }, [currentSong, currentSongId, visibleSongs]);
+  }, [currentSong, currentSongId, loadedSongs]);
 
   // Define onSongEnded using useCallback to maintain reference stability
   const onSongEnded = useCallback(() => {
@@ -49,6 +50,8 @@ export const QueueManager = (currentSong, visibleSongs) => {
 
   const handleSongSelect = useCallback(
     (songId) => {
+      console.error('INSIDE');
+
       const index = Object.keys(visibleSongs).findIndex(
         (key) => visibleSongs[key].id === songId
       );

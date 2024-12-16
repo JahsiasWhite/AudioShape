@@ -6,6 +6,7 @@ import QueueSVG from './queue.svg';
 
 const Queue = () => {
   const {
+    loadedSongs,
     visibleSongs,
     currentSongId,
     currentSongIndex,
@@ -48,7 +49,7 @@ const Queue = () => {
                   className={`queue-item current-song-queue
                 `}
                 >
-                  {visibleSongs[currentSongId].title}
+                  {loadedSongs[currentSongId].title}
                 </div>
               )}
             </div>
@@ -60,7 +61,7 @@ const Queue = () => {
                   className="queue-item"
                   onDoubleClick={() => handleSongSelectQueue(id)}
                 >
-                  {visibleSongs[id].title}
+                  {loadedSongs[id].title}
                 </div>
               ))}
           </div>
@@ -73,7 +74,7 @@ const Queue = () => {
                   className="queue-item"
                   onDoubleClick={() => handleSongSelectQueue(parseFloat(id))}
                 >
-                  {visibleSongs[id].title}
+                  {loadedSongs[id].title}
                 </div>
               ))}
           </div>

@@ -3,7 +3,7 @@ import SettingsVG from './Settings.svg';
 function SettingsButton() {
   return (
     <div className="button-container">
-      <img className="icon" src={SettingsVG}></img>
+      <img className="force" src={SettingsVG}></img>
       <span>Settings</span>
     </div>
   );

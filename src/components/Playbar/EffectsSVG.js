@@ -1,6 +1,6 @@
 import './SpeedupButtonSVG.css';
 
-const SlowDownButtonSVG = ({ effectsEnabled, onClick }) => {
+const EffectsButtonSVG = ({ effectsEnabled, onClick }) => {
   return (
     <div>
       {/* <svg
@@ -33,4 +33,4 @@ const SlowDownButtonSVG = ({ effectsEnabled, onClick }) => {
   );
 };
 
-export default SlowDownButtonSVG;
+export default EffectsButtonSVG;
