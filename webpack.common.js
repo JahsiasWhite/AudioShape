@@ -1,11 +1,25 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = {
   mode: 'production',
   entry: './src/index.js',
   devtool: 'inline-source-map',
   target: 'electron-renderer',
+  optimization: {
+    minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          compress: {
+            drop_console: true, // This removes console.* statements
+            pure_funcs: ['console.log', 'console.error'], // Necessary?
+          },
+        },
+      }),
+    ],
+  },
   module: {
     rules: [
       {
