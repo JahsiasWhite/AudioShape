@@ -26,7 +26,7 @@
 .empty-message label {
   display: inline-block;
   background-color: #007bff;
-  color: white;
+  color: var(--color-text);
   border: none;
   padding: 8px 20px;
   border-radius: 5px;
@@ -45,7 +45,7 @@
 
 .song {
   position: relative;
-  color: lightgrey;
+  color: var(--color-text-secondary);
 }
 
 .song-details-header {
@@ -102,7 +102,7 @@
 }
 
 .header-color {
-  color: white;
+  color: var(--color-text);
 }
 
 .highlighted {
@@ -115,7 +115,7 @@
   flex: auto;
   justify-content: flex-end;
   font-size: 16px;
-  color: white;
+  color: var(--color-text);
 }
 
 .right-side {

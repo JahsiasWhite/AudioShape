@@ -1,7 +1,8 @@
 // Settings.js
 import React, { useEffect, useState } from 'react';
 import FolderSelection from '../FolderSelection/FolderSelection';
-import './Settings.css'; // Import the CSS file
+import './Settings.css';
+import ColorSettings from './ColorSettings';
 
 function Settings() {
   const [settings, setSettings] = useState({
@@ -28,6 +29,11 @@ function Settings() {
       console.error(updatedSettings);
       window.electron.ipcRenderer.removeAllListeners('GET_SETTINGS');
     });
+
+    // document.documentElement.style.setProperty(
+    //   '--color-main',
+    //   'rgb(255, 0, 0)'
+    // );
   };
 
   // Handle settings update when the user interacts with FolderSelection
@@ -94,6 +100,8 @@ function Settings() {
           />
           <label htmlFor="spotifyEnabled"> Enable Spotify </label>
         </div>
+
+        <ColorSettings />
       </div>
     </div>
   );

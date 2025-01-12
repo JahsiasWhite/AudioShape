@@ -1,10 +1,10 @@
 .search-bar {
-  display: flex; /* Allow centering of the input */
-  align-items: center; /* Center input vertically */
+  display: flex;
+  align-items: center;
   border: none; /* Remove default border */
   background-color: transparent; /* Transparent background */
-  padding: 5px 10px; /* Add some padding */
-  border-bottom: 1px solid #ddd; /* Bottom border */
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--color-accent);
   width: 30%;
   margin-top: 10px;
 }
@@ -13,12 +13,6 @@
   flex: 1; /* Allow input to fill remaining space */
   border: none; /* Remove default input border */
   background-color: transparent; /* Transparent background for input */
-  color: rgba(
-    255,
-    255,
-    255,
-    0.7
-  ); /* Semi-transparent text color (adjust opacity as needed) */
   font-size: 16px; /* Adjust font size as needed */
   outline: none; /* Remove outline on focus */
 }
