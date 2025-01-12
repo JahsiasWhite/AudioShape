@@ -26,7 +26,7 @@ function YouTubeDownloader() {
     });
 
     window.electron.ipcRenderer.on('download-error', (error) => {
-      setDownloadStatus('Error: ' + error);
+      setDownloadStatus(error);
     });
   };
 

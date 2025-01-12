@@ -104,8 +104,10 @@ describe('QueueManager', () => {
       song3: { id: 'song3', title: 'Song 3' },
     };
 
+    const loadedSongs = ['test'];
+
     const { result } = renderHook(() =>
-      QueueManager(mockCurrentSong, mockVisibleSongs)
+      QueueManager(mockCurrentSong, mockVisibleSongs, loadedSongs)
     );
 
     // Set initial state
@@ -124,6 +126,28 @@ describe('QueueManager', () => {
     expect(result.current.songQueue).toEqual(['song3']);
     expect(result.current.currentSongId).toBe('song2');
     // expect(result.current.currentSongIndex).toBe(1); // Assuming 'song2' is at index 1 in mockVisibleSongs
+  });
+
+  it('should play the next song and return gracefully if no loaded songs', () => {
+    const mockCurrentSong = {
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+    };
+
+    const mockVisibleSongs = {};
+    const loadedSongs = [];
+
+    const { result } = renderHook(() =>
+      QueueManager(mockCurrentSong, mockVisibleSongs, loadedSongs)
+    );
+
+    // Trigger playing the next song
+    act(() => {
+      result.current.playNextSong();
+    });
+
+    // Assertions
+    expect(result).toBeDefined();
   });
 
   it('should play the next song when there is no queue', () => {
@@ -284,8 +308,10 @@ describe('QueueManager', () => {
       song3: { id: 'song3', title: 'Song 3' },
     };
 
+    const loadedSongs = ['test'];
+
     const { result } = renderHook(() =>
-      QueueManager(mockCurrentSong, mockVisibleSongs)
+      QueueManager(mockCurrentSong, mockVisibleSongs, loadedSongs)
     );
 
     // Set initial state

@@ -397,6 +397,12 @@ const SETUP_GET_SONGS = (mainW) => {
       updateLibraryDirectory(correctedPath);
     }
 
+    // The user has not selected a directory, so we should return an empty array
+    if (correctedPath === '') {
+      event.reply('GRAB_SONGS', []);
+      return;
+    }
+
     // Get all songs in the given directory as well as all subdirectories
     const audioTypes = 'mp3,wav,ogg,mp4,flac';
     const audios = await glob(correctedPath + '/**/*.{' + audioTypes + '}');
@@ -405,7 +411,7 @@ const SETUP_GET_SONGS = (mainW) => {
     // Make sure we have at least one song in the directory
     if (audios.length === 0) {
       // ! OUTPUT ERROR HERE?
-      event.reply('GRAB_SONGS', []); // Send an empty array to the renderer ?? I think this is broke right now
+      event.reply('GRAB_SONGS', []);
       return;
     }
 
@@ -572,6 +578,16 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
   // Get where we are saving the video to
   const settings = getSettings();
   const songDirectory = settings.libraryDirectory;
+  console.log('SONG DIRECTORY: ', songDirectory);
+
+  if (songDirectory === '') {
+    console.error('No song directory selected, returning...');
+    mainWindow.webContents.send(
+      'download-error',
+      `No valid song directory found. Please choose a song directory from the settings page to download songs.`
+    );
+    return;
+  }
 
   /* Setup progress tracking */
   const tracker = {

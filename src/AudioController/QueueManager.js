@@ -14,6 +14,10 @@ export const QueueManager = (currentSong, visibleSongs, loadedSongs) => {
       currentSong.removeEventListener('ended', onSongEnded);
     }
 
+    if (loadedSongs.length === 0) {
+      return;
+    }
+
     setHistory((oldHistory) => [...oldHistory, currentSongId]);
 
     // Use functional updates to ensure we have the latest state

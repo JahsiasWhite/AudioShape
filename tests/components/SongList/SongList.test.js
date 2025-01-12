@@ -42,6 +42,7 @@ window.electron = {
   ipcRenderer: {
     on: jest.fn(),
     once: jest.fn(),
+    sendMessage: jest.fn(),
   },
 };
 
@@ -115,5 +116,53 @@ describe('Song List', () => {
     // Verify songs were reordered
     expect(songListBefore).not.toEqual(songListAfter);
     expect(songListAfter).toEqual(['Song A', 'Song B', 'Song C']);
+  });
+
+  it('handles import songs correctly', () => {
+    // Mock the AudioContext values
+    const mockAudioContext = {
+      visibleSongs: [],
+      currentScreen: 'All Songs',
+      setCurrentScreen: jest.fn(),
+      initSongsLoading: false,
+      loadingQueue: [],
+    };
+
+    // Mock useAudioPlayer hook
+    jest
+      .spyOn(
+        require('../../../src/AudioController/AudioContext'),
+        'useAudioPlayer'
+      )
+      .mockImplementation(() => mockAudioContext);
+
+    const { getByText, getAllByRole, getByTestId } = render(
+      <AudioProvider>
+        <SongList />
+      </AudioProvider>
+    );
+
+    // Click FolderSelection button
+    fireEvent.click(getByText('Choose Song Directory'));
+
+    // Simulate folder input change
+    const mockFile = {
+      path: 'C:\\Users\\test\\Music\\MyMusic',
+      webkitRelativePath: 'MyMusic/song.mp3',
+      name: 'song.mp3',
+    };
+    const input = getByTestId('folder-input');
+    fireEvent.change(input, {
+      target: {
+        files: [mockFile],
+      },
+    });
+
+    // Verify nothing broke
+    expect(SongList).toBeDefined();
+    expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith(
+      'GET_SONGS',
+      'C:\\Users\\test\\Music\\MyMusic'
+    );
   });
 });

@@ -53,6 +53,44 @@ describe('DownloadManager', () => {
     );
   });
 
+  it('should handle song export if there is no song', async () => {
+    // Mock getCurrentAudioBuffer function
+    const testObj = {
+      length: 10,
+      src: 'sample-file',
+    };
+    const getCurrentAudioBufferMock = jest.fn().mockResolvedValue({
+      getChannelData: jest.fn(() => {
+        return testObj;
+      }),
+      numberOfChannels: 2,
+      sampleRate: 44100,
+    });
+
+    // Mock finishLoading, initCurrentSong, and downloadAudio functions
+    const finishLoadingMock = jest.fn();
+    const initCurrentSongMock = null;
+
+    const currentSongMock = {};
+
+    // Render the hook with the provided mock functions
+    const { result } = renderHook(() =>
+      DownloadManager(
+        currentSongMock,
+        finishLoadingMock,
+        initCurrentSongMock,
+        getCurrentAudioBufferMock
+      )
+    );
+
+    // Act: Call handleSongExport
+    await act(async () => {
+      await result.current.handleSongExport();
+    });
+
+    expect(result).toBeDefined();
+  });
+
   it('should handle temp song saved', async () => {
     // Mock finishLoading, initCurrentSong, and getCurrentAudioBuffer functions
     const finishLoadingMock = jest.fn();

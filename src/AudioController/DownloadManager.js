@@ -46,6 +46,8 @@ export const DownloadManager = (
    * Sends the edited audio to the server to be saved to the file system
    */
   async function handleSongExport() {
+    if (currentSong.src === '') return;
+
     const audioBuffer = await getCurrentAudioBuffer(currentSong.src);
 
     const wavBytes = createWavBytes(audioBuffer);

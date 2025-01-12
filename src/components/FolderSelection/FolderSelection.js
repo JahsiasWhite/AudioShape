@@ -6,7 +6,6 @@ function FolderSelection({ onSettingsUpdate }) {
   // Once a folder is selected, we call to the server to load the
   // file path to grab the songs
   const handleFolderSelection = (event) => {
-    console.error('ENTERED');
     const file = event.target.files[0];
     if (!file) return;
 
@@ -20,18 +19,18 @@ function FolderSelection({ onSettingsUpdate }) {
       fullPath.indexOf(firstFolder) + firstFolder.length
     );
 
-    console.error('Selected folder path:', selectedFolderPath);
-
     window.electron.ipcRenderer.sendMessage('GET_SONGS', selectedFolderPath);
 
     // Notify the parent component about the folder selection
-    onSettingsUpdate();
+    // This is only necessary/used on the settings.js page
+    if (onSettingsUpdate) onSettingsUpdate();
   };
 
   return (
     <label htmlFor="folderInput" className="folderInputLabel">
       <b>Choose Song Directory</b>
       <input
+        data-testid="folder-input"
         id="folderInput"
         type="file"
         directory=""

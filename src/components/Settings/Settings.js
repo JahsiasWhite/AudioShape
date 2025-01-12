@@ -29,11 +29,6 @@ function Settings() {
       console.error(updatedSettings);
       window.electron.ipcRenderer.removeAllListeners('GET_SETTINGS');
     });
-
-    // document.documentElement.style.setProperty(
-    //   '--color-main',
-    //   'rgb(255, 0, 0)'
-    // );
   };
 
   // Handle settings update when the user interacts with FolderSelection
