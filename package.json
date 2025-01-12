@@ -52,7 +52,7 @@
     ]
   },
   "dependencies": {
-    "@distube/ytdl-core": "^4.15.1",
+    "@distube/ytdl-core": "^4.15.8",
     "ffmpeg-static": "^5.2.0",
     "fluent-ffmpeg": "^2.1.2",
     "glob": "^10.3.3",
