@@ -45,7 +45,39 @@ function App() {
   useEffect(() => {
     // Fetch initial songs when the component mounts
     window.electron.ipcRenderer.sendMessage('GET_SONGS', '');
+
+    // Fetch color settings
+    // This will create a duplicate of each style
+    // I could just delete the css styles and define the defaults in the server...
+    window.electron.ipcRenderer.sendMessage('GET_COLOR_SETTINGS');
   }, []);
+
+  window.electron.ipcRenderer.on('RETURN_COLOR_SETTINGS', (colorSettings) => {
+    // If the user has never changed the color settings,
+    // then we can continue using the default ones
+    if (colorSettings === null || Object.keys(colorSettings).length === 0) {
+      return;
+    }
+
+    const root = document.documentElement;
+
+    root.style.setProperty('--color-main', colorSettings.main);
+    root.style.setProperty('--color-secondary', colorSettings.secondary);
+    root.style.setProperty('--color-tertiary', colorSettings.tertiary);
+    root.style.setProperty('--color-accent', colorSettings.accent);
+    root.style.setProperty('--color-button', colorSettings.button);
+    root.style.setProperty(
+      '--color-button-secondary',
+      colorSettings.secondaryButton
+    );
+    root.style.setProperty('--color-text', colorSettings.text);
+    console.error('SETTING COLORSETTINGS: ', colorSettings.secondaryText);
+    root.style.setProperty(
+      '--color-text-secondary',
+      colorSettings.secondaryText
+    );
+    root.style.setProperty('--color-text-inverse', colorSettings.textInverse);
+  });
 
   /**
    * Enables fullscreen mode

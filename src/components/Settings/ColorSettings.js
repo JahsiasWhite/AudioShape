@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import './ColorSettings.css';
 
+const defaultColors = {
+  main: 'rgb(13 14 18)',
+  secondary: 'rgb(26, 25, 26)',
+  tertiary: 'white',
+  accent: 'white',
+  button: '#294973',
+  text: 'white',
+  secondaryText: 'lightgrey',
+  textInverse: 'black',
+  buttonSecondary: '#316baa',
+};
+
 const ColorSettings = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [colors, setColors] = useState({
@@ -72,9 +84,18 @@ const ColorSettings = () => {
     const root = document.documentElement;
     const newColors = { ...colors, [colorKey]: value };
     setColors(newColors);
+    console.error(
+      'COLORS: ',
+      ' value: ',
+      root.style.getPropertyValue(`--color-text-secondary}`),
+      ' cur: ',
+      hexToRgb(value)
+    );
 
     // Update CSS variables
-    if (colorKey === 'main' || colorKey === 'secondary') {
+    if (colorKey === 'secondaryText') {
+      root.style.setProperty(`--color-text-secondary`, rgbToHex(value));
+    } else if (colorKey === 'main' || colorKey === 'secondary') {
       root.style.setProperty(`--color-${colorKey}`, hexToRgb(value));
     } else {
       root.style.setProperty(
@@ -84,9 +105,30 @@ const ColorSettings = () => {
     }
 
     // Save to electron settings if available
-    // if (window.electron?.ipcRenderer) {
-    //   window.electron.ipcRenderer.sendMessage('SAVE_COLOR_SETTINGS', newColors);
-    // }
+    window.electron.ipcRenderer.sendMessage('SAVE_COLOR_SETTINGS', newColors);
+  };
+
+  const handleReset = () => {
+    setColors(defaultColors);
+
+    // Reset all CSS variables
+    Object.entries(defaultColors).forEach(([key, value]) => {
+      if (key === 'secondaryText') {
+        root.style.setProperty(`--color-text-secondary`, value);
+        return;
+      }
+
+      const cssVarName = `--color-${key
+        .replace(/([A-Z])/g, '-$1')
+        .toLowerCase()}`;
+      root.style.setProperty(cssVarName, value);
+    });
+
+    // Save default colors to electron settings
+    window.electron.ipcRenderer.sendMessage(
+      'SAVE_COLOR_SETTINGS',
+      defaultColors
+    );
   };
 
   return (
@@ -98,8 +140,16 @@ const ColorSettings = () => {
         <span>Colors</span>
         <span>▼</span>
       </button>
+
       {isOpen && (
         <div className="color-settings">
+          <button
+            className="reset-button"
+            onClick={handleReset}
+            title="Reset to default colors"
+          >
+            Reset
+          </button>
           {Object.entries(colors).map(([key, value]) => (
             <div key={key} className="setting-item">
               <label htmlFor={`color-${key}`}>

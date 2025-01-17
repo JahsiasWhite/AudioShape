@@ -35,6 +35,10 @@ Don't have any local songs? No problem! AudioShape also includes the ability to 
 
 AudioShape also has an extensive full-screen mode. Sit back and watch the audio spectrum of the current song. Listening to an MP4? Full-screen mode even lets you watch the accompanied music video!
 
+## Install
+
+Go to releases and download the newest release
+
 ## Build and Run
 
 #### Install dependencies

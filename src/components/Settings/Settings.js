@@ -10,6 +10,7 @@ function Settings() {
     dataDirectory: '',
     mp4DownloadEnabled: false,
     spotifyEnabled: false,
+    colors: {},
   });
 
   /**

@@ -1,7 +1,5 @@
 :root {
-  /* --color-main: #203245; */
   --color-main: rgb(13 14 18);
-  /* --color-secondary: #2a4057; */
   --color-secondary: rgb(26, 25, 26);
   --color-tertiary: white;
   --color-accent: white;
@@ -10,6 +8,9 @@
   --color-text-secondary: lightgrey;
   --color-text-inverse: black;
   --color-button-secondary: #316baa;
+
+  /* --color-main: #203245; */
+  /* --color-secondary: #2a4057; */
   /* --color-button-secondary: #e76f51; */
   /* --color-button-secondary: #277da1; */
 }
@@ -20,7 +21,7 @@ body {
 }
 
 input {
-  color: var(--color-text-secondary);
+  color: var(--color-text-inverse);
 }
 
 ::placeholder {
@@ -108,4 +109,8 @@ input {
   background-color: var(
     --color-button
   ); /* Color of the  moveable bar on hover */
+}
+
+::-webkit-scrollbar-corner {
+  background-color: var(--color-main);
 }

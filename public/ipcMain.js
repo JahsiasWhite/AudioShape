@@ -127,6 +127,23 @@ const SETUP_SETINGS = (mainWindow, dataDirectory) => {
 
     fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
   });
+
+  ipcMain.on('SAVE_COLOR_SETTINGS', (event, updatedColorSettings) => {
+    // TODO Everywhere there is "settingsPath", should I modularize? Just make this a global variable...
+    const settingsPath = createSettingsPath();
+
+    let settings = getSettings();
+
+    // Store all color settings inside a 'colors' object
+    settings.colors = updatedColorSettings;
+
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+  });
+
+  ipcMain.on('GET_COLOR_SETTINGS', (event) => {
+    console.error('GETTING COLOR SETTINGS: ', getSettings());
+    mainWindow.webContents.send('RETURN_COLOR_SETTINGS', getSettings().colors);
+  });
 };
 
 const SETUP_PLAYLISTS = (mainWindow, dataDirectory) => {
