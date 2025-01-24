@@ -1,7 +1,7 @@
 /**
  * The body of the song list. The actual list of songs :|
  */
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 import PlusButtonSVG from './add-svgrepo-com.svg';
 import MixerSVG from '../LayoutBar/MixerButton/mixer.svg';
@@ -123,6 +123,55 @@ export default function SongListItems({
     // So we can still go to other playlists without playing them
   }
 
+  /**
+   * Returns the Data URL of a jpeg frame from the given mp4 video at a specified time
+   *
+   * TODO
+   * Maybe have the time be more variable? It's harder than it seems though. If I do random, I'd want the
+   * max time to be the video duration. I have to get that in loadeddata though. And then I need to wait
+   * an unspecified time for it to be set in video. So when I drawImage, it actually is the image.
+   *
+   * @param {String} videoSrc
+   * @returns
+   */
+  const extractThumbnail = (videoSrc) => {
+    return new Promise((resolve) => {
+      const video = document.createElement('video');
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+
+      video.addEventListener('loadeddata', () => {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0);
+        resolve(canvas.toDataURL('image/jpeg'));
+      });
+
+      video.src = videoSrc;
+
+      // Get the picture from the video at a certain time
+      video.currentTime = 1;
+    });
+  };
+
+  const [thumbnails, setThumbnails] = useState();
+  useEffect(() => {
+    const loadThumbnails = async () => {
+      console.error('LOADING THUMBNAILS');
+      const newThumbnails = {};
+      for (const key of Object.keys(filteredSongs)) {
+        if (
+          filteredSongs[key].file &&
+          filteredSongs[key].file.includes('.mp4')
+        ) {
+          newThumbnails[key] = await extractThumbnail(filteredSongs[key].file);
+        }
+      }
+      setThumbnails(newThumbnails);
+    };
+    loadThumbnails();
+  }, [filteredSongs]);
+
   // ? TODO I had <div> here instead of <>... I can't remember if it fixed a small glitch...
   return (
     <>
@@ -148,11 +197,26 @@ export default function SongListItems({
               currentSongId === visibleSongs[key].id ? 'highlighted' : ''
             }`}
           >
-            {visibleSongs[key].albumImage && (
+            {!filteredSongs[key].albumImage ? (
+              // If there is no album image, check if the file is an mp4.
+              // If it is, we can use a frame from the video as the image
+              filteredSongs[key].file &&
+              filteredSongs[key].file.includes('.mp4') &&
+              thumbnails ? (
+                <img
+                  className="list-image-header"
+                  src={thumbnails[key]}
+                  alt={`${filteredSongs[key].album} cover`}
+                />
+              ) : (
+                <></>
+              )
+            ) : (
+              // If there was an image in the immediate file directory, use that as the image
               <img
-                className="list-image"
-                src={visibleSongs[key].albumImage}
-                alt={`${visibleSongs[key].album} cover`}
+                className="list-image-header"
+                src={filteredSongs[key].albumImage}
+                alt={`${filteredSongs[key].album} cover`}
               />
             )}
             <div className="song-details">
