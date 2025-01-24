@@ -1,4 +1,24 @@
-# AudioShape
+<h1 align="center">
+  AudioShape
+</h1>
+
+<div align="center">
+
+  <h4>
+    A music player with built-in audio editing tools
+  </h4>
+
+  <p>
+      <img src="https://img.shields.io/badge/version-0.2.7-green.svg" alt="version"/>
+      <img src="https://img.shields.io/badge/OS-windows-blue?style=flat&labelColor=363D44" alt="Operating systems"/>
+      <a href="https://github.com/JahsiasWhite/AudioShape/actions/workflows/tests.yml" alt="tests"><img src="https://github.com/JahsiasWhite/AudioShape/actions/workflows/tests.yml/badge.svg" alt="tests"/></a>
+  </p>
+
+</div>
+
+<p align="center">
+  <img src="images/edit-screen1.png" alt="main screen" width="650">
+</p
 
 ## v0.27 notes
 
@@ -9,31 +29,14 @@
 - optimized performance
 - lots of bug fixes
 
-## Project Status
+### Core Features
 
-<table class="no-border">
-  <tr>
-    <td><a href="https://github.com/JahsiasWhite/AudioShape/actions/workflows/tests.yml" alt="tests"><img src="https://github.com/JahsiasWhite/AudioShape/actions/workflows/tests.yml/badge.svg" alt="tests"/></a></td>
-  </tr>
-  <tr>
-    <td><img src="https://img.shields.io/badge/OS-windows-blue?style=flat&labelColor=363D44" alt="Operating systems"/></td>
-  </tr>
-</table>
-
-## Introduction
-
-Experience music like never before with a real-time streaming and editing music player.
-
-The most exciting feature is the song editing! Seamlessly edit the song you are listening to and keep the settings saved for all future songs. For example, are you a big fan of listening to sped up songs? Simply use the preset (or create your own preset) to have the currently plaing song become its sped-up version. If you're just listening to your playlist, the next song will also be sped up! Like how the song sounds? Export it to keep it saved forever.
-
-<p align="center">
-  <img src="images/edit-screen1.png" alt="main screen" width="650">
-</p
-
-Don't have any local songs? No problem! AudioShape also includes the ability to download songs directly from Youtube by providing the song's url.
-<br>Have a Spotify account? Download your songs or playlists from your account!
-
-AudioShape also has an extensive full-screen mode. Sit back and watch the audio spectrum of the current song. Listening to an MP4? Full-screen mode even lets you watch the accompanied music video!
+- 🎚️ Live audio editing (speed, EQ, effects)
+- 🔄 Edits are persistent. No need to reapply when a new song plays
+- 💾 Save/Export custom tracks and presets
+- 🎥 Built in downloader for YouTube and Spotify
+- 🎬 Full-screen mode that supports video formats
+- 🎨 Customizable themes
 
 ## Install
 
