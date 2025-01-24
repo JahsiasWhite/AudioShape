@@ -590,7 +590,7 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
   // Get the youtube video title
   const info = await ytdl.getInfo(url);
   const videoTitle = info.videoDetails.title.replace('|', ''); // Must remove special characters or FFMPEG will crash
-  console.log('Got video detail');
+  console.log('Got video detail: ', videoTitle);
 
   // Get where we are saving the video to
   const settings = getSettings();
