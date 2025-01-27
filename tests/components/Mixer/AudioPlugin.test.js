@@ -113,11 +113,10 @@ describe('<AudioPlugin />', () => {
     fireEvent.mouseMove(grip, { clientX: 10, clientY: 0 });
     fireEvent.mouseUp(grip);
 
-    // There is a small delay from the debounce function that we have to wait for
-    await new Promise((r) => setTimeout(r, 2000));
-
-    const newMultiplier = getByText('MULTIPLIER: 1.69x');
-    expect(newMultiplier).not.toBeNull();
+    // There is a small delay for the UI to update that we have to wait for
+    await waitFor(() => {
+      expect(getByText('MULTIPLIER: 1.69x')).not.toBeNull();
+    });
   });
 
   it('speed knob position should update when reset button is pressed', async () => {
@@ -143,23 +142,25 @@ describe('<AudioPlugin />', () => {
     fireEvent.mouseMove(grip, { clientX: 10, clientY: 0 });
     fireEvent.mouseUp(grip);
 
-    // There is a small delay from the debounce function that we have to wait for
-    await new Promise((r) => setTimeout(r, 2000));
+    // There is a small delay for the UI to update that we have to wait for
+    await waitFor(() => {
+      expect(getByText('MULTIPLIER: 1.69x')).not.toBeNull();
 
-    const newMultiplier = getByText('MULTIPLIER: 1.69x');
-    expect(newMultiplier).not.toBeNull();
+      const newMultiplier = getByText('MULTIPLIER: 1.69x');
+      expect(newMultiplier).not.toBeNull();
 
-    expect(getComputedStyle(innerKnob).transform).toBe('rotate(270deg)');
+      expect(getComputedStyle(innerKnob).transform).toBe('rotate(270deg)');
 
-    // Click Reset button
-    const resetDiv = getByText('Reset');
-    const resetButton = resetDiv.querySelector('.synth-button');
-    fireEvent.click(resetButton);
+      // Click Reset button
+      const resetDiv = getByText('Reset');
+      const resetButton = resetDiv.querySelector('.synth-button');
+      fireEvent.click(resetButton);
 
-    const resetMultiplier = getByText('MULTIPLIER: 1x');
-    expect(resetMultiplier).not.toBeNull();
+      const resetMultiplier = getByText('MULTIPLIER: 1x');
+      expect(resetMultiplier).not.toBeNull();
+    });
 
-    const innerKnob2 = speedKnob.querySelector('.knob.inner');
+    // const innerKnob2 = speedKnob.querySelector('.knob.inner');
     // expect(getComputedStyle(innerKnob2).transform).toBe('rotate(178deg)');
   });
 });
