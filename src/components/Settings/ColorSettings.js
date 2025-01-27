@@ -7,10 +7,10 @@ const defaultColors = {
   tertiary: 'white',
   accent: 'white',
   button: '#294973',
+  secondaryButton: '#316baa',
   text: 'white',
   secondaryText: 'lightgrey',
   textInverse: 'black',
-  buttonSecondary: '#316baa',
 };
 
 const ColorSettings = () => {
@@ -84,18 +84,14 @@ const ColorSettings = () => {
     const root = document.documentElement;
     const newColors = { ...colors, [colorKey]: value };
     setColors(newColors);
-    console.error(
-      'COLORS: ',
-      ' value: ',
-      root.style.getPropertyValue(`--color-text-secondary}`),
-      ' cur: ',
-      hexToRgb(value)
-    );
 
     // Update CSS variables
     if (colorKey === 'secondaryText') {
       root.style.setProperty(`--color-text-secondary`, rgbToHex(value));
+    } else if (colorKey === 'secondaryButton') {
+      root.style.setProperty(`--color-button-secondary`, hexToRgb(value));
     } else if (colorKey === 'main' || colorKey === 'secondary') {
+      console.error('setting color: ', colorKey);
       root.style.setProperty(`--color-${colorKey}`, hexToRgb(value));
     } else {
       root.style.setProperty(
@@ -112,9 +108,13 @@ const ColorSettings = () => {
     setColors(defaultColors);
 
     // Reset all CSS variables
+    const root = document.documentElement;
     Object.entries(defaultColors).forEach(([key, value]) => {
       if (key === 'secondaryText') {
         root.style.setProperty(`--color-text-secondary`, value);
+        return;
+      } else if (key === 'secondaryButton') {
+        root.style.setProperty(`--color-button-secondary`, value);
         return;
       }
 

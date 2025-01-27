@@ -68,7 +68,7 @@ function App() {
     root.style.setProperty('--color-button', colorSettings.button);
     root.style.setProperty(
       '--color-button-secondary',
-      colorSettings.buttonSecondary
+      colorSettings.secondaryButton
     );
     root.style.setProperty('--color-text', colorSettings.text);
     root.style.setProperty(
