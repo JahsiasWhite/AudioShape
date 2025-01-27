@@ -68,10 +68,9 @@ function App() {
     root.style.setProperty('--color-button', colorSettings.button);
     root.style.setProperty(
       '--color-button-secondary',
-      colorSettings.secondaryButton
+      colorSettings.buttonSecondary
     );
     root.style.setProperty('--color-text', colorSettings.text);
-    console.error('SETTING COLORSETTINGS: ', colorSettings.secondaryText);
     root.style.setProperty(
       '--color-text-secondary',
       colorSettings.secondaryText
