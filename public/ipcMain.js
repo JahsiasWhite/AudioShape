@@ -84,20 +84,21 @@ const DELETE_TEMP_SONG = () => {
  * Exports the given song to the same location it was copied from
  */
 const SAVE_SONG = (dataDirectory) => {
-  ipcMain.on('SAVE_SONG', async (event, audioData) => {
-    console.error('Saving song');
-    // Construct the audio data into a Blob of wav data
-    const wavData = await getAudioBuffer(audioData);
+  ipcMain.on('SAVE_SONG', async (event, sourcePath) => {
+    console.error('Saving song...');
 
     // Create the new file path
-    newTemporaryFilePath = path.join(dataDirectory, `${uuidv4()}-export.mp3`);
+    newFilePath = path.join(dataDirectory, `export-${uuidv4()}.mp3`);
 
-    // Convert the Blob to a Buffer
-    const bufferData = await wavData.arrayBuffer();
-    const buffer = Buffer.from(bufferData);
+    // Cleanup the sourcePath
+    // 'file:///C:/Example' -> 'C:/Example'
+    sourcePath = sourcePath.replace('file:///', '');
 
-    // Write the Buffer to the file
-    fs.writeFileSync(newTemporaryFilePath, buffer);
+    // Copy the file to the new path
+    console.error('Source: ', sourcePath);
+    console.error('New Path: ', newFilePath);
+    await fs.promises.copyFile(sourcePath, newFilePath);
+    console.error('Saved song...');
   });
 };
 
