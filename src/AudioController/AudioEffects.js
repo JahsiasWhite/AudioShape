@@ -140,7 +140,6 @@ export const AudioEffects = (
   const applySavedEffects = async (comboName) => {
     // Toggling off
     console.error(fileLocation, visibleSongs[currentSongId]);
-    // TODO: Do I need the first part of this statement?
     if (currentEffectCombo === comboName) {
       toggleSavedEffectOff();
       return;
