@@ -29,6 +29,8 @@
 - 🎬 Full-screen mode that supports video formats
 - 🎨 Customizable themes
 
+You can try a simplified version on the web [here](https://slowandreverbify.com)
+
 > ⚠️ **Note:** This project is still under active development. Bugs and errors may occur. Feel free to submit a PR or issue on GitHub if you encounter any problems!
 
 ## Install
