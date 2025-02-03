@@ -9,9 +9,9 @@ const Login = () => {
   return (
     <div className="App">
       <header className="App-header">
-        <a className="btn-spotify" onClick={handleLoginClick}>
+        <h1 className="btn-spotify" onClick={handleLoginClick}>
           Login with Spotify
-        </a>
+        </h1>
       </header>
     </div>
   );

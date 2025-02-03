@@ -1,7 +1,8 @@
 // Settings.js
 import React, { useEffect, useState } from 'react';
 import FolderSelection from '../FolderSelection/FolderSelection';
-import './Settings.css'; // Import the CSS file
+import './Settings.css';
+import ColorSettings from './ColorSettings';
 
 function Settings() {
   const [settings, setSettings] = useState({
@@ -9,6 +10,7 @@ function Settings() {
     dataDirectory: '',
     mp4DownloadEnabled: false,
     spotifyEnabled: false,
+    colors: {},
   });
 
   /**
@@ -26,6 +28,7 @@ function Settings() {
     window.electron.ipcRenderer.on('GET_SETTINGS', (updatedSettings) => {
       setSettings(updatedSettings);
       console.error(updatedSettings);
+      window.electron.ipcRenderer.removeAllListeners('GET_SETTINGS');
     });
   };
 
@@ -93,6 +96,8 @@ function Settings() {
           />
           <label htmlFor="spotifyEnabled"> Enable Spotify </label>
         </div>
+
+        <ColorSettings />
       </div>
     </div>
   );

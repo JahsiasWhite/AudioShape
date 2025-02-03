@@ -1,8 +1,10 @@
-/* Settings.css */
+.settings {
+  color: var(--color-text-inverse);
+}
+
 .settings-container {
-  background-color: #f4f4f4;
+  background-color: var(--color-tertiary);
   padding: 20px;
-  color: black;
   border: 1px solid #ddd;
   border-radius: 5px;
   margin: 20px;

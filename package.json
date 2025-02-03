@@ -8,7 +8,7 @@
   "homepage": "./",
   "main": "./public/electron.js",
   "scripts": {
-    "react-start": "react-scripts start",
+    "react-start": "set BROWSER=none && react-scripts start",
     "all": "concurrently -k \" npm run react-start\" \"wait-on http://localhost:3000 && electron .\"",
     "package-win": "electron-packager . AudioShape --platform=win32 --arch=x64 --out=release-builds",
     "react-build": "react-scripts build",
@@ -52,6 +52,7 @@
     ]
   },
   "dependencies": {
+    "@distube/ytdl-core": "^4.15.8",
     "ffmpeg-static": "^5.2.0",
     "fluent-ffmpeg": "^2.1.2",
     "glob": "^10.3.3",
@@ -62,8 +63,7 @@
     "spotify-web-api-node": "^5.0.2",
     "tone": "^14.7.77",
     "uuid": "^9.0.1",
-    "yt-search": "^2.10.4",
-    "ytdl-core": "^4.11.5"
+    "yt-search": "^2.10.4"
   },
   "browserslist": {
     "production": [

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
-// TODO: Instead of exit button, click on outside of menu to close
 // TODO: Add song.id !!!!
 
 function EffectNamePopup({ effects, closeNamePopup }) {

@@ -42,7 +42,7 @@ export const AudioEffects = (
       return;
     }
 
-    // TODO: Does this one really have to be different
+    // Speed works differently from all other effects
     if (effect === 'speed') {
       handleSpeedChange(value);
       return;
@@ -61,10 +61,10 @@ export const AudioEffects = (
   };
 
   const addEffect = async (currentEffect, value, fL) => {
-    console.error('ADDING EFFECT: ' + currentEffect);
+    console.log('ADDING EFFECT: ' + currentEffect);
 
     if (!currentSongId) {
-      console.error('No song selected, returning');
+      console.log('No song selected, returning');
       effects[currentEffect] = value;
       setEffects(effects);
       return;
@@ -87,10 +87,10 @@ export const AudioEffects = (
 
       // TODO ! Have to add all other effects back now
       const otherEffect = Object.keys(effects);
-      console.error(otherEffect);
+      console.log(otherEffect);
       if (otherEffect[0] === undefined) {
         // play original song
-        console.error('PLAYING ORIGINAL SONG');
+        console.log('PLAYING ORIGINAL SONG');
 
         // TODO I THINK THESE HAPPEN A FEW TIMES, MAKE IN OWN FUNCTION?
         /* Start playing the new song */
@@ -126,7 +126,7 @@ export const AudioEffects = (
       }
     }
 
-    console.error('Running effect: ', currentEffect, value);
+    console.log('Running effect: ', currentEffect, value);
     await runEffect(currentEffect, value);
     await getTempSong();
   };
@@ -138,30 +138,9 @@ export const AudioEffects = (
   };
 
   const applySavedEffects = async (comboName) => {
-    // if (!currentSongId) {
-    //   return;
-    // }
-    // console.error('APPLYING ', comboName);
-    // if (effectsEnabled && currentEffectCombo === comboName) {
-    //   console.error(
-    //     'TODO! SHOULD DISABLE EFFECTS. WONT PLAY MUSIC CURRENTLY',
-    //     comboName,
-    //     savedEffects
-    //   );
-    //   setCurrentEffectCombo('');
-    //   setEffectsEnabled(false);
-    //   setEffects({});
-    //   finishLoading();
-    //   return;
-    // }
-
     // Toggling off
     console.error(fileLocation, visibleSongs[currentSongId]);
-    // TODO: Do I need the first part of this statement?
-    if (
-      currentEffectCombo === comboName &&
-      fileLocation === visibleSongs[currentSongId].file
-    ) {
+    if (currentEffectCombo === comboName) {
       toggleSavedEffectOff();
       return;
     }

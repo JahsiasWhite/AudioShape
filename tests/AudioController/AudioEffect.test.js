@@ -182,6 +182,45 @@ describe('AudioEffects', () => {
     expect(result.current.slowDownIsEnabled).toBe(false);
   });
 
+  it('should turn off the current effect if there is no song', async () => {
+    const { result } = renderHook(() =>
+      AudioEffects(
+        currentSong, // currentSong
+        fileLocation,
+        jest.fn(),
+        visibleSongs,
+        undefined, // currentSongId
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+        1,
+        0.5,
+        jest.fn()
+      )
+    );
+
+    act(() => {
+      result.current.setSavedEffects({ effect: { reverb: 0.5 } });
+    });
+
+    act(() => {
+      result.current.applySavedEffects('effect');
+    });
+
+    act(() => {
+      result.current.applySavedEffects('effect');
+    });
+
+    // Initial state assertions
+    expect(result.current.effectsEnabled).toBe(false);
+    expect(result.current.currentEffectCombo).toBe('');
+    expect(result.current.currentSpeed).toBe(1);
+    expect(result.current.speedupIsEnabled).toBe(false);
+    expect(result.current.slowDownIsEnabled).toBe(false);
+  });
+
   it('should reset current song', async () => {
     const { result } = renderHook(() =>
       AudioEffects(

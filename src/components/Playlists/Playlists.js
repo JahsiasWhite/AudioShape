@@ -31,20 +31,18 @@ const Playlists = ({ toggleSection }) => {
     let newSongCollection = {};
     for (let i = 0; i < playlist.songs.length; i++) {
       const songName = playlist.songs[i];
-      //TODO ! Make this not a loop, the id is randomly generated though
-      // for (let j = 0; j < loadedSongs.length; j++) {
-      //   if (loadedSongs[j].title === songName)
-      //     newSongCollection.push(loadedSongs[j]);
-      // }
-      // newSongCollection.push(loadedSongs[songName]);
-      newSongCollection[songName] = loadedSongs[songName];
+
+      // Make sure the song has been loaded
+      if (loadedSongs[songName])
+        newSongCollection[songName] = loadedSongs[songName];
     }
 
+    console.error('New Song Collection: ', newSongCollection);
     setVisibleSongs(newSongCollection);
 
     // ! Todo, probably want to clean this up
     setCurrentScreen(playlist.name);
-    toggleSection('songs');
+    toggleSection('allSongs');
   };
 
   /**
@@ -89,7 +87,7 @@ const Playlists = ({ toggleSection }) => {
 
   return (
     <div className="playlists-container">
-      <h2>Playlists</h2>
+      <h1>Playlists</h1>
       <div className="create-playlist">
         <input
           type="text"

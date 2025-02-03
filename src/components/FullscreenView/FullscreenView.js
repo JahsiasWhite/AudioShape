@@ -23,13 +23,6 @@ const FullscreenView = ({ toggleFullscreen }) => {
     <div className="fullscreen-view">
       {!isMP4 ? (
         <>
-          {/* {song && song.albumImage && (
-            // <img
-            //   className="song-image"
-            //   src={song.albumImage}
-            //   alt={`${song.album} cover`}
-            // />
-          )} */}
           {song && (
             <div className="fullscreen-song-details">
               {song.albumImage && (

@@ -1,9 +1,9 @@
 import React from 'react';
 import { render, renderHook, fireEvent, act } from '@testing-library/react';
-import Settings from '../../src/components/Settings/Settings.js';
+import ColorSettings from '../../src/components/Settings/ColorSettings.js';
 import AudioContext, {
   AudioProvider,
-} from '../../src/AudioController/AudioContext';
+} from '../../src/AudioController/AudioContext.js';
 
 const loadedSongs = [
   {
@@ -44,46 +44,44 @@ window.electron = {
   },
 };
 
-describe('<Settings />', () => {
+describe('<ColorSettings />', () => {
   afterEach(() => {
     jest.clearAllMocks(); // Clear all mocks after each test
   });
 
-  it('renders settings correctly', () => {
+  it('renders color settings correctly', () => {
     const { container } = render(
       <AudioProvider>
-        <Settings />
+        <ColorSettings />
       </AudioProvider>
     );
 
     expect(container).toBeDefined();
   });
 
-  it('handles toggle spotify correctly', () => {
+  it('handles reset correctly', () => {
     const { getByText, getByRole } = render(
       <AudioProvider>
-        <Settings />
+        <ColorSettings />
       </AudioProvider>
     );
 
     // Simulate a click on an artist card
-    fireEvent.doubleClick(getByText('Enable Spotify'));
+    fireEvent.click(getByText('Colors'));
+    fireEvent.doubleClick(getByText('Reset'));
     expect(window.electron.ipcRenderer.on).toHaveBeenCalled();
+  });
 
-    /* TEST */
-    const updatedSettings = {
-      songDirectory: '',
-      dataDirectory: '',
-      mp4DownloadEnabled: false,
-      spotifyEnabled: true,
-    };
-    act(() => {
-      // Assuming 'GET_SETTINGS' is the 3rd registered 'on' callback
-      //   window.electron.ipcRenderer.on.mock.calls[2][1](updatedSettings);
-      window.electron.ipcRenderer.on.mock.calls[2][1](updatedSettings);
-    });
+  it('handles reset correctly', () => {
+    const { getByText, getByRole } = render(
+      <AudioProvider>
+        <ColorSettings />
+      </AudioProvider>
+    );
 
-    const checkbox = getByRole('checkbox', { name: /Enable Spotify/i });
-    expect(checkbox.checked).toBe(true);
+    // Simulate a click on an artist card
+    fireEvent.click(getByText('Colors'));
+    fireEvent.doubleClick(getByText('Reset'));
+    expect(window.electron.ipcRenderer.on).toHaveBeenCalled();
   });
 });

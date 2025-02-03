@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 import './Knob.css';
 
-const Knob = ({ customProps, onChange }) => {
+const Knob = ({ customProps, knobValue, onChange }) => {
   /**
    * This is required so we don't send back 100 inputs when the user drags the knob around. We only want to send the last one
    * @param {*} func
@@ -167,7 +167,7 @@ const Knob = ({ customProps, onChange }) => {
             onMouseDown={this.startDrag}
           >
             <div className="knob inner" style={iStyle}>
-              <div className="grip" />
+              <div className="grip" onClick={this.startDrag} />
             </div>
           </div>
         </div>
@@ -182,7 +182,7 @@ const Knob = ({ customProps, onChange }) => {
       degrees={customProps.degrees}
       min={customProps.min}
       max={customProps.max}
-      value={customProps.value}
+      value={knobValue ? knobValue : customProps.value}
       color={customProps.color}
     />
   );

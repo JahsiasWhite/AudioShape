@@ -1,11 +1,16 @@
 :root {
-  /* --color-main: #203245; */
   --color-main: rgb(13 14 18);
-  /* --color-secondary: #2a4057; */
   --color-secondary: rgb(26, 25, 26);
+  --color-tertiary: white;
+  --color-accent: white;
   --color-button: #294973;
   --color-text: white;
+  --color-text-secondary: lightgrey;
+  --color-text-inverse: black;
   --color-button-secondary: #316baa;
+
+  /* --color-main: #203245; */
+  /* --color-secondary: #2a4057; */
   /* --color-button-secondary: #e76f51; */
   /* --color-button-secondary: #277da1; */
 }
@@ -13,6 +18,15 @@
 
 body {
   overflow: hidden;
+}
+
+input {
+  color: var(--color-text-inverse);
+}
+
+::placeholder {
+  color: var(--color-secondary);
+  /* color: rgba(255, 255, 255, 0.7); */
 }
 
 .app-container {
@@ -61,7 +75,7 @@ body {
 }
 
 .layout-bar {
-  padding-right: 10px;
+  /* padding-right: 10px; */
   background-color: var(--color-main);
 }
 
@@ -87,7 +101,7 @@ body {
 }
 
 .main-content::-webkit-scrollbar-thumb {
-  background-color: var(--color-text); /* Color of the moveable bar */
+  background-color: var(--color-accent); /* Color of the moveable bar */
   border-radius: 10px; /* Add rounded corners */
 }
 
@@ -95,4 +109,8 @@ body {
   background-color: var(
     --color-button
   ); /* Color of the  moveable bar on hover */
+}
+
+::-webkit-scrollbar-corner {
+  background-color: var(--color-main);
 }

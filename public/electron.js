@@ -84,7 +84,10 @@ app.on('ready', function () {
       // enableRemoteModule: true,
       // contextIsolation: false,
 
-      // ! TODO Idk this seems bad... cant play local files without it though?
+      // Don't allow dev tools on production version
+      devTools: !app.isPackaged,
+
+      // So we can play local files
       webSecurity: false,
     },
   });

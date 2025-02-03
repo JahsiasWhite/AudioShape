@@ -18,7 +18,7 @@ const readline = require('readline');
 // For searching youtube videos. The spotify downloader requires this
 const youtubeSearch = require('yt-search');
 
-const ytdl = require('ytdl-core');
+const ytdl = require('@distube/ytdl-core');
 const ffmpegPath = require('ffmpeg-static');
 const cp = require('child_process');
 
@@ -84,20 +84,21 @@ const DELETE_TEMP_SONG = () => {
  * Exports the given song to the same location it was copied from
  */
 const SAVE_SONG = (dataDirectory) => {
-  ipcMain.on('SAVE_SONG', async (event, audioData) => {
-    console.error('Saving song');
-    // Construct the audio data into a Blob of wav data
-    const wavData = await getAudioBuffer(audioData);
+  ipcMain.on('SAVE_SONG', async (event, sourcePath) => {
+    console.error('Saving song...');
 
     // Create the new file path
-    newTemporaryFilePath = path.join(dataDirectory, `${uuidv4()}-export.mp3`);
+    newFilePath = path.join(dataDirectory, `export-${uuidv4()}.mp3`);
 
-    // Convert the Blob to a Buffer
-    const bufferData = await wavData.arrayBuffer();
-    const buffer = Buffer.from(bufferData);
+    // Cleanup the sourcePath
+    // 'file:///C:/Example' -> 'C:/Example'
+    sourcePath = sourcePath.replace('file:///', '');
 
-    // Write the Buffer to the file
-    fs.writeFileSync(newTemporaryFilePath, buffer);
+    // Copy the file to the new path
+    console.error('Source: ', sourcePath);
+    console.error('New Path: ', newFilePath);
+    await fs.promises.copyFile(sourcePath, newFilePath);
+    console.error('Saved song...');
   });
 };
 
@@ -126,6 +127,23 @@ const SETUP_SETINGS = (mainWindow, dataDirectory) => {
     }
 
     fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+  });
+
+  ipcMain.on('SAVE_COLOR_SETTINGS', (event, updatedColorSettings) => {
+    // TODO Everywhere there is "settingsPath", should I modularize? Just make this a global variable...
+    const settingsPath = createSettingsPath();
+
+    let settings = getSettings();
+
+    // Store all color settings inside a 'colors' object
+    settings.colors = updatedColorSettings;
+
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+  });
+
+  ipcMain.on('GET_COLOR_SETTINGS', (event) => {
+    console.error('GETTING COLOR SETTINGS: ', getSettings());
+    mainWindow.webContents.send('RETURN_COLOR_SETTINGS', getSettings().colors);
   });
 };
 
@@ -378,16 +396,17 @@ const processSongMetadata = (file, imageFiles) => {
 const SETUP_GET_SONGS = (mainW) => {
   mainWindow = mainW;
   ipcMain.on('GET_SONGS', async (event, folderPath) => {
-    folderPath = getParentDirectory(folderPath);
+    console.error('FOLDER PATH: ', folderPath);
+    // folderPath = getParentDirectory(folderPath);
+    // console.error('FOLDER PATH2: ', folderPath);
 
     let correctedPath = '';
     // If folderPath is empty, use the default path
     if (folderPath === '') {
-      const settingsPath = createSettingsPath();
-
-      const settings = getSettings(settingsPath);
+      const settings = getSettings();
 
       correctedPath = settings.libraryDirectory;
+      console.error('FOLDERPATH 3: ', correctedPath);
     } else {
       // Our string has '\' instead of '/' so we gotta fix that
       correctedPath = folderPath.replace(/\\/g, '/');
@@ -396,14 +415,21 @@ const SETUP_GET_SONGS = (mainW) => {
       updateLibraryDirectory(correctedPath);
     }
 
+    // The user has not selected a directory, so we should return an empty array
+    if (correctedPath === '') {
+      event.reply('GRAB_SONGS', []);
+      return;
+    }
+
     // Get all songs in the given directory as well as all subdirectories
-    const audios = await glob(correctedPath + '/**/*.{mp3,wav,ogg,mp4}');
+    const audioTypes = 'mp3,wav,ogg,mp4,flac';
+    const audios = await glob(correctedPath + '/**/*.{' + audioTypes + '}');
     const imageFiles = await glob(correctedPath + '/**/*.{jpg,jpeg,png}');
 
     // Make sure we have at least one song in the directory
     if (audios.length === 0) {
       // ! OUTPUT ERROR HERE?
-      event.reply('GRAB_SONGS', []); // Send an empty array to the renderer ?? I think this is broke right now
+      event.reply('GRAB_SONGS', []);
       return;
     }
 
@@ -565,11 +591,21 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
   // Get the youtube video title
   const info = await ytdl.getInfo(url);
   const videoTitle = info.videoDetails.title.replace('|', ''); // Must remove special characters or FFMPEG will crash
-  console.log('Got video detail');
+  console.log('Got video detail: ', videoTitle);
 
   // Get where we are saving the video to
   const settings = getSettings();
   const songDirectory = settings.libraryDirectory;
+  console.log('SONG DIRECTORY: ', songDirectory);
+
+  if (songDirectory === '') {
+    console.error('No song directory selected, returning...');
+    mainWindow.webContents.send(
+      'download-error',
+      `No valid song directory found. Please choose a song directory from the settings page to download songs.`
+    );
+    return;
+  }
 
   /* Setup progress tracking */
   const tracker = {
@@ -659,6 +695,7 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
           (downloaded / total) * 100,
           spotifyDetails ? spotifyDetails.name : 'name'
         );
+        console.error('DOWNLOADING');
       });
 
     audioStream
@@ -694,23 +731,21 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
       });
 
     return new Promise((resolve, reject) => {
-      // audioStream.on('finish', () => {
-      //   console.error('SUCCESSFULLY DOWNLOADED');
-      //   resolve(outputFilePath);
-      //   mainWindow.webContents.send(
-      //     'download-success',
-      //     'Download completed!',
-      //     songData
-      //   );
-      // });
-      // audioStream.on('error', (error) => {
-      //   console.error('ERROR DOWNLOADING');
-      //   reject(error);
-      //   mainWindow.webContents.send(
-      //     'download-error',
-      //     `FFmpeg process exited with code ${code}`
-      //   );
-      // });
+      console.error('RETURNING?');
+      audioStream.on('finish', () => {
+        console.error('SUCCESSFULLY DOWNLOADED');
+        resolve(outputFilePath);
+        // mainWindow.webContents.send(
+        //   'download-success',
+        //   'Download completed!',
+        //   songData
+        // );
+      });
+      audioStream.on('error', (error) => {
+        console.error('ERROR DOWNLOADING');
+        reject(error);
+        mainWindow.webContents.send('download-error', `${error}`);
+      });
     });
   }
 
@@ -928,6 +963,8 @@ function getSettings(settingsPath) {
   if (settingsPath === undefined) {
     settingsPath = createSettingsPath();
   }
+
+  console.error('SETTINGSPATH: ', settingsPath);
 
   const settingsData = fs.readFileSync(settingsPath, 'utf-8');
   return JSON.parse(settingsData);

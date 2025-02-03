@@ -22,6 +22,7 @@ export const AudioProvider = ({ children }) => {
   /* General songs */
   const [loadedSongs, setLoadedSongs] = useState({});
   const [visibleSongs, setVisibleSongs] = useState({}); // ! TODO, I think this would work better as an array
+  const [initSongsLoading, setInitSongsLoading] = useState(true);
 
   /* General */
   const [loadingQueue, setLoadingQueue] = useState([]);
@@ -146,7 +147,7 @@ export const AudioProvider = ({ children }) => {
     nextSongs,
     toggleShuffle,
     shuffleIsEnabled,
-  } = QueueManager(currentSong, visibleSongs);
+  } = QueueManager(currentSong, visibleSongs, loadedSongs);
 
   // Handles all audio effects
   const {
@@ -223,13 +224,14 @@ export const AudioProvider = ({ children }) => {
   // Current song changed! Update our variables
   // Essentially create the new song :)
   useEffect(() => {
+    console.error('SONG CHANGED');
     // ? Can we do something here so if this is null, we never would even end up here
     if (currentSongId === null) return;
 
     // TODO If we are on a non songpage, spotify playlist for example, and the song ends, visibleSongs will be []
     // visibleSongs should NOT BE DEPENDENT on what screen is showing
     // Shouldn't need once I implement
-    if (!visibleSongs[currentSongId]) return;
+    // if (!visibleSongs[currentSongId]) return;
 
     startLoading();
 
@@ -237,7 +239,7 @@ export const AudioProvider = ({ children }) => {
     // We need to fix some characters. Unfortunatley we cant use encodeURIComponent() because
     // setting the src has its own encode :(
     // So we have to manually fix these here
-    fileLocation = visibleSongs[currentSongId].file;
+    fileLocation = loadedSongs[currentSongId].file;
     fileLocation = fileLocation.replace(/[#\$]/g, function (match) {
       // TODO This is used in multiple spots...
       if (match === '#') {
@@ -279,9 +281,11 @@ export const AudioProvider = ({ children }) => {
   const initialSongLoad = (songs) => {
     setLoadedSongs(songs);
     setVisibleSongs(songs);
+    setInitSongsLoading(false);
   };
 
   window.electron.ipcRenderer.on('GRAB_SONGS', (retrievedSongs) => {
+    console.error('GOT SONGS: ', retrievedSongs);
     initialSongLoad(retrievedSongs);
   });
 
@@ -305,6 +309,7 @@ export const AudioProvider = ({ children }) => {
         currentScreen,
         setCurrentScreen,
         setVisibleSongs,
+        initSongsLoading,
         currentSong,
         currentSongIndex,
         currentSongId,

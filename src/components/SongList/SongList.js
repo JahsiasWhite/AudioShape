@@ -16,7 +16,8 @@ const filters = ['Title', 'Duration'];
 var index = 0;
 
 function SongList({ handleSongEdit }) {
-  const { visibleSongs, currentScreen, setCurrentScreen } = useAudioPlayer();
+  const { visibleSongs, currentScreen, setCurrentScreen, initSongsLoading } =
+    useAudioPlayer();
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -25,8 +26,13 @@ function SongList({ handleSongEdit }) {
    */
   useEffect(() => {
     // TODO: Do I need to show loading?
-    if (Object.keys(visibleSongs).length > 0) {
-      setIsLoading(false);
+    // if (Object.keys(visibleSongs).length > 0) {
+    //   setIsLoading(false);
+    // } else {
+    //   setIsLoading(true);
+    // }
+    if (initSongsLoading) {
+      setIsLoading(true);
     } else {
       setIsLoading(false);
     }
@@ -81,6 +87,11 @@ function SongList({ handleSongEdit }) {
 
     // 3. Convert the sorted entries back to an object
     const sortedSongs = Object.fromEntries(songEntries);
+    // const sortedSongs = songEntries.reduce((acc, [_, song], index) => {
+    //   acc[index] = song;
+    //   return acc;
+    // }, {});
+    console.log('Sorted songs: ', sortedSongs);
 
     setFilteredSongs(sortedSongs);
   }
@@ -92,9 +103,26 @@ function SongList({ handleSongEdit }) {
     setClicked([clientX, clientY, songData]);
   }
 
+  // Use the first song to set the image
+  // TODO: Make this better
+  let firstKey = Object.keys(filteredSongs)[0];
+
+  console.error('TEST: ', filteredSongs);
+
   return (
     <div className="song-list-container">
-      <div className="song-list-header">{currentScreen}</div>
+      <div className="song-list-header">
+        {filteredSongs &&
+          filteredSongs[firstKey] &&
+          filteredSongs[firstKey].albumImage && (
+            <img
+              className="list-image-header"
+              src={filteredSongs[firstKey].albumImage}
+              alt={`${filteredSongs[firstKey].album} cover`}
+            />
+          )}
+        {currentScreen}
+      </div>
       <Searchbar setFilteredSongs={setFilteredSongs} />
       {isLoading ? (
         <p>Loading...</p>
@@ -131,6 +159,11 @@ function SongList({ handleSongEdit }) {
               {/* <div className="filter">Filter</div> */}
             </div>
           </div>
+          {/* <div className="song-details-header">
+            <div>Song</div>
+            <div>Album</div>
+            <div>Duration</div>
+          </div> */}
           <ul className="song-list">
             <SongListItems
               filteredSongs={filteredSongs}
@@ -140,7 +173,10 @@ function SongList({ handleSongEdit }) {
               handleSongEditClick={handleSongEdit}
             />
           </ul>
-          <RightClickMenu clickData={clicked} />
+          <RightClickMenu
+            clickData={clicked}
+            handleSongEditClick={handleSongEdit}
+          />
           {/* Render the PlaylistMenu when playlistMenuIndex has a real index */}
           {playlistMenuIndex != -1 && (
             <PlaylistMenu

@@ -46,11 +46,12 @@ export const DownloadManager = (
    * Sends the edited audio to the server to be saved to the file system
    */
   async function handleSongExport() {
-    const audioBuffer = await getCurrentAudioBuffer(currentSong.src);
+    if (currentSong.src === '') return;
 
-    const wavBytes = createWavBytes(audioBuffer);
-    window.electron.ipcRenderer.sendMessage('SAVE_SONG', wavBytes);
-    // downloadAudio(audioBuffer);
+    // const audioBuffer = await getCurrentAudioBuffer(currentSong.src);
+    // const wavBytes = createWavBytes(audioBuffer);
+
+    window.electron.ipcRenderer.sendMessage('SAVE_SONG', currentSong.src);
   }
 
   async function downloadAudio(audioBuffer) {

@@ -19,7 +19,7 @@ import FullscreenView from './components/FullscreenView/FullscreenView';
 import ErrorMessages from './components/ErrorMessages/ErrorMessages';
 
 // CONTEXT
-import { AudioProvider } from './AudioController/AudioContext'; // So we can talk to the editor directly, NO PROP DRILLING YAY!!
+import { AudioProvider } from './AudioController/AudioContext';
 
 function App() {
   const [selectedSongIndex, setSelectedSongIndex] = useState(null);
@@ -31,32 +31,52 @@ function App() {
   };
 
   // Current showing content in 'main-content'
-  const [currentSection, setCurrentSection] = useState('songs');
+  const [currentSection, setCurrentSection] = useState('allSongs');
+
   // Function to toggle between SongList and Playlists
   const toggleSection = (section) => {
-    //TODO FIX THIS, Each page should be its own component... instead of SongList showing all types
-    if (section === 'allSongs') {
-      section = 'songs';
-    }
     setCurrentSection(section);
   };
 
   /**
    * When the app first loads, we make a call to the server to grab the songs. It will pull any songs if a
-   * previous directory was given in the past. Once the server is done processing, it sends the songs back
-   * here where they are saved.
+   * previous directory was given in the past. Once the server is done processing, it sends the songs to our songList component
    */
   useEffect(() => {
     // Fetch initial songs when the component mounts
     window.electron.ipcRenderer.sendMessage('GET_SONGS', '');
 
-    // // ! GET_SONGS loads from the dir, while GRAB_SONGS gets songs to show on the frontend
-    // window.electron.ipcRenderer.on('GRAB_SONGS', (retrievedSongs) => {
-    //   // handleSongLoad(mp3Files);
-    //   console.error('SETTING NEW SONGS');
-    //   // setLoadedSongs(retrievedSongs); // ! should I actually call initialSongLoad?
-    // });
+    // Fetch color settings
+    // This will create a duplicate of each style
+    // I could just delete the css styles and define the defaults in the server...
+    window.electron.ipcRenderer.sendMessage('GET_COLOR_SETTINGS');
   }, []);
+
+  window.electron.ipcRenderer.on('RETURN_COLOR_SETTINGS', (colorSettings) => {
+    // If the user has never changed the color settings,
+    // then we can continue using the default ones
+    if (colorSettings === null || Object.keys(colorSettings).length === 0) {
+      return;
+    }
+
+    const root = document.documentElement;
+
+    root.style.setProperty('--color-main', colorSettings.main);
+    root.style.setProperty('--color-secondary', colorSettings.secondary);
+    root.style.setProperty('--color-tertiary', colorSettings.tertiary);
+    root.style.setProperty('--color-accent', colorSettings.accent);
+    root.style.setProperty('--color-button', colorSettings.button);
+    root.style.setProperty(
+      '--color-button-secondary',
+      colorSettings.secondaryButton
+    );
+    root.style.setProperty('--color-text', colorSettings.text);
+    root.style.setProperty(
+      '--color-text-secondary',
+      colorSettings.secondaryText
+    );
+    root.style.setProperty('--color-text-inverse', colorSettings.textInverse);
+  });
 
   /**
    * Enables fullscreen mode
@@ -85,9 +105,13 @@ function App() {
         {!isFullscreen && (
           <div className="non-fullscreen">
             <div className="middle-content">
-              <LayoutBar toggleSection={toggleSection} />
+              <LayoutBar
+                toggleSection={toggleSection}
+                currentSection={currentSection}
+                setCurrentSection={setCurrentSection}
+              />
               <div className="main-content">
-                {currentSection === 'songs' ? (
+                {currentSection === 'allSongs' ? (
                   <SongList
                     // handleSongLoad={loadedSongs}
                     handleSongEdit={handleSongSelect}

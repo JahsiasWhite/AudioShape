@@ -60,3 +60,29 @@
 
   margin-left: 5px;
 }
+
+/* Responsive styles */
+@media screen and (max-width: 768px) {
+  .layout-bar {
+    width: 60px; /* Smaller width for mobile screens */
+  }
+
+  .centered-content {
+    margin-right: 10px;
+    margin-left: 10px;
+  }
+
+  .button-container span {
+    display: none; /* Hide text on mobile */
+  }
+
+  .icon,
+  .force {
+    margin-right: 0; /* Remove margin since text is hidden */
+  }
+
+  .button-container {
+    justify-content: center; /* Center the icons */
+    margin-left: 0;
+  }
+}

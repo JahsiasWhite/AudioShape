@@ -26,7 +26,14 @@ function YouTubeDownloader() {
     });
 
     window.electron.ipcRenderer.on('download-error', (error) => {
-      setDownloadStatus('Error: ' + error);
+      console.log(error, typeof error);
+      if (error.includes('403')) {
+        setDownloadStatus(
+          'Youtube updated their site, breaking this... Ensure you have the latest version of AudioShape installed. If its still not working, please wait for a fix...'
+        );
+      } else {
+        setDownloadStatus(error);
+      }
     });
   };
 

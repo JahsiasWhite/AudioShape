@@ -35,7 +35,7 @@
 }
 
 .popup-container::-webkit-scrollbar-thumb {
-  background-color: var(--color-text); /* Color of the thumb */
+  background-color: var(--color-accent); /* Color of the thumb */
   border-radius: 10px; /* Add rounded corners */
 }
 
