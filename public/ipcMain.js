@@ -385,7 +385,7 @@ const processSongMetadata = (file, imageFiles) => {
           resolve(songData);
         })
         .catch((error) => {
-          resolve(error);
+          reject(error);
         });
     } catch (err) {
       console.error('ERROR', err);
@@ -442,17 +442,17 @@ const SETUP_GET_SONGS = (mainW) => {
       try {
         const songData = await processSongMetadata(file, imageFiles);
         songs[songData.id] = songData;
-
+      } catch (error) {
+        console.error('ERROR AT', count, '\nFile: ', file, '\nError: ', error);
+        // mainWindow.webContents.send('ERROR_MESSAGE', {
+        //   title: 'Error',
+        //   description: error.message,
+        // });
+      } finally {
         count++;
         if (count === audios.length) {
           mainWindow.webContents.send('GRAB_SONGS', songs);
         }
-      } catch (error) {
-        console.error('ERROR AT', count, '\nFile: ', file, '\nError: ', error);
-        mainWindow.webContents.send('ERROR_MESSAGE', {
-          title: 'Error',
-          description: error.message,
-        });
       }
     });
     console.error('Finished grabbing song data...');
