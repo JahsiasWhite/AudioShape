@@ -11,28 +11,49 @@ function YouTubeDownloader() {
   const { addSong } = useAudioPlayer();
 
   const [videoUrl, setVideoUrl] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [downloadStatus, setDownloadStatus] = useState(null);
 
-  const handleDownload = () => {
+  const handleUrlDownload = () => {
     if (videoUrl === '') return;
 
-    window.electron.ipcRenderer.sendMessage('DOWNLOAD_YOUTUBE_VID', videoUrl);
     setDownloadStatus('Downloading');
+    window.electron.ipcRenderer.sendMessage('DOWNLOAD_YOUTUBE_VID', videoUrl);
 
-    window.electron.ipcRenderer.on('download-success', (message, newSong) => {
+    listenForDownloadEvents();
+  };
+
+  const handleSearchDownload = () => {
+    if (searchQuery.trim() === '') return;
+
+    const songDetails = {
+      name: searchQuery,
+      artist: '',
+      album: '',
+    };
+
+    setDownloadStatus('Downloading');
+    window.electron.ipcRenderer.sendMessage(
+      'DOWNLOAD_SONG_FROM_YOUTUBE_SEARCH',
+      songDetails
+    );
+
+    listenForDownloadEvents();
+  };
+
+  const listenForDownloadEvents = () => {
+    window.electron.ipcRenderer.once('download-success', (message, newSong) => {
       setDownloadStatus('Success: ' + message);
-
       addSong(newSong);
     });
 
-    window.electron.ipcRenderer.on('download-error', (error) => {
-      console.log(error, typeof error);
-      if (error.includes('403')) {
+    window.electron.ipcRenderer.once('download-error', (error) => {
+      if (typeof error === 'string' && error.includes('403')) {
         setDownloadStatus(
           'Youtube updated their site, breaking this... Ensure you have the latest version of AudioShape installed. If its still not working, please wait for a fix...'
         );
       } else {
-        setDownloadStatus(error);
+        setDownloadStatus(error.toString());
       }
     });
   };
@@ -48,10 +69,24 @@ function YouTubeDownloader() {
           value={videoUrl}
           onChange={(e) => setVideoUrl(e.target.value)}
         />
-        <button className="download-button" onClick={handleDownload}>
+        <button className="download-button" onClick={handleUrlDownload}>
           Download
         </button>
       </div>
+
+      <div className="input-container">
+        <input
+          type="text"
+          className="video-url-input"
+          placeholder="Search YouTube for a song"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <button className="download-button" onClick={handleSearchDownload}>
+          Download
+        </button>
+      </div>
+
       {downloadStatus === 'Downloading' ? (
         <div className="center-content">
           <LoadingSpinner />

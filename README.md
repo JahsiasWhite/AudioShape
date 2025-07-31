@@ -22,7 +22,7 @@
 
 ### Core Features
 
-- 🎚️ Live audio editing (speed, EQ, effects)
+- 🎚️ Live\* audio editing (speed, EQ, effects)
 - 🔄 Edits are persistent. No need to reapply when a new song plays
 - 💾 Save/Export custom tracks and presets
 - 🎥 Built in downloader for YouTube and Spotify

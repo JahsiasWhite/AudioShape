@@ -44,26 +44,32 @@ export const AudioProvider = ({ children }) => {
    * @returns
    */
   const getCurrentAudioBuffer = async (file) => {
-    // let filePath = currentSongId;
-    // let filePath = index === undefined ? currentSongIndex : index;
-    // if (filePath === null) return;
-    const audioContext = new (window.AudioContext ||
-      window.webkitAudioContext)();
+    try {
+      // let filePath = currentSongId;
+      // let filePath = index === undefined ? currentSongIndex : index;
+      // if (filePath === null) return;
+      const audioContext = new (window.AudioContext ||
+        window.webkitAudioContext)();
 
-    // const response = await fetch(visibleSongs[filePath].file);
-    // const response = await fetch(currentSong.src);
+      // const response = await fetch(visibleSongs[filePath].file);
+      // const response = await fetch(currentSong.src);
 
-    if (file) {
-      fileLocation = file;
+      if (file) {
+        fileLocation = file;
+      }
+
+      console.error(file);
+      console.error(fileLocation);
+      const response = await fetch(fileLocation);
+      const audioData = await response.arrayBuffer();
+      const audioBuffer = await audioContext.decodeAudioData(audioData);
+
+      return audioBuffer;
+    } catch (error) {
+      // TODO: Sometimes this comes in here when it shouldn't
+      console.error('Error fetching audio buffer:', error);
+      return null;
     }
-
-    console.error(file);
-    console.error(fileLocation);
-    const response = await fetch(fileLocation);
-    const audioData = await response.arrayBuffer();
-    const audioBuffer = await audioContext.decodeAudioData(audioData);
-
-    return audioBuffer;
   };
 
   /**

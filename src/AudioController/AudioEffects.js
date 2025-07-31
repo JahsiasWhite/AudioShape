@@ -140,7 +140,10 @@ export const AudioEffects = (
   const applySavedEffects = async (comboName) => {
     // Toggling off
     console.error(fileLocation, visibleSongs[currentSongId]);
-    if (currentEffectCombo === comboName) {
+    if (
+      currentEffectCombo === comboName &&
+      fileLocation === visibleSongs[currentSongId].file
+    ) {
       toggleSavedEffectOff();
       return;
     }

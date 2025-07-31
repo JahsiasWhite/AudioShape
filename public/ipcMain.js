@@ -296,21 +296,29 @@ const SETUP_SONG_DOWNLOADS = (mainW) => {
     downloadYoutubeVideo(videoUrl);
   });
 
+  /**
+   * Downloads a song from youtube using the search query
+   */
   ipcMain.on(
     'DOWNLOAD_SONG_FROM_YOUTUBE_SEARCH',
     async (event, songDetails) => {
       // Get the song url
       const result = await youtubeSearch(songDetails.name + songDetails.artist);
-      const url = result.all[0].url; // TODO: What happens if all is empty? Is that possible? 'all' is an array of the search results...
+
+      // Is this possible? 'all' is an array of the search results...
+      if (result.all.length === 0) {
+        console.error('No results found for the search query');
+      }
 
       // download the song from youtube
-      downloadYoutubeVideo(url, songDetails);
+      const url = result.all[0].url;
+      downloadYoutubeVideo(url);
     }
   );
 };
 
 // Function to process song metadata
-const processSongMetadata = (file, imageFiles) => {
+const processSongMetadata = (file, imageMap) => {
   return new Promise((resolve, reject) => {
     try {
       metadata
@@ -362,15 +370,24 @@ const processSongMetadata = (file, imageFiles) => {
           }
 
           /* Gets image for the song/album */
+          // Prioritizes the image with the same name as the song file
+          // If none match, it will use an image found in the song directory
+          // If no image is found, the frontend will check if the song is an .mp4 file
+          // If it is, it will use a frame from the video as the album image
           const albumDir = path.dirname(file);
+          const fileName = path
+            .basename(file)
+            .substring(0, file.lastIndexOf('.'));
           let savedImage = undefined;
-          for (const image in imageFiles) {
-            const imageDir = path.dirname(imageFiles[image]);
-            if (albumDir === imageDir) {
-              savedImage = imageFiles[image];
-              break;
+          imageMap[albumDir]?.forEach((imageFile) => {
+            if (savedImage === fileName) {
+              savedImage = imageFile;
+              return;
             }
-          }
+            if (!savedImage) {
+              savedImage = imageFile;
+            }
+          });
 
           const songData = {
             id: key,
@@ -379,7 +396,7 @@ const processSongMetadata = (file, imageFiles) => {
             artist: artist,
             album: album,
             duration: duration,
-            albumImage: savedImage, // Initialize image
+            albumImage: savedImage,
           };
 
           resolve(songData);
@@ -424,7 +441,18 @@ const SETUP_GET_SONGS = (mainW) => {
     // Get all songs in the given directory as well as all subdirectories
     const audioTypes = 'mp3,wav,ogg,mp4,flac';
     const audios = await glob(correctedPath + '/**/*.{' + audioTypes + '}');
+
+    // Get and set a map of image files for easier access
     const imageFiles = await glob(correctedPath + '/**/*.{jpg,jpeg,png}');
+    const imageMap = {};
+    imageFiles.forEach((imageFile) => {
+      const imageDir = path.dirname(imageFile);
+      if (!imageMap[imageDir]) {
+        imageMap[imageDir] = [];
+      }
+      imageMap[imageDir].push(imageFile);
+    });
+    console.error('Image Map: ', imageMap);
 
     // Make sure we have at least one song in the directory
     if (audios.length === 0) {
@@ -437,10 +465,10 @@ const SETUP_GET_SONGS = (mainW) => {
     let count = 0; // This is so we know when we ran out of files to parse and can return
     songs = {}; // ? Reset songs here?
 
-    console.error('Grabbing song data...');
+    console.log('Grabbing song data...');
     audios.forEach(async (file) => {
       try {
-        const songData = await processSongMetadata(file, imageFiles);
+        const songData = await processSongMetadata(file, imageMap);
         songs[songData.id] = songData;
       } catch (error) {
         console.error('ERROR AT', count, '\nFile: ', file, '\nError: ', error);
@@ -591,7 +619,7 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
   // Get the youtube video title
   const info = await ytdl.getInfo(url);
   const videoTitle = info.videoDetails.title.replace('|', ''); // Must remove special characters or FFMPEG will crash
-  console.log('Got video detail: ', videoTitle);
+  console.log('Got video title: ', videoTitle);
 
   // Get where we are saving the video to
   const settings = getSettings();
@@ -663,6 +691,7 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
   };
 
   // Downloading audio only
+  // TODO: Refactor this entire thing. Its bad...
   if (!settings.mp4DownloadEnabled) {
     const outputVagueFilePath = path.join(
       songDirectory,
@@ -834,7 +863,7 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
           spotifyDetails
         );
       } else {
-        songData = await processSongMetadata(outputFilePath, []);
+        songData = await processSongMetadata(outputFilePath, {});
       }
 
       mainWindow.webContents.send(
