@@ -27,20 +27,21 @@ const mockCurrentSong = {
   addEventListener: jest.fn(),
   removeEventListener: jest.fn(),
 };
+const effects = { 1: {} };
+const loadingQueue = ['effect1'];
+
 var mockSetVisibleSongs;
 var handleSongSelectMock;
 var resetCurrentSongMock;
+var setEffectsMock;
 jest.mock('../../../src/AudioController/AudioContext', () => {
   const useAudioPlayer = jest.fn();
   useAudioPlayer.mockReturnValue({
-    // setVisibleSongs: (mockSetVisibleSongs = jest.fn()),
-    // setCurrentScreen: jest.fn(),
-    // loadedSongs: loadedSongs,
-    // visibleSongs: loadedSongs,
-    // handleSongSelect: (handleSongSelectMock = jest.fn()),
+    effects: effects,
+    setEffects: (setEffectsMock = jest.fn()),
+    loadingQueue: loadingQueue,
     currentSpeed: 1,
     currentSong: mockCurrentSong,
-    loadingQueue: [],
     savedEffects: savedEffects,
     resetCurrentSong: (resetCurrentSongMock = jest.fn()),
     addEffect: jest.fn(),
@@ -87,6 +88,10 @@ describe('<AudioPlugin />', () => {
 
     // Click reset button
     fireEvent.click(resetButton);
+
+    expect(resetCurrentSongMock).toHaveBeenCalledTimes(1);
+    expect(setEffectsMock).toHaveBeenCalledTimes(1);
+    expect(getByText('MULTIPLIER: 1x')).not.toBeNull();
   });
 
   it('speed knob should work', async () => {

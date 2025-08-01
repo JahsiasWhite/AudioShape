@@ -135,15 +135,18 @@ export const AudioEffects = (
     console.log('Toggling saved effect off');
     resetCurrentSong();
     finishLoading();
+    setEffects({});
   };
 
   const applySavedEffects = async (comboName) => {
     // Toggling off
     console.error(fileLocation, visibleSongs[currentSongId]);
-    if (
-      currentEffectCombo === comboName &&
-      fileLocation === visibleSongs[currentSongId].file
-    ) {
+    console.error(
+      currentEffectCombo === comboName,
+      currentSongId === undefined,
+      fileLocation === visibleSongs[currentSongId]?.file
+    );
+    if (currentEffectCombo === comboName) {
       toggleSavedEffectOff();
       return;
     }

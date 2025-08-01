@@ -46,6 +46,8 @@ function Playbar({ toggleFullscreen }) {
     <div className="playbar">
       <div className="current-song">
         {/* TODO Clean this up? */}
+        {/* Loading queue - how many more effects to load
+         * effects - how many effects in total should be loaded */}
         {loadedSongs[currentSongId] &&
           loadedSongs[currentSongId].albumImage && (
             <img
@@ -57,10 +59,9 @@ function Playbar({ toggleFullscreen }) {
         {loadingQueue.length > 0 ? (
           <>
             <LoadingSpinner />
-            {-1 * (loadingQueue.length - Object.keys(effects).length) +
-              '/' +
-              Object.keys(effects).length +
-              'effects'}
+            {`${Object.keys(effects).length - loadingQueue.length}/${
+              Object.keys(effects).length
+            } effects`}
           </>
         ) : (
           <div className="song-details">

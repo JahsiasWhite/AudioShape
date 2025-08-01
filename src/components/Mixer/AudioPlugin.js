@@ -42,6 +42,7 @@ const AudioPlugin = () => {
   const {
     addEffect,
     effects,
+    setEffects,
     resetCurrentSong,
     currentEffectCombo,
     savedEffects,
@@ -206,6 +207,8 @@ const AudioPlugin = () => {
 
     // Restart the current playing song
     resetCurrentSong();
+
+    setEffects({}); // Clear all effects
   };
 
   /**
@@ -213,7 +216,7 @@ const AudioPlugin = () => {
    */
   const resetKnobValues = () => {
     setKnobs({
-      speed: initialKnobValues.speedKnobValue * INIT_MULTIPLIER,
+      speed: initialKnobValues.speedKnobValue,
       reverbWetness: initialKnobValues.reverbKnobValue,
       delay: initialKnobValues.delayKnobValue,
       bitCrusher: initialKnobValues.bitCrusherKnobValue,
