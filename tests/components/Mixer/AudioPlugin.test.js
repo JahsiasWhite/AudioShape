@@ -168,4 +168,70 @@ describe('<AudioPlugin />', () => {
     // const innerKnob2 = speedKnob.querySelector('.knob.inner');
     // expect(getComputedStyle(innerKnob2).transform).toBe('rotate(178deg)');
   });
+
+  it('speed knob position should update when a speed effect is added (like toggleSpeedup)', async () => {
+    // Mock the useAudioPlayer hook to simulate currentSpeed changes
+    const mockUseAudioPlayer =
+      require('../../../src/AudioController/AudioContext').useAudioPlayer;
+
+    // First render with default speed
+    mockUseAudioPlayer.mockReturnValue({
+      effects: effects,
+      setEffects: setEffectsMock,
+      loadingQueue: loadingQueue,
+      currentSpeed: 1, // Default speed
+      currentSong: mockCurrentSong,
+      savedEffects: savedEffects,
+      resetCurrentSong: resetCurrentSongMock,
+      addEffect: jest.fn(),
+    });
+
+    const { container, getByText, rerender } = render(
+      <AudioProvider>
+        <AudioPlugin />
+      </AudioProvider>
+    );
+
+    // Multiplier is default to 1x
+    expect(getByText('MULTIPLIER: 1x')).not.toBeNull();
+    const speedContainer = container.querySelector('.speed-body');
+
+    const speedKnob = speedContainer.querySelector('.knob');
+    const innerKnob = speedKnob.querySelector('.knob.inner');
+
+    // Make sure default values are correct
+    expect(getComputedStyle(innerKnob).transform).toBe('rotate(178deg)');
+
+    // Now simulate a speed effect being added (like toggleSpeedup would do)
+    // Update the mock to return a new currentSpeed value
+    mockUseAudioPlayer.mockReturnValue({
+      effects: effects,
+      setEffects: setEffectsMock,
+      loadingQueue: loadingQueue,
+      currentSpeed: 1.2, // Speed effect applied
+      currentSong: mockCurrentSong,
+      savedEffects: savedEffects,
+      resetCurrentSong: resetCurrentSongMock,
+      addEffect: jest.fn(),
+    });
+
+    // Rerender the component to trigger the useEffect
+    rerender(
+      <AudioProvider>
+        <AudioPlugin />
+      </AudioProvider>
+    );
+
+    // The speed knob position should now reflect the new speed
+    await waitFor(() => {
+      expect(getByText('MULTIPLIER: 1.2x')).not.toBeNull();
+
+      // The knob position should have changed to reflect the new speed
+      // The exact transform value will depend on how the speed maps to knob position
+      const innerKnobUpdated = container.querySelector('.knob.inner');
+      const newTransform = getComputedStyle(innerKnobUpdated).transform;
+
+      expect(newTransform).not.toBe('rotate(178deg)'); // Should be different from default
+    });
+  });
 });

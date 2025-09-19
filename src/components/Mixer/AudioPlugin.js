@@ -77,6 +77,14 @@ const AudioPlugin = () => {
 
   const [multiplier, setMultiplier] = useState(INIT_MULTIPLIER);
 
+  // Sync speed knob position with currentSpeed changes from audio context
+  useEffect(() => {
+    // Only update if currentSpeed has changed
+    const newSpeedKnobValue = initialKnobValues.speedKnobValue * currentSpeed;
+    setKnobs((prevKnobs) => ({ ...prevKnobs, speed: newSpeedKnobValue }));
+    setMultiplier(currentSpeed);
+  }, [currentSpeed, savedEffects]);
+
   /* Styles for the different knobs */
   const speedKnobStyles = {
     degrees: 260,

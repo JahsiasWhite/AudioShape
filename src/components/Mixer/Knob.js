@@ -39,6 +39,22 @@ const Knob = ({ customProps, knobValue, onChange }) => {
       this.state = { deg: this.currentDeg };
     }
 
+    componentDidUpdate(prevProps) {
+      // Update knob position when knobValue prop changes
+      if (prevProps.knobValue !== this.props.knobValue) {
+        this.currentDeg = Math.floor(
+          this.convertRange(
+            this.props.min,
+            this.props.max,
+            this.startAngle,
+            this.endAngle,
+            this.props.knobValue
+          )
+        );
+        this.setState({ deg: this.currentDeg });
+      }
+    }
+
     startDrag = (e) => {
       e.preventDefault();
       const knob = e.target.getBoundingClientRect();
