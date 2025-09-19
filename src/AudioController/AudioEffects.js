@@ -27,6 +27,7 @@ export const AudioEffects = (
   const [currentSpeed, setCurrentSpeed] = useState(1);
   const [speedupIsEnabled, setSpeedupIsEnabled] = useState(false);
   const [slowDownIsEnabled, setSlowDownIsEnabled] = useState(false);
+  const [effectSongId, setEffectSongId] = useState(null);
 
   //   var fileLocation; // TODO
   var effectThreshold = 0;
@@ -135,18 +136,13 @@ export const AudioEffects = (
     console.log('Toggling saved effect off');
     resetCurrentSong();
     finishLoading();
-    setEffects({});
   };
 
   const applySavedEffects = async (comboName) => {
     // Toggling off
-    console.error(fileLocation, visibleSongs[currentSongId]);
-    console.error(
-      currentEffectCombo === comboName,
-      currentSongId === undefined,
-      fileLocation === visibleSongs[currentSongId]?.file
-    );
-    if (currentEffectCombo === comboName) {
+    const isSameCombo = currentEffectCombo === comboName;
+    const isSameSong = effectSongId === currentSongId;
+    if (isSameCombo && isSameSong) {
       toggleSavedEffectOff();
       return;
     }
@@ -157,6 +153,7 @@ export const AudioEffects = (
     if (savedEffects[comboName]) {
       setEffectsEnabled(true);
       setCurrentEffectCombo(comboName); // TODO ALSO REDUNDANT
+      setEffectSongId(currentSongId);
 
       // Disable any other effects
       setSpeedupIsEnabled(false);
@@ -192,25 +189,13 @@ export const AudioEffects = (
       currentSong.removeEventListener('ended', onSongEnded);
     }
 
-    // They can't both be active
-    if (slowDownIsEnabled) {
-      setSlowDownIsEnabled(false);
-    }
+    const newSpeed = speedupIsEnabled ? 1 : DEFAULT_SPEEDUP;
+    setSpeedupIsEnabled(!speedupIsEnabled);
+    setSlowDownIsEnabled(false);
 
-    // If there is a current playing, set the global file location to the unedited song
-    // TODO: I think this is useless? Check toggleSlowdown as well
-    // if (currentSongId !== null) fileLocation = visibleSongs[currentSongId].file; // TODO: Make this a function, set default fileLocation -- setSongFileDefaultLocation
+    addEffect('speed', newSpeed);
 
-    if (speedupIsEnabled) {
-      setSpeedupIsEnabled(false);
-      // handleSpeedChange(1);
-      addEffect('speed', 1);
-    } else {
-      setSpeedupIsEnabled(true);
-      // handleSpeedChange(DEFAULT_SPEEDUP);
-      addEffect('speed', DEFAULT_SPEEDUP);
-
-      // Disable all other current effects
+    if (!speedupIsEnabled) {
       setEffectsEnabled(false);
       setCurrentEffectCombo('');
     }
@@ -225,24 +210,16 @@ export const AudioEffects = (
       currentSong.removeEventListener('ended', onSongEnded);
     }
 
-    if (speedupIsEnabled) {
-      setSpeedupIsEnabled(false);
-    }
+    const newSpeed = slowDownIsEnabled ? 1 : DEFAULT_SLOWDOWN;
+    setSlowDownIsEnabled(!slowDownIsEnabled);
+    setSpeedupIsEnabled(false);
 
-    // fileLocation = visibleSongs[currentSongId].file;
+    addEffect('speed', newSpeed);
 
-    if (slowDownIsEnabled) {
-      setSlowDownIsEnabled(false);
-      // handleSpeedChange(1);
-      addEffect('speed', 1);
-    } else {
-      setSlowDownIsEnabled(true);
-      // handleSpeedChange(DEFAULT_SLOWDOWN);
-      addEffect('speed', DEFAULT_SLOWDOWN);
+    if (!slowDownIsEnabled) {
+      setEffectsEnabled(false);
+      setCurrentEffectCombo('');
     }
-    // return;
-    // setSlowDownIsEnabled(!slowDownIsEnabled);
-    // handleSpeedChange(1.2);
   };
 
   /**
@@ -280,11 +257,11 @@ export const AudioEffects = (
     );
   };
 
-  useEffect(() => {
-    const handleEffectComboAdded = (newEffectCombos) => {
-      setSavedEffects(newEffectCombos);
-    };
+  const handleEffectComboAdded = (newEffectCombos) => {
+    setSavedEffects(newEffectCombos);
+  };
 
+  useEffect(() => {
     window.electron.ipcRenderer.once(
       'SAVE_EFFECT_COMBO',
       handleEffectComboAdded
@@ -316,6 +293,8 @@ export const AudioEffects = (
    */
   const resetCurrentSong = () => {
     // Reset the songs effects
+    setEffects({});
+    setEffectSongId(null);
     setCurrentEffectCombo('');
     setEffectsEnabled(false);
     setSpeedupIsEnabled(false);
