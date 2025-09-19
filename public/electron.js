@@ -4,7 +4,6 @@ const path = require('path');
 const fs = require('fs');
 const url = require('url');
 
-// TODO Put these all in one function...
 const {
   SAVE_TEMP_SONG,
   DELETE_TEMP_SONG,
@@ -16,26 +15,44 @@ const {
   SETUP_GET_SONGS,
 } = require('./ipcMain');
 
-// TODO: Use these instead of 'path.join()'. I don't know why I have so many duplicates
-const dataDirectory = path.join(app.getPath('userData'), 'Data'); // Gets the path to the data folder
+// Initialize application constants and file paths
+function initializeAppConstants() {
+  const dataDirectory = path.join(app.getPath('userData'), 'Data');
+  
+  const defaultSettings = JSON.stringify({
+    libraryDirectory: '',
+    loop: 'none',
+    volume: 100,
+    allowRemote: true,
+    mp4DownloadEnabled: false,
+    spotifyEnabled: false,
+    dataDirectory: dataDirectory,
+    attchingExtraDetails: true,
+  });
 
-/* Globals */
-let defaultSettings = JSON.stringify({
-  libraryDirectory: '',
-  loop: 'none',
-  volume: 100,
-  allowRemote: true,
-  mp4DownloadEnabled: false,
-  spotifyEnabled: false,
-  dataDirectory: dataDirectory,
-  attchingExtraDetails: true,
-});
+  const settingsFile = path.join(dataDirectory, 'settings.json');
+  const playlistsFile = path.join(dataDirectory, 'playlists.json');
+  const effectCombosFile = path.join(dataDirectory, 'effectCombos.json');
+  const tempSongFolder = path.join(dataDirectory, 'temp-songs');
 
-/* Create the files to save settings */
-const settingsFile = dataDirectory + '\\settings.json';
-const playlistsFile = dataDirectory + '\\playlists.json';
-const effectCombosFile = dataDirectory + '\\effectCombos.json';
-const tempSongFolder = dataDirectory + '\\temp-songs';
+  return {
+    dataDirectory,
+    defaultSettings,
+    settingsFile,
+    playlistsFile,
+    effectCombosFile,
+    tempSongFolder
+  };
+}
+
+const {
+  dataDirectory,
+  defaultSettings,
+  settingsFile,
+  playlistsFile,
+  effectCombosFile,
+  tempSongFolder
+} = initializeAppConstants();
 if (!fs.existsSync(dataDirectory)) {
   fs.mkdirSync(dataDirectory);
 }
