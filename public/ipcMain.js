@@ -34,6 +34,7 @@ let effectCombosFile = null;
 let mainWindow = undefined;
 
 /* When auto playing with edits on, we have to save the song to have full editing control */
+// TODO: Is there a way to not have to save file? Can't we just use in-memory buffers?
 const SAVE_TEMP_SONG = (dataDirectory, mainWindow) => {
   ipcMain.on('SAVE_TEMP_SONG', async (event, audioData) => {
     console.error('Saving temp song');

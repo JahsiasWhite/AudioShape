@@ -36,7 +36,7 @@ export async function renderAudioWithEffect(
       return;
   }
 
-  console.error('EFFECT PARAMS: ', effectParams);
+  console.log('Effect Parameters: ', effectParams);
   const duration = audioBuffer.duration;
   return await Tone.Offline(async ({ transport }) => {
     const source = effectFunction(audioBuffer, effectParams);
