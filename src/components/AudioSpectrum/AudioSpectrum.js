@@ -44,7 +44,10 @@ const AudioSpectrum = ({ song, loading }) => {
 
       analyser.getByteFrequencyData(dataArray);
 
-      ctx.fillStyle = 'rgb(13 14 18)'; // Background color
+      // Create background
+      const root = document.documentElement;
+      const computedStyle = getComputedStyle(root);
+      ctx.fillStyle = computedStyle.getPropertyValue('--color-main').trim();
       ctx.fillRect(0, 0, canvas.width, canvas.height); // (x, y, width, height)
 
       let lastBarHeights = [];
