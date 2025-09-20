@@ -1,5 +1,9 @@
 import { useState, useCallback } from 'react';
 
+// If the current song has played for more than this many seconds,
+// going to the previous song will restart this song instead of going to the previous song
+const TOTAL_SECONDS_TO_RESTART = 3;
+
 export const QueueManager = (currentSong, visibleSongs, loadedSongs) => {
   const [currentSongId, setCurrentSongId] = useState(null);
   const [currentSongIndex, setCurrentSongIndex] = useState(null);
@@ -78,6 +82,13 @@ export const QueueManager = (currentSong, visibleSongs, loadedSongs) => {
   );
 
   const playPreviousSong = useCallback(() => {
+    // Should just restart the current song if it has been playing for more than a few seconds
+    if (currentSong && currentSong.currentTime > TOTAL_SECONDS_TO_RESTART) {
+      currentSong.currentTime = 0;
+      currentSong.play();
+      return;
+    }
+
     if (currentSong) {
       currentSong.removeEventListener('ended', onSongEnded);
     }
