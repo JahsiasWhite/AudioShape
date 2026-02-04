@@ -183,7 +183,6 @@ export const AudioProvider = ({ children }) => {
   } = AudioEffects(
     currentSong,
     fileLocation,
-    onSongEnded,
     visibleSongs,
     currentSongId,
     startLoading,
@@ -262,23 +261,17 @@ export const AudioProvider = ({ children }) => {
       return;
     }
 
-    /* If speed is changed, edit the song first and then play */
-    if (speedupIsEnabled) {
-      // handleSpeedChange(DEFAULT_SPEEDUP);
-      addEffect('speed', DEFAULT_SPEEDUP);
-      return;
-    } else if (slowDownIsEnabled) {
-      // handleSpeedChange(DEFAULT_SLOWDOWN);
-      addEffect('speed', DEFAULT_SLOWDOWN);
-      return;
-    }
-
     currentSong.src = fileLocation;
+
+    /* Apply live speed if a speed preset is active */
+    if (speedupIsEnabled) {
+      addEffect('speed', DEFAULT_SPEEDUP);
+    } else if (slowDownIsEnabled) {
+      addEffect('speed', DEFAULT_SLOWDOWN);
+    }
 
     /* (Re)Initializes the current song */
     initCurrentSong();
-
-    // setCurrentSong(currentSong);
 
     finishLoading();
   }, [currentSongId]);

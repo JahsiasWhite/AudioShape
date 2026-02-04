@@ -8,7 +8,6 @@ import {
 export const AudioEffects = (
   currentSong,
   fileLocation,
-  onSongEnded,
   visibleSongs,
   currentSongId,
   startLoading,
@@ -31,6 +30,7 @@ export const AudioEffects = (
 
   //   var fileLocation; // TODO
   var effectThreshold = 0;
+  var totalRenderedEffects = 0;
 
   /**
    * Applies the given effect to the current song
@@ -43,9 +43,10 @@ export const AudioEffects = (
       return;
     }
 
-    // Speed works differently from all other effects
+    // Speed is applied live via playbackRate
     if (effect === 'speed') {
-      handleSpeedChange(value);
+      currentSong.playbackRate = value;
+      currentSong.defaultPlaybackRate = value;
       return;
     }
 
@@ -66,52 +67,53 @@ export const AudioEffects = (
 
     if (!currentSongId) {
       console.log('No song selected, returning');
-      effects[currentEffect] = value;
-      setEffects(effects);
+      if (currentEffect !== 'speed') {
+        setEffects({...effects, [currentEffect]: value});
+      }
+      return;
+    }
+
+    // Speed is applied live via playbackRate - never rendered to a file
+    if (currentEffect === 'speed') {
+      setCurrentSpeed(value);
+      currentSong.playbackRate = value;
+      currentSong.defaultPlaybackRate = value;
       return;
     }
 
     /* Make effects unclickable while the current song is being edited */
     startLoading(currentEffect);
 
-    // Save the new speed. RN only used for the video player
-    if (currentEffect === 'speed') {
-      setCurrentSpeed(value);
-    }
-
     // Add our effects to the list
     // Check if the effect was turned off
     // TODO: Get the actual defaults, kinda fcking up with reverb wetness rn
     if (value === 1 || value === false) {
-      delete effects[currentEffect];
+      const { [currentEffect]: _, ...remainingEffects } = effects;
+      setEffects(remainingEffects);
       fileLocation = visibleSongs[currentSongId].file;
 
-      // TODO ! Have to add all other effects back now
-      const otherEffect = Object.keys(effects);
+      // Re-apply remaining non-speed effects (speed is handled live)
+      const otherEffect = Object.keys(remainingEffects).filter(e => e !== 'speed');
       console.log(otherEffect);
       if (otherEffect[0] === undefined) {
         // play original song
         console.log('PLAYING ORIGINAL SONG');
 
-        // TODO I THINK THESE HAPPEN A FEW TIMES, MAKE IN OWN FUNCTION?
         /* Start playing the new song */
         currentSong.src = fileLocation;
         initCurrentSong();
-        // setCurrentSong(currentSong);
 
         /* Make the effects clickable again */
         finishLoading();
       } else {
         // loop through all other effects
-        runEffect(otherEffect[0], effects[otherEffect[0]]);
+        runEffect(otherEffect[0], remainingEffects[otherEffect[0]]);
       }
 
       return;
-    } else {
-      effects[currentEffect] = value;
     }
 
-    setEffects(effects);
+    setEffects(prev => ({...prev, [currentEffect]: value}));
 
     /* Annoying check, this will run if we aren't coming from applySavedEffects. IE: just editing one at a time and not using saved effects OR using a speed preset */
     if (fL === undefined) {
@@ -147,33 +149,52 @@ export const AudioEffects = (
       return;
     }
 
+    // Reset all current effects before applying new combo
+    setEffects({});
+    setCurrentSpeed(1);
+    currentSong.playbackRate = 1;
+    currentSong.defaultPlaybackRate = 1;
+
     // The first effect will be applied to the original file
-    if (currentSongId) fileLocation = visibleSongs[currentSongId].file;
+    if (currentSongId && visibleSongs[currentSongId]) fileLocation = visibleSongs[currentSongId].file;
 
     if (savedEffects[comboName]) {
       setEffectsEnabled(true);
-      setCurrentEffectCombo(comboName); // TODO ALSO REDUNDANT
+      setCurrentEffectCombo(comboName);
       setEffectSongId(currentSongId);
 
       // Disable any other effects
       setSpeedupIsEnabled(false);
       setSlowDownIsEnabled(false);
 
-      // Start loading the all effects
-      // startLoading(savedEffects[comboName]);
+      // Count non-speed effects upfront (can't rely on effects state due to React batching)
+      totalRenderedEffects = Object.keys(savedEffects[comboName])
+        .filter(e => e !== 'speed').length;
 
       for (const effect in savedEffects[comboName]) {
-        effectThreshold++;
-
         const effectValue = savedEffects[comboName][effect];
-        // console.error(effect, effectValue);
-        // console.error(fileLocation);
-        // runEffect(effect, effectValue);
-        await addEffect(effect, effectValue, fileLocation); // TODO I dont like this, kinda sloppy
+
+        // Speed is applied live, not rendered to a file
+        if (effect === 'speed') {
+          setCurrentSpeed(effectValue);
+          currentSong.playbackRate = effectValue;
+          currentSong.defaultPlaybackRate = effectValue;
+          continue;
+        }
+
+        effectThreshold++;
+        await addEffect(effect, effectValue, fileLocation);
         fileLocation = currentSong.src; // All subsequent effects will be applied to the temp file
 
         // Finish loading the effect
         finishLoading(effect);
+      }
+
+      // If the combo only had speed (no rendered effects), play the original song directly
+      if (totalRenderedEffects === 0) {
+        currentSong.src = fileLocation;
+        initCurrentSong();
+        finishLoading();
       }
     } else {
       // NOT A COMBO
@@ -184,11 +205,6 @@ export const AudioEffects = (
    * Toggles whether the current and all future songs will be sped up
    */
   const toggleSpeedup = () => {
-    if (currentSong) {
-      // TODO: maybe make this its own function? gets used quite a bit
-      currentSong.removeEventListener('ended', onSongEnded);
-    }
-
     const newSpeed = speedupIsEnabled ? 1 : DEFAULT_SPEEDUP;
     setSpeedupIsEnabled(!speedupIsEnabled);
     setSlowDownIsEnabled(false);
@@ -205,11 +221,6 @@ export const AudioEffects = (
    * Toggles whether the current and all future songs will be slowed down
    */
   const toggleSlowDown = () => {
-    if (currentSong) {
-      // TODO: maybe make this its own function? gets used quite a bit
-      currentSong.removeEventListener('ended', onSongEnded);
-    }
-
     const newSpeed = slowDownIsEnabled ? 1 : DEFAULT_SLOWDOWN;
     setSlowDownIsEnabled(!slowDownIsEnabled);
     setSpeedupIsEnabled(false);
@@ -232,7 +243,7 @@ export const AudioEffects = (
         async (outputPath) => {
           await handleTempSongSaved(
             outputPath,
-            Object.keys(effects).length,
+            totalRenderedEffects,
             effectThreshold
           );
           resolve();
@@ -249,11 +260,16 @@ export const AudioEffects = (
   });
 
   const saveEffects = (comboName) => {
+    // Include speed in saved combos (speed is tracked via currentSpeed, not effects)
+    const effectsToSave = currentSpeed !== 1
+      ? {...effects, speed: currentSpeed}
+      : effects;
+
     // Save the effectCombo permanently
     window.electron.ipcRenderer.sendMessage(
       'SAVE_EFFECT_COMBO',
       comboName,
-      effects
+      effectsToSave
     );
   };
 
@@ -299,6 +315,9 @@ export const AudioEffects = (
     setEffectsEnabled(false);
     setSpeedupIsEnabled(false);
     setSlowDownIsEnabled(false);
+    setCurrentSpeed(1);
+    currentSong.playbackRate = 1;
+    currentSong.defaultPlaybackRate = 1;
 
     if (!currentSongId) return;
 
