@@ -10,6 +10,8 @@
 
 .fullscreen-playbar-show {
   transform: translateY(0%) !important;
-  background-color: rgba(13, 14, 18, 0.85);
+  /* background-color: rgba(13, 14, 18, 0.85); */
+  background-color: var(--color-main);
+  opacity: 0.85;
   backdrop-filter: blur(8px);
 }

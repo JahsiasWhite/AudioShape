@@ -3,7 +3,8 @@
 }
 
 .settings-container {
-  background-color: var(--color-tertiary);
+  background-color: var(--color-main);
+  color: var(--color-text);
   padding: 20px;
   border: 1px solid #2a2a38;
   border-radius: 8px;

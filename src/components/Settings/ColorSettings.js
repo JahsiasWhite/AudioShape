@@ -61,6 +61,7 @@ const ColorSettings = () => {
     const root = document.documentElement;
     const computedStyle = getComputedStyle(root);
 
+    console.log('Initializing colors from CSS variables:');
     setColors({
       main: computedStyle.getPropertyValue('--color-main').trim(),
       secondary: computedStyle.getPropertyValue('--color-secondary').trim(),
@@ -96,7 +97,7 @@ const ColorSettings = () => {
     } else {
       root.style.setProperty(
         `--color-${colorKey.replace(/([A-Z])/g, '-$1').toLowerCase()}`,
-        value
+        value,
       );
     }
 
@@ -127,7 +128,7 @@ const ColorSettings = () => {
     // Save default colors to electron settings
     window.electron.ipcRenderer.sendMessage(
       'SAVE_COLOR_SETTINGS',
-      defaultColors
+      defaultColors,
     );
   };
 
