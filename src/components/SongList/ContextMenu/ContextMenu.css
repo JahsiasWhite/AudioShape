@@ -6,20 +6,26 @@
 .context-menu {
   list-style: none;
   background-color: var(--color-secondary);
-  border: 1px solid #ccc;
-  padding: 0;
+  border: 1px solid #252530;
+  border-radius: 6px;
+  padding: 4px 0;
   margin: 0;
   position: absolute;
   z-index: 1000;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+  min-width: 140px;
 }
 
 .context-menu li {
-  padding: 8px;
+  padding: 8px 14px;
   cursor: pointer;
+  font-size: 13px;
+  color: var(--color-text);
+  transition: background 0.1s;
 }
 
 .context-menu li:hover {
-  background-color: grey;
+  background-color: rgba(255, 255, 255, 0.06);
 }
 
 .context-menu-container.active .context-menu {
@@ -27,18 +33,18 @@
 }
 
 .popup-container::-webkit-scrollbar {
-  width: 10px; /* Width of the scrollbar */
+  width: 6px;
 }
 
 .popup-container::-webkit-scrollbar-track {
-  background: var(--color-main); /* Background color of the track */
+  background: var(--color-main);
 }
 
 .popup-container::-webkit-scrollbar-thumb {
-  background-color: var(--color-accent); /* Color of the thumb */
-  border-radius: 10px; /* Add rounded corners */
+  background-color: #2a2a3a;
+  border-radius: 10px;
 }
 
 .popup-container::-webkit-scrollbar-thumb:hover {
-  background-color: var(--color-button); /* Color of the thumb on hover */
+  background-color: var(--color-accent);
 }

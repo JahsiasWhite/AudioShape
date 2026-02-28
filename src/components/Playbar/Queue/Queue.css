@@ -1,5 +1,4 @@
 .queue {
-  /* margin-right: 10px; */
 }
 
 .showing {
@@ -10,10 +9,11 @@
   margin-top: 5px;
   border-radius: 5px;
   padding: 10px;
+  transition: background 0.15s;
 }
 
 .queue-item:hover {
-  background-color: grey;
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .current-song-queue {

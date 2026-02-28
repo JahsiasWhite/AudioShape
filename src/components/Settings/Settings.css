@@ -5,8 +5,8 @@
 .settings-container {
   background-color: var(--color-tertiary);
   padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
+  border: 1px solid #2a2a38;
+  border-radius: 8px;
   margin: 20px;
 }
 

@@ -1,20 +1,14 @@
 :root {
-  --color-main: rgb(13 14 18);
-  --color-secondary: rgb(26, 25, 26);
-  --color-tertiary: white;
-  --color-accent: white;
-  --color-button: #294973;
-  --color-text: white;
-  --color-text-secondary: lightgrey;
-  --color-text-inverse: black;
-  --color-button-secondary: #316baa;
-
-  /* --color-main: #203245; */
-  /* --color-secondary: #2a4057; */
-  /* --color-button-secondary: #e76f51; */
-  /* --color-button-secondary: #277da1; */
+  --color-main: rgb(13, 14, 18);
+  --color-secondary: #141418;
+  --color-tertiary: #1c1c24;
+  --color-accent: #00c8ff;
+  --color-button: #1d3a56;
+  --color-text: #dde0ea;
+  --color-text-secondary: #72728a;
+  --color-text-inverse: #ccd0e0;
+  --color-button-secondary: #0088b0;
 }
-/* background-color: rgb(13 14 18) !important; */
 
 body {
   overflow: hidden;
@@ -25,8 +19,8 @@ input {
 }
 
 ::placeholder {
-  color: var(--color-secondary);
-  /* color: rgba(255, 255, 255, 0.7); */
+  color: var(--color-text-secondary);
+  opacity: 0.5;
 }
 
 .app-container {
@@ -35,17 +29,13 @@ input {
   width: 100vw;
   color: var(--color-text);
   flex-direction: initial;
-  /* I dont like blurry text */
   font-weight: 300;
-
   overflow: hidden;
 }
 
 .non-fullscreen {
   display: flex;
   flex-direction: column;
-  /* height: 100vh; */
-  /* width: 100vw; */
   background-color: var(--color-main);
 }
 
@@ -58,24 +48,16 @@ input {
 }
 
 .playbar {
-  /* width: 100%; */
-  /* background-color: inherit; */
-  /* position: absolute; */
-  /* bottom: 0; */
-
   display: flex;
   justify-content: space-between;
   align-items: center;
-  /* height: auto; */
-  /* position: absolute; */
-  /* width: 100%; */
   padding-top: 10px;
   padding-bottom: 10px;
   width: 100vw;
+  border-top: 1px solid #1e1e2a;
 }
 
 .layout-bar {
-  /* padding-right: 10px; */
   background-color: var(--color-main);
 }
 
@@ -83,32 +65,23 @@ input {
   flex-grow: 1;
   background-color: var(--color-secondary);
   overflow: overlay;
-
-  /* height: 90%; */
-  /* height: auto; */
-  /* padding-bottom: 100px; */
-
-  /* scrollbar-width: thin;
-  scrollbar-color: #ccc #f0f0f0; */
 }
 
 .main-content::-webkit-scrollbar {
-  width: 10px; /* Width of the scrollbar */
+  width: 8px;
 }
 
 .main-content::-webkit-scrollbar-track {
-  background: var(--color-main); /* Background color of the track */
+  background: var(--color-main);
 }
 
 .main-content::-webkit-scrollbar-thumb {
-  background-color: var(--color-accent); /* Color of the moveable bar */
-  border-radius: 10px; /* Add rounded corners */
+  background-color: #2a2a3a;
+  border-radius: 10px;
 }
 
 .main-content::-webkit-scrollbar-thumb:hover {
-  background-color: var(
-    --color-button
-  ); /* Color of the  moveable bar on hover */
+  background-color: var(--color-accent);
 }
 
 ::-webkit-scrollbar-corner {
