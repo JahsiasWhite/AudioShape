@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 import './Knob.css';
 
-const Knob = ({ customProps, knobValue, onChange }) => {
+const Knob = ({ customProps, knobValue, onChange, live }) => {
   /**
    * This is required so we don't send back 100 inputs when the user drags the knob around. We only want to send the last one
    * @param {*} func
@@ -70,6 +70,19 @@ const Knob = ({ customProps, knobValue, onChange }) => {
         if (this.currentDeg === this.startAngle) this.currentDeg--;
 
         this.setState({ deg: this.currentDeg });
+
+        if (this.props.onLiveChange) {
+          const liveValue = Math.floor(
+            this.convertRange(
+              this.startAngle,
+              this.endAngle,
+              this.props.min,
+              this.props.max,
+              this.currentDeg
+            )
+          );
+          this.props.onLiveChange(liveValue);
+        }
       };
 
       /* User has stopped dragging */
@@ -200,6 +213,7 @@ const Knob = ({ customProps, knobValue, onChange }) => {
       max={customProps.max}
       value={knobValue ? knobValue : customProps.value}
       color={customProps.color}
+      onLiveChange={live ? onChange : undefined}
     />
   );
 };

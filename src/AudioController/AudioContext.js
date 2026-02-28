@@ -336,7 +336,7 @@ export const AudioProvider = ({ children }) => {
         toggleSlowDown,
         speedupIsEnabled,
         slowDownIsEnabled,
-        handleSongExport,
+        handleSongExport: () => handleSongExport(currentSpeed),
         addSong,
         playlists,
         setPlaylists,

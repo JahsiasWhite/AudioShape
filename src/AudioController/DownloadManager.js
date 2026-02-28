@@ -45,13 +45,19 @@ export const DownloadManager = (
   /**
    * Sends the edited audio to the server to be saved to the file system
    */
-  async function handleSongExport() {
+  async function handleSongExport(speed) {
     if (currentSong.src === '') return;
 
-    // const audioBuffer = await getCurrentAudioBuffer(currentSong.src);
-    // const wavBytes = createWavBytes(audioBuffer);
-
-    window.electron.ipcRenderer.sendMessage('SAVE_SONG', currentSong.src);
+    return new Promise((resolve, reject) => {
+      window.electron.ipcRenderer.once('SAVE_SONG_RESULT', (result) => {
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(new Error(result.error));
+        }
+      });
+      window.electron.ipcRenderer.sendMessage('SAVE_SONG', currentSong.src, speed);
+    });
   }
 
   async function downloadAudio(audioBuffer) {

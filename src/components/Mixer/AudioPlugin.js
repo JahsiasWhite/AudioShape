@@ -18,6 +18,7 @@ import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 const AudioPlugin = () => {
   const [showSavePopup, setShowSavePopup] = useState(false);
+  const [exportStatus, setExportStatus] = useState(null); // null | 'exporting' | 'success' | 'error'
 
   // References to all child components
   // Required so we can use the reset button
@@ -243,10 +244,22 @@ const AudioPlugin = () => {
           Export
           <div
             className="synth-button"
-            onClick={() => {
-              handleSongExport();
+            onClick={async () => {
+              if (exportStatus === 'exporting') return;
+              setExportStatus('exporting');
+              try {
+                await handleSongExport();
+                setExportStatus('success');
+              } catch {
+                setExportStatus('error');
+              } finally {
+                setTimeout(() => setExportStatus(null), 3000);
+              }
             }}
           ></div>
+          {exportStatus === 'exporting' && <span style={{ fontSize: '10px', color: '#aaa' }}>Saving...</span>}
+          {exportStatus === 'success' && <span style={{ fontSize: '10px', color: '#4caf50' }}>Saved!</span>}
+          {exportStatus === 'error' && <span style={{ fontSize: '10px', color: '#f44336' }}>Failed</span>}
         </div>
         <div className="plugin-button-container">
           Save
@@ -280,6 +293,7 @@ const AudioPlugin = () => {
               customProps={speedKnobStyles}
               knobValue={knobs.speed}
               onChange={mapValueToSpeed}
+              live={true}
             />
             <p>MULTIPLIER: {multiplier}x</p>
           </div>

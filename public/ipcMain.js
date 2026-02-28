@@ -82,24 +82,79 @@ const DELETE_TEMP_SONG = () => {
 };
 
 /**
- * Exports the given song to the same location it was copied from
+ * Builds a chain of atempo filters to cover the full 0.1–2.0 speed range.
+ * The atempo filter only accepts values between 0.5 and 2.0, so speeds outside
+ * that range are achieved by chaining multiple filters.
+ */
+function buildAtempoFilters(speed) {
+  const filters = [];
+  let s = speed;
+  while (s < 0.5) {
+    filters.push('atempo=0.5');
+    s /= 0.5;
+  }
+  while (s > 2.0) {
+    filters.push('atempo=2.0');
+    s /= 2.0;
+  }
+  filters.push(`atempo=${parseFloat(s.toFixed(6))}`);
+  return filters.join(',');
+}
+
+/**
+ * Exports the given song, baking in the speed effect if needed.
+ * Preserves the source file format: .mp4 sources are exported as .mp4 (with
+ * video speed adjusted), everything else is exported as .mp3.
  */
 const SAVE_SONG = (dataDirectory) => {
-  ipcMain.on('SAVE_SONG', async (event, sourcePath) => {
-    console.error('Saving song...');
+  ipcMain.on('SAVE_SONG', async (event, sourcePath, speed) => {
+    try {
+      // Cleanup the sourcePath: 'file:///C:/Example' -> 'C:/Example'
+      sourcePath = decodeURIComponent(sourcePath.replace('file:///', ''));
 
-    // Create the new file path
-    newFilePath = path.join(dataDirectory, `export-${uuidv4()}.mp3`);
+      // Preserve the source format: .mp4 stays .mp4, everything else → .mp3
+      const sourceExt = path.extname(sourcePath).toLowerCase();
+      const outputExt = sourceExt === '.mp4' ? '.mp4' : '.mp3';
+      const newFilePath = path.join(dataDirectory, `export-${uuidv4()}${outputExt}`);
 
-    // Cleanup the sourcePath
-    // 'file:///C:/Example' -> 'C:/Example'
-    sourcePath = sourcePath.replace('file:///', '');
+      console.error('Source: ', sourcePath);
+      console.error('New Path: ', newFilePath);
+      console.error('Speed: ', speed);
 
-    // Copy the file to the new path
-    console.error('Source: ', sourcePath);
-    console.error('New Path: ', newFilePath);
-    await fs.promises.copyFile(sourcePath, newFilePath);
-    console.error('Saved song...');
+      if (speed && speed !== 1) {
+        const atempoChain = buildAtempoFilters(speed);
+        await new Promise((resolve, reject) => {
+          let cmd = ffmpeg(sourcePath).audioFilters(atempoChain);
+
+          if (sourceExt === '.mp4') {
+            // Adjust video speed to match audio
+            cmd = cmd.videoFilters(`setpts=PTS/${speed}`);
+          } else {
+            cmd = cmd.noVideo();
+          }
+
+          cmd
+            .output(newFilePath)
+            .on('end', () => {
+              console.error('Saved song with speed effect.');
+              resolve();
+            })
+            .on('error', (err) => {
+              console.error('Error applying speed effect:', err);
+              reject(err);
+            })
+            .run();
+        });
+      } else {
+        await fs.promises.copyFile(sourcePath, newFilePath);
+        console.error('Saved song.');
+      }
+
+      event.reply('SAVE_SONG_RESULT', { success: true, path: newFilePath });
+    } catch (err) {
+      console.error('Error saving song:', err);
+      event.reply('SAVE_SONG_RESULT', { success: false, error: err.message });
+    }
   });
 };
 
