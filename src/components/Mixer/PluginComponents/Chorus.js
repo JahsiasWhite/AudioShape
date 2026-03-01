@@ -46,6 +46,7 @@ const Chorus = React.forwardRef(({ interpolateValue, addEffect }, ref) => {
       <div className="speed-body">
         <Knob
           customProps={chorusKnobStyles}
+          knobValue={chorusKnobStyles.value}
           onChange={(val) => mapValueToChorus(val)}
         />
         <p>FREQ: {chorusKnobStyles.value}</p>

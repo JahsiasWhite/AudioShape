@@ -228,6 +228,8 @@ const AudioPlugin = () => {
     });
     setMultiplier(1);
     eqRef.current.resetEq();
+    autoWahRef.current.resetAutoWah();
+    chorusRef.current.resetChorus();
   };
 
   return (
@@ -322,6 +324,7 @@ const AudioPlugin = () => {
           >
             <Knob
               customProps={reverbKnobStyles}
+              knobValue={knobs.reverbWetness}
               onChange={mapValueToReverbWetness}
             />
             <p>WET: {knobs.reverbWetness}%</p>
@@ -330,7 +333,7 @@ const AudioPlugin = () => {
         <div className="module-container">
           <div className="header">DELAY</div>
           <div className="speed-body">
-            <Knob customProps={delayKnobStyles} onChange={mapValueToDelay} />
+            <Knob customProps={delayKnobStyles} knobValue={knobs.delay} onChange={mapValueToDelay} />
             <p>DELAY: {knobs.delay}s</p>
           </div>
         </div>
@@ -339,6 +342,7 @@ const AudioPlugin = () => {
           <div className="speed-body">
             <Knob
               customProps={bitCrusherKnobStyles}
+              knobValue={knobs.bitCrusher}
               onChange={(val) => updateKnobValue('bitCrusher', val)}
             />
             <p>CRUSH: {knobs.bitCrusher} bit</p>
@@ -349,6 +353,7 @@ const AudioPlugin = () => {
           <div className="speed-body">
             <Knob
               customProps={pitchShiftKnobStyles}
+              knobValue={knobs.pitchShift}
               onChange={(val) => updateKnobValue('pitchShift', val)}
             />
             <p>SHIFT: {knobs.pitchShift}</p>
