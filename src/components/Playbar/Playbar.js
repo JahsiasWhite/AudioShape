@@ -17,6 +17,7 @@ function Playbar({ toggleFullscreen }) {
     currentSongId,
     toggleShuffle,
     shuffleIsEnabled,
+    loopIsEnabled,
     loadingQueue,
     effects,
     setVisibleSongs,
@@ -27,11 +28,11 @@ function Playbar({ toggleFullscreen }) {
     'LoadingQueue.length: ',
     loadingQueue.length,
     'Object.keys(effects).length : ',
-    Object.keys(effects).length
+    Object.keys(effects).length,
   );
 
   const shuffleHelper = () => {
-    console.error(shuffleIsEnabled);
+    console.log('shuffleIsEnabled:', shuffleIsEnabled);
     toggleShuffle();
   };
 
@@ -84,6 +85,7 @@ function Playbar({ toggleFullscreen }) {
       <div className="playbar-right-side">
         <ShuffleButtonSVG
           shuffleIsEnabled={shuffleIsEnabled}
+          loopIsEnabled={loopIsEnabled}
           onClick={() => {
             shuffleHelper();
           }}

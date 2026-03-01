@@ -5,7 +5,11 @@ import { DownloadManager } from '../../src/AudioController/DownloadManager';
 window.electron = {
   ipcRenderer: {
     sendMessage: jest.fn(),
-    once: jest.fn(),
+    once: jest.fn().mockImplementation((event, callback) => {
+      if (event === 'SAVE_SONG_RESULT') {
+        callback({ success: true });
+      }
+    }),
   },
 };
 
@@ -51,6 +55,7 @@ describe('DownloadManager', () => {
     expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith(
       'SAVE_SONG',
       expect.any(String),
+      undefined,
     );
   });
 

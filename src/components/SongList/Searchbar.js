@@ -15,13 +15,6 @@ function SearchBar({ setFilteredSongs }) {
         return true; // Include all entries if no input
       }
 
-      if (value.duration === undefined) {
-        // This is a rare one, but sometimes when downloading songs, their duration isn't set correctly
-        // TODO This is only like this while I use duration as a key, once I use actual keys, I can remove this
-        console.error('Song with undefined duration: ', value);
-        return false;
-      }
-
       if (searchTerm === '.mp4' || searchTerm === '*.mp4') {
         if (visibleSongs[key].file.endsWith('.mp4')) {
           return true;

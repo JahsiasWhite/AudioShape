@@ -10,7 +10,10 @@ export const QueueManager = (currentSong, visibleSongs, loadedSongs) => {
   const [songQueue, setQueue] = useState([]);
   const [nextSongs, setNextSongs] = useState([]);
   const [history, setHistory] = useState([]);
-  const [shuffleIsEnabled, setShuffleIsEnabled] = useState(false);
+  // playMode cycles: 'normal' → 'shuffle' → 'loop' → 'normal'
+  const [playMode, setPlayMode] = useState('normal');
+  const shuffleIsEnabled = playMode === 'shuffle';
+  const loopIsEnabled = playMode === 'loop';
 
   // Make playNextSong a useCallback so we can reference it in onSongEnded
   const playNextSong = useCallback(() => {
@@ -149,24 +152,36 @@ export const QueueManager = (currentSong, visibleSongs, loadedSongs) => {
     });
   }, []);
 
+  // Cycles: normal → shuffle → loop → normal
   const toggleShuffle = useCallback(() => {
-    setShuffleIsEnabled((current) => {
-      if (current) {
-        setNextSongs(Object.keys(visibleSongs).slice(currentSongIndex + 1));
-        return false;
+    setPlayMode((current) => {
+      if (current === 'normal') {
+        // Enter shuffle
+        const upNext = Object.keys(visibleSongs).filter(
+          (key) => parseFloat(key) !== currentSongId
+        );
+        for (let i = upNext.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [upNext[i], upNext[j]] = [upNext[j], upNext[i]];
+        }
+        setNextSongs(upNext);
+        currentSong.loop = false;
+        return 'shuffle';
       }
 
-      const upNext = Object.keys(visibleSongs).filter(
-        (key) => parseFloat(key) !== currentSongId
-      );
-      for (let i = upNext.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [upNext[i], upNext[j]] = [upNext[j], upNext[i]];
+      if (current === 'shuffle') {
+        // Enter loop
+        setNextSongs(Object.keys(visibleSongs).slice(currentSongIndex + 1));
+        currentSong.loop = true;
+        return 'loop';
       }
-      setNextSongs(upNext);
-      return true;
+
+      // Back to normal
+      currentSong.loop = false;
+      setNextSongs(Object.keys(visibleSongs).slice(currentSongIndex + 1));
+      return 'normal';
     });
-  }, [visibleSongs, currentSongIndex, currentSongId]);
+  }, [currentSong, visibleSongs, currentSongIndex, currentSongId]);
 
   return {
     handleSongSelect,
@@ -182,5 +197,6 @@ export const QueueManager = (currentSong, visibleSongs, loadedSongs) => {
     nextSongs,
     toggleShuffle,
     shuffleIsEnabled,
+    loopIsEnabled,
   };
 };

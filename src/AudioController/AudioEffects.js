@@ -7,7 +7,7 @@ export const AudioEffects = (
   visibleSongs,
   currentSongId,
   DEFAULT_SPEEDUP,
-  DEFAULT_SLOWDOWN
+  DEFAULT_SLOWDOWN,
 ) => {
   const [effects, setEffects] = useState({});
   const [savedEffects, setSavedEffects] = useState({});
@@ -38,7 +38,7 @@ export const AudioEffects = (
       return;
     }
 
-    setEffects(prev => ({ ...prev, [currentEffect]: value }));
+    setEffects((prev) => ({ ...prev, [currentEffect]: value }));
     updateLiveEffect(currentEffect, value);
   };
 
@@ -126,14 +126,13 @@ export const AudioEffects = (
   });
 
   const saveEffects = (comboName) => {
-    const effectsToSave = currentSpeed !== 1
-      ? { ...effects, speed: currentSpeed }
-      : effects;
+    const effectsToSave =
+      currentSpeed !== 1 ? { ...effects, speed: currentSpeed } : effects;
 
     window.electron.ipcRenderer.sendMessage(
       'SAVE_EFFECT_COMBO',
       comboName,
-      effectsToSave
+      effectsToSave,
     );
   };
 
@@ -144,7 +143,7 @@ export const AudioEffects = (
   useEffect(() => {
     window.electron.ipcRenderer.once(
       'SAVE_EFFECT_COMBO',
-      handleEffectComboAdded
+      handleEffectComboAdded,
     );
   }, [savedEffects]);
 
@@ -152,6 +151,7 @@ export const AudioEffects = (
    * Resets the current song's effects to defaults and restarts it
    */
   const clearEffects = () => {
+    const wasPaused = currentSong.paused;
     resetAllLiveEffects();
     setEffects({});
     setEffectSongId(null);
@@ -162,6 +162,7 @@ export const AudioEffects = (
     setCurrentSpeed(1);
     currentSong.playbackRate = 1;
     currentSong.defaultPlaybackRate = 1;
+    if (wasPaused) currentSong.pause();
   };
 
   const resetCurrentSong = () => {
@@ -169,6 +170,7 @@ export const AudioEffects = (
 
     if (!currentSongId) return;
 
+    console.error('Resetting current song to:', visibleSongs, currentSongId);
     currentSong.src = visibleSongs[currentSongId].file;
     restartCurrentSong();
   };

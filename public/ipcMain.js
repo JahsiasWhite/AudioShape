@@ -231,10 +231,13 @@ const SETUP_PLAYLISTS = (mainWindow, dataDirectory) => {
     // Get playlists
     const playlists = getPlaylists(playlistsFilePath);
 
-    // Find and remove the playlist with the matching name
-    const updatedPlaylists = playlists.filter(
-      (playlist) => playlist.name !== playlistToDelete.name
-    );
+    // Find the target playlist by ID (preferred) or by name (legacy fallback)
+    const targetIndex = playlistToDelete.id
+      ? playlists.findIndex((p) => p.id === playlistToDelete.id)
+      : playlists.findIndex((p) => p.name === playlistToDelete.name);
+
+    if (targetIndex !== -1) playlists.splice(targetIndex, 1);
+    const updatedPlaylists = playlists;
 
     try {
       // Write the updated playlists back to the file
@@ -385,8 +388,7 @@ const processSongMetadata = (file, imageMap) => {
           let album = data.common.album;
           let duration = data.format.duration;
 
-          // Unique key, consider using a more robust method
-          let key = duration;
+          let key = file;
 
           // To avoid empty fields, if the file doesn't have the appropriate metadata, use defaults
           if (
@@ -994,6 +996,7 @@ function createPlaylist(playlistName) {
 
   // Create a new playlist object
   const newPlaylist = {
+    id: uuidv4(),
     name: playlistName,
     image: '',
     songs: [],

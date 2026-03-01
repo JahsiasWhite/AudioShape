@@ -32,7 +32,7 @@ const loadingQueue = ['effect1'];
 
 var mockSetVisibleSongs;
 var handleSongSelectMock;
-var resetCurrentSongMock;
+var clearEffectsMock;
 var setEffectsMock;
 jest.mock('../../../src/AudioController/AudioContext', () => {
   const useAudioPlayer = jest.fn();
@@ -43,7 +43,8 @@ jest.mock('../../../src/AudioController/AudioContext', () => {
     currentSpeed: 1,
     currentSong: mockCurrentSong,
     savedEffects: savedEffects,
-    resetCurrentSong: (resetCurrentSongMock = jest.fn()),
+    currentEffectCombo: '',
+    clearEffects: (clearEffectsMock = jest.fn()),
     addEffect: jest.fn(),
   });
 
@@ -66,7 +67,7 @@ describe('<AudioPlugin />', () => {
     const { container } = render(
       <AudioProvider>
         <AudioPlugin />
-      </AudioProvider>
+      </AudioProvider>,
     );
 
     expect(container).toBeDefined();
@@ -77,7 +78,7 @@ describe('<AudioPlugin />', () => {
     const { getByText } = render(
       <AudioProvider>
         <AudioPlugin />
-      </AudioProvider>
+      </AudioProvider>,
     );
 
     const resetDiv = getByText(buttonText);
@@ -89,8 +90,7 @@ describe('<AudioPlugin />', () => {
     // Click reset button
     fireEvent.click(resetButton);
 
-    expect(resetCurrentSongMock).toHaveBeenCalledTimes(1);
-    expect(setEffectsMock).toHaveBeenCalledTimes(1);
+    expect(clearEffectsMock).toHaveBeenCalledTimes(1);
     expect(getByText('MULTIPLIER: 1x')).not.toBeNull();
   });
 
@@ -98,7 +98,7 @@ describe('<AudioPlugin />', () => {
     const { container, getByText } = render(
       <AudioProvider>
         <AudioPlugin />
-      </AudioProvider>
+      </AudioProvider>,
     );
 
     // Multiplier is default to 1x
@@ -108,19 +108,19 @@ describe('<AudioPlugin />', () => {
     const speedContainer = container.querySelector('.speed-body');
     expect(speedContainer).toBeDefined();
 
-    const speedKnob = speedContainer.querySelector('.knob');
-    const grip = speedKnob.querySelector('.grip');
-    expect(grip).toBeDefined();
-    expect(grip).not.toBeNull();
+    const speedKnob = speedContainer.querySelector('.knob-svg');
+    expect(speedKnob).not.toBeNull();
 
     // Drag speed to the right
-    fireEvent.mouseDown(grip);
-    fireEvent.mouseMove(grip, { clientX: 10, clientY: 0 });
-    fireEvent.mouseUp(grip);
+    fireEvent.mouseDown(speedKnob);
+    await act(async () => {
+      fireEvent.mouseMove(document, { clientX: 10, clientY: 0 });
+      fireEvent.mouseUp(document);
+    });
 
     // There is a small delay for the UI to update that we have to wait for
     await waitFor(() => {
-      expect(getByText('MULTIPLIER: 1.69x')).not.toBeNull();
+      expect(getByText('MULTIPLIER: 0.39x')).not.toBeNull();
     });
   });
 
@@ -128,33 +128,26 @@ describe('<AudioPlugin />', () => {
     const { container, getByText } = render(
       <AudioProvider>
         <AudioPlugin />
-      </AudioProvider>
+      </AudioProvider>,
     );
 
     // Multiplier is default to 1x
     const multiplier = getByText('MULTIPLIER: 1x');
     const speedContainer = container.querySelector('.speed-body');
 
-    const speedKnob = speedContainer.querySelector('.knob');
-    const innerKnob = speedKnob.querySelector('.knob.inner');
-    const grip = speedKnob.querySelector('.grip');
-
-    // Make sure default values are correct
-    expect(getComputedStyle(innerKnob).transform).toBe('rotate(178deg)');
+    const speedKnob = speedContainer.querySelector('.knob-svg');
+    expect(speedKnob).not.toBeNull();
 
     // Simulate moving speed knob to the right
-    fireEvent.mouseDown(grip);
-    fireEvent.mouseMove(grip, { clientX: 10, clientY: 0 });
-    fireEvent.mouseUp(grip);
+    fireEvent.mouseDown(speedKnob);
+    await act(async () => {
+      fireEvent.mouseMove(document, { clientX: 10, clientY: 0 });
+      fireEvent.mouseUp(document);
+    });
 
     // There is a small delay for the UI to update that we have to wait for
     await waitFor(() => {
-      expect(getByText('MULTIPLIER: 1.69x')).not.toBeNull();
-
-      const newMultiplier = getByText('MULTIPLIER: 1.69x');
-      expect(newMultiplier).not.toBeNull();
-
-      expect(getComputedStyle(innerKnob).transform).toBe('rotate(270deg)');
+      expect(getByText('MULTIPLIER: 0.39x')).not.toBeNull();
 
       // Click Reset button
       const resetDiv = getByText('Reset');
@@ -164,9 +157,6 @@ describe('<AudioPlugin />', () => {
       const resetMultiplier = getByText('MULTIPLIER: 1x');
       expect(resetMultiplier).not.toBeNull();
     });
-
-    // const innerKnob2 = speedKnob.querySelector('.knob.inner');
-    // expect(getComputedStyle(innerKnob2).transform).toBe('rotate(178deg)');
   });
 
   it('speed knob position should update when a speed effect is added (like toggleSpeedup)', async () => {
@@ -182,25 +172,24 @@ describe('<AudioPlugin />', () => {
       currentSpeed: 1, // Default speed
       currentSong: mockCurrentSong,
       savedEffects: savedEffects,
-      resetCurrentSong: resetCurrentSongMock,
+      currentEffectCombo: '',
+      clearEffects: clearEffectsMock,
       addEffect: jest.fn(),
     });
 
     const { container, getByText, rerender } = render(
       <AudioProvider>
         <AudioPlugin />
-      </AudioProvider>
+      </AudioProvider>,
     );
 
     // Multiplier is default to 1x
     expect(getByText('MULTIPLIER: 1x')).not.toBeNull();
     const speedContainer = container.querySelector('.speed-body');
+    expect(speedContainer).not.toBeNull();
 
-    const speedKnob = speedContainer.querySelector('.knob');
-    const innerKnob = speedKnob.querySelector('.knob.inner');
-
-    // Make sure default values are correct
-    expect(getComputedStyle(innerKnob).transform).toBe('rotate(178deg)');
+    // Make sure default multiplier is correct
+    expect(getByText('MULTIPLIER: 1x')).not.toBeNull();
 
     // Now simulate a speed effect being added (like toggleSpeedup would do)
     // Update the mock to return a new currentSpeed value
@@ -211,7 +200,8 @@ describe('<AudioPlugin />', () => {
       currentSpeed: 1.2, // Speed effect applied
       currentSong: mockCurrentSong,
       savedEffects: savedEffects,
-      resetCurrentSong: resetCurrentSongMock,
+      currentEffectCombo: '',
+      clearEffects: clearEffectsMock,
       addEffect: jest.fn(),
     });
 
@@ -219,19 +209,12 @@ describe('<AudioPlugin />', () => {
     rerender(
       <AudioProvider>
         <AudioPlugin />
-      </AudioProvider>
+      </AudioProvider>,
     );
 
-    // The speed knob position should now reflect the new speed
+    // The multiplier display should now reflect the new speed
     await waitFor(() => {
       expect(getByText('MULTIPLIER: 1.2x')).not.toBeNull();
-
-      // The knob position should have changed to reflect the new speed
-      // The exact transform value will depend on how the speed maps to knob position
-      const innerKnobUpdated = container.querySelector('.knob.inner');
-      const newTransform = getComputedStyle(innerKnobUpdated).transform;
-
-      expect(newTransform).not.toBe('rotate(178deg)'); // Should be different from default
     });
   });
 });

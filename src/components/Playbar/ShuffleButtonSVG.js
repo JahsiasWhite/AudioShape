@@ -1,13 +1,33 @@
 import './SpeedupButtonSVG.css';
 
-const ShuffleButtonSVG = ({ shuffleIsEnabled, onClick }) => {
+const ShuffleButtonSVG = ({ shuffleIsEnabled, loopIsEnabled, onClick }) => {
+  const color = loopIsEnabled ? '#aa6b31' : shuffleIsEnabled ? '#316baa' : '#D3D3D3';
+
+  if (loopIsEnabled) {
+    return (
+      <div>
+        <svg
+          className="speedup-button"
+          height="800px"
+          width="800px"
+          fill={color}
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+          onClick={onClick}
+        >
+          <path d="M17 17H7V14L3 18L7 22V19H19V13H17V17ZM7 7H17V10L21 6L17 2V5H5V11H7V7Z" />
+        </svg>
+      </div>
+    );
+  }
+
   return (
     <div>
       <svg
         className="speedup-button"
         height="800px"
         width="800px"
-        fill={shuffleIsEnabled ? '#316baa' : '#D3D3D3'}
+        fill={color}
         version="1.1"
         id="shuffle"
         xmlns="http://www.w3.org/2000/svg"

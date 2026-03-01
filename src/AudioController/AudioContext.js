@@ -156,6 +156,7 @@ export const AudioProvider = ({ children }) => {
     nextSongs,
     toggleShuffle,
     shuffleIsEnabled,
+    loopIsEnabled,
   } = QueueManager(currentSong, visibleSongs, loadedSongs);
 
   // Handles all audio effects
@@ -241,6 +242,18 @@ export const AudioProvider = ({ children }) => {
     initCurrentSong();
     finishLoading();
   }, [currentSongId]);
+
+  /* Keep isPlaying in sync with the actual audio element state */
+  useEffect(() => {
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+    currentSong.addEventListener('play', onPlay);
+    currentSong.addEventListener('pause', onPause);
+    return () => {
+      currentSong.removeEventListener('play', onPlay);
+      currentSong.removeEventListener('pause', onPause);
+    };
+  }, []);
 
   /* When the songs first load, we want all songs to be shown */
   const initialSongLoad = (songs) => {
@@ -330,6 +343,7 @@ export const AudioProvider = ({ children }) => {
         nextSongs,
         toggleShuffle,
         shuffleIsEnabled,
+        loopIsEnabled,
         togglePopup,
         setTogglePopup,
       }}
