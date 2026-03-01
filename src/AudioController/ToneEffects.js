@@ -143,3 +143,114 @@ function applyChorus(audioBuffer, value) {
 
   return player;
 }
+
+/**
+ * Creates a single Tone.js effect node (not connected to anything) for offline rendering.
+ * Returns null for unknown or no-op effects.
+ */
+function createOfflineEffectNode(effectName, value) {
+  switch (effectName) {
+    case 'reverbIsActive':
+    case 'reverbWetness': {
+      const reverb = new Tone.Freeverb();
+      reverb.wet.value = typeof value === 'boolean' ? (value ? 0.5 : 0) : value;
+      reverb.roomSize.value = 0.5;
+      reverb.dampening = 8000;
+      return reverb;
+    }
+    case 'delay': {
+      if (value <= 0) return null;
+      const delay = new Tone.FeedbackDelay({ delayTime: value, feedback: 0.5 });
+      delay.wet.value = 0.5;
+      return delay;
+    }
+    case 'bitCrusher': {
+      if (value >= 16) return null;
+      const bc = new Tone.BitCrusher({ bits: value });
+      bc.wet.value = 1;
+      return bc;
+    }
+    case 'pitchShift': {
+      if (value === 0) return null;
+      return new Tone.PitchShift({ pitch: value });
+    }
+    case 'high':
+    case 'mid':
+    case 'low': {
+      const [low, mid, high] = value;
+      if (low === 0 && mid === 0 && high === 0) return null;
+      return new Tone.EQ3(low, mid, high);
+    }
+    case 'autowah': {
+      if (value <= 0) return null;
+      const aw = new Tone.AutoWah(value, 6, 0);
+      aw.wet.value = 0.8;
+      return aw;
+    }
+    case 'chorus': {
+      if (value >= 0) return null;
+      const ch = new Tone.Chorus(Math.abs(value), 2.5, 0.5);
+      ch.wet.value = 0.7;
+      ch.start();
+      return ch;
+    }
+    default:
+      return null;
+  }
+}
+
+/**
+ * Fixed order matching the live effects chain in LiveEffectsChain.js.
+ * Export must apply effects in the same order or the result sounds different
+ * (e.g. EQ before delay vs. delay before EQ produce audibly distinct output).
+ */
+const LIVE_CHAIN_ORDER = [
+  'reverbIsActive', 'reverbWetness',
+  'delay',
+  'bitCrusher',
+  'pitchShift',
+  'low', 'mid', 'high',  // EQ — deduplicated to one node
+  'autowah',
+  'chorus',
+];
+
+/**
+ * Renders all non-speed effects in a single Tone.Offline pass.
+ * Returns the rendered AudioBuffer, or the original if no effects apply.
+ * @param {AudioBuffer} audioBuffer
+ * @param {Object} effects  - the effects state object (speed key is ignored)
+ * @returns {Promise<AudioBuffer>}
+ */
+export async function renderAudioWithAllEffects(audioBuffer, effects) {
+  // Build deduplicated effect list in the same order as the live chain
+  const seen = new Set();
+  const toRender = [];
+  for (const name of LIVE_CHAIN_ORDER) {
+    if (!(name in effects)) continue;
+    const key = ['high', 'mid', 'low'].includes(name) ? 'eq' : name;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    toRender.push([name, effects[name]]);
+  }
+
+  if (toRender.length === 0) return audioBuffer;
+
+  const duration = audioBuffer.duration;
+  return await Tone.Offline(async () => {
+    const effectNodes = toRender
+      .map(([name, value]) => createOfflineEffectNode(name, value))
+      .filter(Boolean);
+
+    if (effectNodes.length === 0) return;
+
+    const player = new Tone.Player(audioBuffer);
+
+    player.connect(effectNodes[0]);
+    for (let i = 0; i < effectNodes.length - 1; i++) {
+      effectNodes[i].connect(effectNodes[i + 1]);
+    }
+    effectNodes[effectNodes.length - 1].toDestination();
+
+    player.start();
+  }, duration);
+}

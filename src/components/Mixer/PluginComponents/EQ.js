@@ -3,7 +3,7 @@ import React, { useState, useImperativeHandle, useEffect } from 'react';
 import Knob from '../Knob';
 
 const EQ = React.forwardRef(({ interpolateValue, addEffect }, ref) => {
-  const [eqValues, setEqValues] = useState([1, 1, 1]);
+  const [eqValues, setEqValues] = useState([0, 0, 0]);
   const [eqKnobStyles, setEqKnobStyles] = useState({
     degrees: 260,
     color: true,

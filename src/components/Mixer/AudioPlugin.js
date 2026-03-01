@@ -142,10 +142,11 @@ const AudioPlugin = () => {
     // Round to two decimal places
     const roundedMappedValue = parseFloat(mappedValue.toFixed(2));
 
-    // Make sure the input value isn't outside of the range
-    // This really shouldn't happen but the sliders are annoying sometimes
-    if (roundedMappedValue < range[0]) return range[0];
-    if (roundedMappedValue > range[1]) return range[1];
+    // Clamp to the range — use min/max so inverted ranges (e.g. [0, -20]) work correctly
+    const clampMin = Math.min(range[0], range[1]);
+    const clampMax = Math.max(range[0], range[1]);
+    if (roundedMappedValue < clampMin) return clampMin;
+    if (roundedMappedValue > clampMax) return clampMax;
 
     return roundedMappedValue;
   };

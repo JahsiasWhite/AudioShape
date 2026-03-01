@@ -7,6 +7,8 @@ import { AudioEffects } from './AudioEffects';
 import { DownloadManager } from './DownloadManager';
 import { PlaylistsManager } from './PlaylistsManager';
 import { Tools } from './Tools';
+import { setupLiveEffectsChain } from './LiveEffectsChain';
+import { renderAudioWithAllEffects } from './ToneEffects';
 
 // Sets up this context to be the main controller for the application
 const AudioContext = createContext();
@@ -27,9 +29,9 @@ export const AudioProvider = ({ children }) => {
   /* General */
   const [loadingQueue, setLoadingQueue] = useState([]);
 
-  const initCurrentSong = () => {
+  const initCurrentSong = async () => {
+    await setupLiveEffectsChain(currentSong); // No-op after first call (resolves instantly)
     currentSong.volume = volume;
-    // currentSong.load(); // Load the new song's data
     currentSong.play();
     setIsPlaying(true);
 
@@ -48,8 +50,9 @@ export const AudioProvider = ({ children }) => {
       // let filePath = currentSongId;
       // let filePath = index === undefined ? currentSongIndex : index;
       // if (filePath === null) return;
-      const audioContext = new (window.AudioContext ||
-        window.webkitAudioContext)();
+      const audioContext = new (
+        window.AudioContext || window.webkitAudioContext
+      )();
 
       // const response = await fetch(visibleSongs[filePath].file);
       // const response = await fetch(currentSong.src);
@@ -130,12 +133,12 @@ export const AudioProvider = ({ children }) => {
     isMuted,
   } = AudioControls(currentSong);
 
-  const { handleSongExport, handleTempSongSaved, downloadAudio } =
+  const { handleSongExport, downloadAudio } =
     DownloadManager(
       currentSong,
       finishLoading,
       initCurrentSong,
-      getCurrentAudioBuffer
+      getCurrentAudioBuffer,
     );
 
   // Handles the overall functionality of playing and switching songs
@@ -157,43 +160,25 @@ export const AudioProvider = ({ children }) => {
 
   // Handles all audio effects
   const {
-    runEffect,
     addEffect,
     applySavedEffects,
     toggleSpeedup,
     toggleSlowDown,
-    renderAudioWithEffect,
-    handleSpeedChange,
     saveEffects,
     resetCurrentSong,
     effects,
     setEffects,
     savedEffects,
-    setSavedEffects,
-    effectsEnabled,
-    setEffectsEnabled,
     currentEffectCombo,
-    setCurrentEffectCombo,
     currentSpeed,
-    setCurrentSpeed,
     speedupIsEnabled,
-    setSpeedupIsEnabled,
     slowDownIsEnabled,
-    setSlowDownIsEnabled,
   } = AudioEffects(
     currentSong,
-    fileLocation,
     visibleSongs,
     currentSongId,
-    startLoading,
-    finishLoading,
-    downloadAudio,
-    handleTempSongSaved,
-    initCurrentSong,
     DEFAULT_SPEEDUP,
     DEFAULT_SLOWDOWN,
-    getCurrentAudioBuffer,
-    loadingQueue
   );
 
   // Handles playlists
@@ -225,54 +210,34 @@ export const AudioProvider = ({ children }) => {
     setVideoTime(newVideoTime);
   };
 
-  // ! I can put this in AudioEffects.js and it will work properly.
-  // Current song changed! Update our variables
-  // Essentially create the new song :)
+  // Current song changed — just point the audio element at the new file.
+  // The live effects chain stays wired and automatically applies to whatever is playing.
   useEffect(() => {
-    console.error('SONG CHANGED');
-    // ? Can we do something here so if this is null, we never would even end up here
+    console.error('SONG CHANGED TO ', currentSongId);
     if (currentSongId === null) return;
-
-    // TODO If we are on a non songpage, spotify playlist for example, and the song ends, visibleSongs will be []
-    // visibleSongs should NOT BE DEPENDENT on what screen is showing
-    // Shouldn't need once I implement
-    // if (!visibleSongs[currentSongId]) return;
+    if (!loadedSongs[currentSongId]) return;
 
     startLoading();
 
-    /* Update the new file location */
-    // We need to fix some characters. Unfortunatley we cant use encodeURIComponent() because
-    // setting the src has its own encode :(
-    // So we have to manually fix these here
     fileLocation = loadedSongs[currentSongId].file;
-    fileLocation = fileLocation.replace(/[#\$]/g, function (match) {
-      // TODO This is used in multiple spots...
-      if (match === '#') {
-        return '%23';
-      } else {
-        return '$';
-      }
-    });
+    fileLocation = fileLocation.replace(/[#\$]/g, (match) =>
+      match === '#' ? '%23' : '$'
+    );
     console.error('SETTING FILE LOCATION TO : ' + fileLocation);
-
-    /* If effects are enabled, apply them to the new song */
-    if (effectsEnabled) {
-      applySavedEffects(currentEffectCombo);
-      return;
-    }
 
     currentSong.src = fileLocation;
 
-    /* Apply live speed if a speed preset is active */
+    /* Restore speed for the new song (non-speed effects apply automatically via the live chain) */
     if (speedupIsEnabled) {
       addEffect('speed', DEFAULT_SPEEDUP);
     } else if (slowDownIsEnabled) {
       addEffect('speed', DEFAULT_SLOWDOWN);
+    } else if (currentSpeed !== 1) {
+      currentSong.playbackRate = currentSpeed;
+      currentSong.defaultPlaybackRate = currentSpeed;
     }
 
-    /* (Re)Initializes the current song */
     initCurrentSong();
-
     finishLoading();
   }, [currentSongId]);
 
@@ -336,7 +301,24 @@ export const AudioProvider = ({ children }) => {
         toggleSlowDown,
         speedupIsEnabled,
         slowDownIsEnabled,
-        handleSongExport: () => handleSongExport(currentSpeed),
+        handleSongExport: async () => {
+          const nonSpeedEffects = Object.entries(effects).filter(([name]) => name !== 'speed');
+          if (nonSpeedEffects.length > 0) {
+            // Render all active effects offline first, then export the result
+            const audioBuffer = await getCurrentAudioBuffer(fileLocation);
+            if (audioBuffer) {
+              const rendered = await renderAudioWithAllEffects(audioBuffer, effects);
+              downloadAudio(rendered);
+              const tempPath = await new Promise((resolve) => {
+                window.electron.ipcRenderer.once('TEMP_SONG_SAVED', (outputPath) => resolve(outputPath));
+              });
+              const result = await handleSongExport(currentSpeed, tempPath);
+              window.electron.ipcRenderer.sendMessage('DELETE_TEMP_SONG');
+              return result;
+            }
+          }
+          return handleSongExport(currentSpeed);
+        },
         addSong,
         playlists,
         setPlaylists,

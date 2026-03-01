@@ -43,10 +43,13 @@ export const DownloadManager = (
   };
 
   /**
-   * Sends the edited audio to the server to be saved to the file system
+   * Sends the edited audio to the server to be saved to the file system.
+   * @param {number} speed - Playback speed to bake in via ffmpeg atempo
+   * @param {string} [overridePath] - Optional pre-rendered temp file path (used when effects are active)
    */
-  async function handleSongExport(speed) {
-    if (currentSong.src === '') return;
+  async function handleSongExport(speed, overridePath) {
+    const sourcePath = overridePath ?? currentSong.src;
+    if (!sourcePath || sourcePath === '') return;
 
     return new Promise((resolve, reject) => {
       window.electron.ipcRenderer.once('SAVE_SONG_RESULT', (result) => {
@@ -56,7 +59,7 @@ export const DownloadManager = (
           reject(new Error(result.error));
         }
       });
-      window.electron.ipcRenderer.sendMessage('SAVE_SONG', currentSong.src, speed);
+      window.electron.ipcRenderer.sendMessage('SAVE_SONG', sourcePath, speed);
     });
   }
 

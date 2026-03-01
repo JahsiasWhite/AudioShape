@@ -18,6 +18,7 @@ function SearchBar({ setFilteredSongs }) {
       if (value.duration === undefined) {
         // This is a rare one, but sometimes when downloading songs, their duration isn't set correctly
         // TODO This is only like this while I use duration as a key, once I use actual keys, I can remove this
+        console.error('Song with undefined duration: ', value);
         return false;
       }
 
