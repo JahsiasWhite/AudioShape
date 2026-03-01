@@ -22,14 +22,14 @@ function SearchBar({ setFilteredSongs }) {
         return false;
       }
 
-      if (searchTerm === '.mp4') {
+      if (searchTerm === '.mp4' || searchTerm === '*.mp4') {
         if (visibleSongs[key].file.endsWith('.mp4')) {
           return true;
         } else {
           return false;
         }
       }
-      if (searchTerm === '.mp3') {
+      if (searchTerm === '.mp3' || searchTerm === '*.mp3') {
         if (visibleSongs[key].file.endsWith('.mp3')) {
           return true;
         } else {

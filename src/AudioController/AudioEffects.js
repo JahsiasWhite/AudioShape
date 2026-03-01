@@ -151,7 +151,7 @@ export const AudioEffects = (
   /**
    * Resets the current song's effects to defaults and restarts it
    */
-  const resetCurrentSong = () => {
+  const clearEffects = () => {
     resetAllLiveEffects();
     setEffects({});
     setEffectSongId(null);
@@ -162,6 +162,10 @@ export const AudioEffects = (
     setCurrentSpeed(1);
     currentSong.playbackRate = 1;
     currentSong.defaultPlaybackRate = 1;
+  };
+
+  const resetCurrentSong = () => {
+    clearEffects();
 
     if (!currentSongId) return;
 
@@ -180,6 +184,7 @@ export const AudioEffects = (
     toggleSpeedup,
     toggleSlowDown,
     saveEffects,
+    clearEffects,
     resetCurrentSong,
     effects,
     setEffects,

@@ -165,6 +165,7 @@ export const AudioProvider = ({ children }) => {
     toggleSpeedup,
     toggleSlowDown,
     saveEffects,
+    clearEffects,
     resetCurrentSong,
     effects,
     setEffects,
@@ -267,6 +268,7 @@ export const AudioProvider = ({ children }) => {
       value={{
         initialSongLoad,
         loadingQueue,
+        clearEffects,
         resetCurrentSong,
         loadedSongs,
         visibleSongs,

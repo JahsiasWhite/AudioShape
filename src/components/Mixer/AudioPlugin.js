@@ -44,7 +44,7 @@ const AudioPlugin = () => {
     addEffect,
     effects,
     setEffects,
-    resetCurrentSong,
+    clearEffects,
     currentEffectCombo,
     savedEffects,
     saveEffects,
@@ -176,7 +176,7 @@ const AudioPlugin = () => {
     const mappedValue = interpolateValue(
       reverbRange,
       newValue,
-      reverbKnobStyles
+      reverbKnobStyles,
     );
 
     setKnobs((prevKnobs) => ({ ...prevKnobs, ['reverbWetness']: newValue }));
@@ -210,15 +210,8 @@ const AudioPlugin = () => {
   };
 
   const resetSong = () => {
-    console.log('Resetting song...');
-
-    // Reset knob values to their initial values
     resetKnobValues();
-
-    // Restart the current playing song
-    resetCurrentSong();
-
-    setEffects({}); // Clear all effects
+    clearEffects();
   };
 
   /**
@@ -227,6 +220,7 @@ const AudioPlugin = () => {
   const resetKnobValues = () => {
     setKnobs({
       speed: initialKnobValues.speedKnobValue,
+      reverbIsActive: false,
       reverbWetness: initialKnobValues.reverbKnobValue,
       delay: initialKnobValues.delayKnobValue,
       bitCrusher: initialKnobValues.bitCrusherKnobValue,
@@ -258,9 +252,15 @@ const AudioPlugin = () => {
               }
             }}
           ></div>
-          {exportStatus === 'exporting' && <span style={{ fontSize: '10px', color: '#aaa' }}>Saving...</span>}
-          {exportStatus === 'success' && <span style={{ fontSize: '10px', color: '#4caf50' }}>Saved!</span>}
-          {exportStatus === 'error' && <span style={{ fontSize: '10px', color: '#f44336' }}>Failed</span>}
+          {exportStatus === 'exporting' && (
+            <span style={{ fontSize: '10px', color: '#aaa' }}>Saving...</span>
+          )}
+          {exportStatus === 'success' && (
+            <span style={{ fontSize: '10px', color: '#4caf50' }}>Saved!</span>
+          )}
+          {exportStatus === 'error' && (
+            <span style={{ fontSize: '10px', color: '#f44336' }}>Failed</span>
+          )}
         </div>
         <div className="plugin-button-container">
           Save
