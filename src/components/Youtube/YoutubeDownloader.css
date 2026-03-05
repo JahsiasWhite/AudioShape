@@ -31,6 +31,10 @@
   font-size: 16px;
 }
 
+input.video-url-input::placeholder {
+  color: var(--color-text-inverse);
+}
+
 .download-button {
   margin-left: 10px;
   padding: 10px 20px;

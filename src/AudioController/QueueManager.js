@@ -41,12 +41,12 @@ export const QueueManager = (currentSong, visibleSongs, loadedSongs) => {
 
           if (nextSongId === undefined) {
             nextSongId = Object.keys(visibleSongs)[0];
-            handleSongSelect(parseFloat(nextSongId));
+            handleSongSelect(nextSongId);
             return remainingNextSongs;
           }
 
           setCurrentSongIndex(Object.keys(loadedSongs).indexOf(nextSongId)); // TODO: Not loadedSongs or visibleSongs but visibleSongs when the player selected play on a song
-          setCurrentSongId(parseFloat(nextSongId));
+          setCurrentSongId(nextSongId);
           return remainingNextSongs;
         });
       }
@@ -158,7 +158,7 @@ export const QueueManager = (currentSong, visibleSongs, loadedSongs) => {
       if (current === 'normal') {
         // Enter shuffle
         const upNext = Object.keys(visibleSongs).filter(
-          (key) => parseFloat(key) !== currentSongId
+          (key) => key !== currentSongId
         );
         for (let i = upNext.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));

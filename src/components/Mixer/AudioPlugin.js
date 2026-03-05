@@ -296,7 +296,6 @@ const AudioPlugin = () => {
               customProps={speedKnobStyles}
               knobValue={knobs.speed}
               onChange={mapValueToSpeed}
-              live={true}
             />
             <p>MULTIPLIER: {multiplier}x</p>
           </div>
@@ -308,9 +307,11 @@ const AudioPlugin = () => {
                 className={`synth-button  ${
                   knobs.reverbIsActive ? 'button-active' : ''
                 }`}
-                onClick={() =>
-                  updateKnobValue('reverbIsActive', !knobs.reverbIsActive)
-                }
+                onClick={() => {
+                  const newActive = !knobs.reverbIsActive;
+                  updateKnobValue('reverbIsActive', newActive);
+                  if (newActive) mapValueToReverbWetness(knobs.reverbWetness);
+                }}
               ></div>
             </div>
             <div className={`${knobs.reverbIsActive ? '' : 'inactive-module'}`}>
@@ -333,7 +334,11 @@ const AudioPlugin = () => {
         <div className="module-container">
           <div className="header">DELAY</div>
           <div className="speed-body">
-            <Knob customProps={delayKnobStyles} knobValue={knobs.delay} onChange={mapValueToDelay} />
+            <Knob
+              customProps={delayKnobStyles}
+              knobValue={knobs.delay}
+              onChange={mapValueToDelay}
+            />
             <p>DELAY: {knobs.delay}s</p>
           </div>
         </div>

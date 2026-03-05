@@ -6,7 +6,7 @@ let _uidCounter = 0;
 const convertRange = (oldMin, oldMax, newMin, newMax, val) =>
   ((val - oldMin) * (newMax - newMin)) / (oldMax - oldMin) + newMin;
 
-const Knob = ({ customProps, knobValue, onChange, live }) => {
+const Knob = ({ customProps, knobValue, onChange, live = true }) => {
   const {
     size = 75,
     degrees = 260,
