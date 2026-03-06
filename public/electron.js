@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, protocol } = require('electron');
+const { app, BrowserWindow, ipcMain, protocol, globalShortcut } = require('electron');
 
 const path = require('path');
 const fs = require('fs');
@@ -380,6 +380,20 @@ app.on('ready', function () {
   //   // More complex code to handle tokens goes here
   // });
 
+  /* Media key global shortcuts */
+  globalShortcut.register('MediaPlayPause', () => {
+    mainWindow.webContents.send('MEDIA_PLAY_PAUSE');
+  });
+  globalShortcut.register('MediaNextTrack', () => {
+    mainWindow.webContents.send('MEDIA_NEXT_TRACK');
+  });
+  globalShortcut.register('MediaPreviousTrack', () => {
+    mainWindow.webContents.send('MEDIA_PREV_TRACK');
+  });
+  globalShortcut.register('MediaStop', () => {
+    mainWindow.webContents.send('MEDIA_STOP');
+  });
+
   /****************************************************** */
 
   var generateRandomString = function (length) {
@@ -392,6 +406,10 @@ app.on('ready', function () {
     }
     return text;
   };
+});
+
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll();
 });
 
 /* MAC OS STUFF */

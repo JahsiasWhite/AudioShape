@@ -241,7 +241,39 @@ export const AudioProvider = ({ children }) => {
 
     initCurrentSong();
     finishLoading();
+
+    if ('mediaSession' in navigator) {
+      const song = loadedSongs[currentSongId];
+      const artwork = song?.albumImage
+        ? [{ src: `file:///${song.albumImage.replace(/\\/g, '/')}`, type: 'image/jpeg' }]
+        : [];
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: song?.title ?? '',
+        artist: song?.artist ?? '',
+        album: song?.album ?? '',
+        artwork,
+      });
+    }
   }, [currentSongId]);
+
+  /* Media key IPC + navigator.mediaSession action handlers */
+  useEffect(() => {
+    const handlePlayPause = () => { if (isPlaying) pauseAudio(); else playAudio(); };
+    const r1 = window.electron.ipcRenderer.on('MEDIA_PLAY_PAUSE', handlePlayPause);
+    const r2 = window.electron.ipcRenderer.on('MEDIA_NEXT_TRACK', playNextSong);
+    const r3 = window.electron.ipcRenderer.on('MEDIA_PREV_TRACK', playPreviousSong);
+    const r4 = window.electron.ipcRenderer.on('MEDIA_STOP', pauseAudio);
+
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.setActionHandler('play', playAudio);
+      navigator.mediaSession.setActionHandler('pause', pauseAudio);
+      navigator.mediaSession.setActionHandler('nexttrack', playNextSong);
+      navigator.mediaSession.setActionHandler('previoustrack', playPreviousSong);
+      navigator.mediaSession.setActionHandler('stop', pauseAudio);
+    }
+
+    return () => { r1?.(); r2?.(); r3?.(); r4?.(); };
+  }, [isPlaying, playAudio, pauseAudio, playNextSong, playPreviousSong]);
 
   /* Keep isPlaying in sync with the actual audio element state */
   useEffect(() => {
