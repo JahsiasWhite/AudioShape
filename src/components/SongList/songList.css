@@ -4,7 +4,7 @@
 }
 
 .song-list-header {
-  font-size: 100px;
+  font-size: 60px;
   display: flex;
   align-items: center;
   margin-top: 10px;
@@ -60,7 +60,7 @@
 }
 
 .list-item {
-  padding: 10px;
+  padding: 4px 10px;
   display: flex;
   align-items: center;
   position: relative;
@@ -73,15 +73,15 @@
 }
 
 .list-image {
-  height: 50px;
-  width: 50px;
+  height: var(--row-image-size);
+  width: var(--row-image-size);
   border-radius: 4px;
   margin-right: 10px;
 }
 
 .list-image-header {
-  height: 200px;
-  width: 200px;
+  height: 120px;
+  width: 120px;
   margin-right: 10px;
   border-radius: 6px;
 }

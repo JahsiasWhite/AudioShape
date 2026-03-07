@@ -204,7 +204,7 @@ export default function SongListItems({
               filteredSongs[key].file.includes('.mp4') &&
               thumbnails ? (
                 <img
-                  className="list-image-header"
+                  className="list-image"
                   src={thumbnails[key]}
                   alt={`${filteredSongs[key].album} cover`}
                 />
@@ -214,7 +214,7 @@ export default function SongListItems({
             ) : (
               // If there was an image in the immediate file directory, use that as the image
               <img
-                className="list-image-header"
+                className="list-image"
                 src={filteredSongs[key].albumImage}
                 alt={`${filteredSongs[key].album} cover`}
               />

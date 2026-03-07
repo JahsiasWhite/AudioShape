@@ -50,7 +50,12 @@ function App() {
     // This will create a duplicate of each style
     // I could just delete the css styles and define the defaults in the server...
     window.electron.ipcRenderer.sendMessage('GET_COLOR_SETTINGS');
+    window.electron.ipcRenderer.sendMessage('GET_ROW_SIZE');
   }, []);
+
+  window.electron.ipcRenderer.on('RETURN_ROW_SIZE', (rowSize) => {
+    document.documentElement.style.setProperty('--row-image-size', rowSize + 'px');
+  });
 
   window.electron.ipcRenderer.on('RETURN_COLOR_SETTINGS', (colorSettings) => {
     // If the user has never changed the color settings,

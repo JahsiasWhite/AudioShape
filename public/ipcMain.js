@@ -201,6 +201,10 @@ const SETUP_SETINGS = (mainWindow, dataDirectory) => {
     console.error('GETTING COLOR SETTINGS: ', getSettings());
     mainWindow.webContents.send('RETURN_COLOR_SETTINGS', getSettings().colors);
   });
+
+  ipcMain.on('GET_ROW_SIZE', (event) => {
+    mainWindow.webContents.send('RETURN_ROW_SIZE', getSettings().rowSize ?? 50);
+  });
 };
 
 const SETUP_PLAYLISTS = (mainWindow, dataDirectory) => {

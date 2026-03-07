@@ -8,6 +8,7 @@
   --color-text-secondary: #72728a;
   --color-text-inverse: #ccd0e0;
   --color-button-secondary: #0088b0;
+  --row-image-size: 50px;
 }
 
 body {
