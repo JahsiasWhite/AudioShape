@@ -51,6 +51,8 @@ This will create a new folder titled 'build'
 
 #### Build App
 
+`npm run react-build`
+
 `npm run electron-build`
 This will create a new folder titled 'dist'. Inside is where the installer.exe is
 

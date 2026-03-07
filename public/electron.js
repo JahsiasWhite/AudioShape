@@ -1,4 +1,10 @@
-const { app, BrowserWindow, ipcMain, protocol, globalShortcut } = require('electron');
+const {
+  app,
+  BrowserWindow,
+  ipcMain,
+  protocol,
+  globalShortcut,
+} = require('electron');
 
 const path = require('path');
 const fs = require('fs');
@@ -18,7 +24,7 @@ const {
 // Initialize application constants and file paths
 function initializeAppConstants() {
   const dataDirectory = path.join(app.getPath('userData'), 'Data');
-  
+
   const defaultSettings = JSON.stringify({
     libraryDirectory: '',
     loop: 'none',
@@ -41,7 +47,7 @@ function initializeAppConstants() {
     settingsFile,
     playlistsFile,
     effectCombosFile,
-    tempSongFolder
+    tempSongFolder,
   };
 }
 
@@ -51,7 +57,7 @@ const {
   settingsFile,
   playlistsFile,
   effectCombosFile,
-  tempSongFolder
+  tempSongFolder,
 } = initializeAppConstants();
 if (!fs.existsSync(dataDirectory)) {
   fs.mkdirSync(dataDirectory);
@@ -114,7 +120,7 @@ app.on('ready', function () {
   // In development, set it to localhost to allow live/hot-reloading.
   const appURL = app.isPackaged
     ? url.format({
-        pathname: path.join(__dirname, 'index.html'),
+        pathname: path.join(__dirname, '..', 'build', 'index.html'),
         protocol: 'file:',
         slashes: true,
       })
@@ -164,7 +170,7 @@ app.on('ready', function () {
       scopes,
       state,
       showDialog,
-      responseType
+      responseType,
     );
     console.log('URL  IS : ', authorizeURL);
     return authorizeURL;
@@ -224,7 +230,7 @@ app.on('ready', function () {
       },
       function (err) {
         console.log('Something went wrong!', err);
-      }
+      },
     );
   });
 
@@ -295,7 +301,7 @@ app.on('ready', function () {
       },
       function (err) {
         console.log('Something went wrong!', err);
-      }
+      },
     );
   }
 

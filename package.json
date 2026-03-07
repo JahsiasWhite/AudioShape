@@ -85,7 +85,7 @@
       "./public/preload.js",
       "./public/index.html",
       "./public/index.css",
-      "build/*"
+      "build/**/*"
     ]
   }
 }
