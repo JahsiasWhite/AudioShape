@@ -16,7 +16,7 @@ const filters = ['Title', 'Duration'];
 var index = 0;
 
 function SongList({ handleSongEdit }) {
-  const { visibleSongs, currentScreen, setCurrentScreen, initSongsLoading } =
+  const { visibleSongs, currentScreen, setCurrentScreen, initSongsLoading, startSongsLoading } =
     useAudioPlayer();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -129,7 +129,7 @@ function SongList({ handleSongEdit }) {
       ) : visibleSongs.length === 0 ? (
         <div className="empty-message">
           <p>No songs found! Make sure the file path is correct, or reset it</p>
-          <FolderSelection />
+          <FolderSelection onLoadingStart={startSongsLoading} />
         </div>
       ) : (
         <div>

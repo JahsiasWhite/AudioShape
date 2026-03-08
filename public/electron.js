@@ -9,6 +9,7 @@ const {
 const path = require('path');
 const fs = require('fs');
 const url = require('url');
+const logger = require('./mainLogger');
 
 const {
   SAVE_TEMP_SONG,
@@ -59,6 +60,11 @@ const {
   effectCombosFile,
   tempSongFolder,
 } = initializeAppConstants();
+
+logger.init(dataDirectory);
+ipcMain.on('LOG', (_event, { ts, level, msg }) => {
+  logger[level === 'ERROR' ? 'error' : 'warn'](`[renderer] ${msg}`);
+});
 if (!fs.existsSync(dataDirectory)) {
   fs.mkdirSync(dataDirectory);
 }

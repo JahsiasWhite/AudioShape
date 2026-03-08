@@ -160,10 +160,7 @@ export default function SongListItems({
       console.error('LOADING THUMBNAILS');
       const newThumbnails = {};
       for (const key of Object.keys(filteredSongs)) {
-        if (
-          filteredSongs[key].file &&
-          filteredSongs[key].file.includes('.mp4')
-        ) {
+        if (filteredSongs[key].isVideo) {
           newThumbnails[key] = await extractThumbnail(filteredSongs[key].file);
         }
       }
@@ -200,9 +197,7 @@ export default function SongListItems({
             {!filteredSongs[key].albumImage ? (
               // If there is no album image, check if the file is an mp4.
               // If it is, we can use a frame from the video as the image
-              filteredSongs[key].file &&
-              filteredSongs[key].file.includes('.mp4') &&
-              thumbnails ? (
+              filteredSongs[key].isVideo && thumbnails ? (
                 <img
                   className="list-image"
                   src={thumbnails[key]}

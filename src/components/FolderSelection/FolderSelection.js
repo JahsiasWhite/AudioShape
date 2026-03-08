@@ -2,7 +2,7 @@ import React from 'react';
 
 import './FolderSelection.css';
 
-function FolderSelection({ onSettingsUpdate }) {
+function FolderSelection({ onSettingsUpdate, onLoadingStart }) {
   // Once a folder is selected, we call to the server to load the
   // file path to grab the songs
   const handleFolderSelection = (event) => {
@@ -18,6 +18,9 @@ function FolderSelection({ onSettingsUpdate }) {
       0,
       fullPath.indexOf(firstFolder) + firstFolder.length
     );
+
+    // Signal that loading has started before sending the request
+    if (onLoadingStart) onLoadingStart();
 
     window.electron.ipcRenderer.sendMessage('GET_SONGS', selectedFolderPath);
 

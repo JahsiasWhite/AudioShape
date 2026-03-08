@@ -3,8 +3,11 @@ import React, { useEffect, useState } from 'react';
 import FolderSelection from '../FolderSelection/FolderSelection';
 import './Settings.css';
 import ColorSettings from './ColorSettings';
+import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 function Settings() {
+  const { startSongsLoading } = useAudioPlayer();
+
   const [settings, setSettings] = useState({
     songDirectory: '',
     dataDirectory: '',
@@ -80,7 +83,7 @@ function Settings() {
           {settings.libraryDirectory}
           {/* Choose Song Directory */}
         </div>
-        <FolderSelection onSettingsUpdate={handleSettingsUpdate} />
+        <FolderSelection onSettingsUpdate={handleSettingsUpdate} onLoadingStart={startSongsLoading} />
 
         <div className="setting-item">
           <strong>Settings Directory:</strong> {settings.dataDirectory}

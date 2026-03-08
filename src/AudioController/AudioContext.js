@@ -32,8 +32,14 @@ export const AudioProvider = ({ children }) => {
   const initCurrentSong = async () => {
     await setupLiveEffectsChain(currentSong); // No-op after first call (resolves instantly)
     currentSong.volume = volume;
-    currentSong.play();
-    setIsPlaying(true);
+    try {
+      await currentSong.play();
+      setIsPlaying(true);
+    } catch (err) {
+      console.error('Failed to play song:', err);
+      setIsPlaying(false);
+      return;
+    }
 
     console.error('Adding event listener for onSongEnded');
     currentSong.addEventListener('ended', onSongEnded);
@@ -294,6 +300,13 @@ export const AudioProvider = ({ children }) => {
     setInitSongsLoading(false);
   };
 
+  /* Called when a new directory is selected — clears old songs and shows loading */
+  const startSongsLoading = () => {
+    setInitSongsLoading(true);
+    setVisibleSongs({});
+    setLoadedSongs({});
+  };
+
   window.electron.ipcRenderer.on('GRAB_SONGS', (retrievedSongs) => {
     console.error('GOT SONGS: ', retrievedSongs);
     initialSongLoad(retrievedSongs);
@@ -312,6 +325,7 @@ export const AudioProvider = ({ children }) => {
     <AudioContext.Provider
       value={{
         initialSongLoad,
+        startSongsLoading,
         loadingQueue,
         clearEffects,
         resetCurrentSong,

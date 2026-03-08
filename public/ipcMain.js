@@ -6,6 +6,9 @@ const { v4: uuidv4 } = require('uuid');
 const { glob } = require('glob');
 const ffmpeg = require('fluent-ffmpeg');
 
+// Logging
+const Logger = require('./mainLogger');
+
 // Annoying way to import this tbh
 let metadata;
 import('music-metadata').then((module) => {
@@ -115,7 +118,10 @@ const SAVE_SONG = (dataDirectory) => {
       // Preserve the source format: .mp4 stays .mp4, everything else → .mp3
       const sourceExt = path.extname(sourcePath).toLowerCase();
       const outputExt = sourceExt === '.mp4' ? '.mp4' : '.mp3';
-      const newFilePath = path.join(dataDirectory, `export-${uuidv4()}${outputExt}`);
+      const newFilePath = path.join(
+        dataDirectory,
+        `export-${uuidv4()}${outputExt}`,
+      );
 
       console.error('Source: ', sourcePath);
       console.error('New Path: ', newFilePath);
@@ -159,6 +165,8 @@ const SAVE_SONG = (dataDirectory) => {
 };
 
 const SETUP_SETINGS = (mainWindow, dataDirectory) => {
+  Logger.info('Initializing settings');
+
   userDataPath = dataDirectory; // TODO I dont like this tbh
   /**
    * Gets all user settings. Called when the user navigates to the settings page
@@ -169,7 +177,7 @@ const SETUP_SETINGS = (mainWindow, dataDirectory) => {
   ipcMain.on('GET_LAYOUT_SETTINGS', (event) => {
     mainWindow.webContents.send(
       'GET_LAYOUT_SETTINGS',
-      getSettings().spotifyEnabled
+      getSettings().spotifyEnabled,
     );
   });
 
@@ -198,7 +206,6 @@ const SETUP_SETINGS = (mainWindow, dataDirectory) => {
   });
 
   ipcMain.on('GET_COLOR_SETTINGS', (event) => {
-    console.error('GETTING COLOR SETTINGS: ', getSettings());
     mainWindow.webContents.send('RETURN_COLOR_SETTINGS', getSettings().colors);
   });
 
@@ -247,13 +254,13 @@ const SETUP_PLAYLISTS = (mainWindow, dataDirectory) => {
       // Write the updated playlists back to the file
       fs.writeFileSync(
         playlistsFilePath,
-        JSON.stringify(updatedPlaylists, null, 2)
+        JSON.stringify(updatedPlaylists, null, 2),
       );
 
       // Update the new playlists
       mainWindow.webContents.send('GRAB_PLAYLISTS', updatedPlaylists);
     } catch (error) {
-      console.error('Error deleting playlist:', error);
+      Logger.error('Error deleting playlist:', error);
 
       // Send an error message back to the renderer process
       // event.sender.send('PLAYLIST_DELETE_ERROR', error.message);
@@ -270,18 +277,18 @@ const SETUP_PLAYLISTS = (mainWindow, dataDirectory) => {
       const playlistsFilePath = path.join(
         userDataPath,
         'Data',
-        'playlists.json'
+        'playlists.json',
       );
       const playlists = getPlaylists(playlistsFilePath);
 
       // Find the playlist by name
       const playlistIndex = playlists.findIndex(
-        (playlist) => playlist.name === playlistName
+        (playlist) => playlist.name === playlistName,
       );
 
       if (playlistIndex === -1) {
         // Playlist not found, handle accordingly (e.g., show an error)
-        console.error(`Playlist "${playlistName}" not found.`);
+        Logger.error(`Playlist "${playlistName}" not found.`);
         return;
       }
 
@@ -295,7 +302,7 @@ const SETUP_PLAYLISTS = (mainWindow, dataDirectory) => {
       if (playlists[playlistIndex].songs.includes(songName)) {
         // Remove the song from the playlist
         playlists[playlistIndex].songs = playlists[playlistIndex].songs.filter(
-          (s) => s !== songName
+          (s) => s !== songName,
         );
       } else {
         // Add the song to the playlist
@@ -311,7 +318,7 @@ const SETUP_PLAYLISTS = (mainWindow, dataDirectory) => {
       mainWindow.webContents.send('GRAB_PLAYLISTS', playlists);
     } catch (error) {
       // Handle any errors that occur during the process
-      console.error('Error adding song to playlist:', error);
+      Logger.error('Error adding song to playlist:', error);
     }
   });
 };
@@ -342,7 +349,7 @@ const SETUP_EFFECTS = (mainWindow, directory) => {
     try {
       fs.writeFileSync(effectCombosFile, JSON.stringify(effectCombos, null, 2));
     } catch (error) {
-      console.error('Error writing combos file:', error);
+      Logger.error('Error writing combos file:', error);
     }
 
     // Send the new effects back to the client
@@ -376,7 +383,7 @@ const SETUP_SONG_DOWNLOADS = (mainW) => {
       // download the song from youtube
       const url = result.all[0].url;
       downloadYoutubeVideo(url);
-    }
+    },
   );
 };
 
@@ -459,6 +466,7 @@ const processSongMetadata = (file, imageMap) => {
             album: album,
             duration: duration,
             albumImage: savedImage,
+            isVideo: path.extname(file).toLowerCase() === '.mp4',
           };
 
           resolve(songData);
@@ -610,14 +618,14 @@ function writeSpotifyDetails(inputFilePath, outputFilePath, metadata) {
         .output(outputFilePath)
         .on('progress', (progress) => {
           console.log(
-            `FFmpeg Progress: ${progress.percent}% done, ${progress.timemark}`
+            `FFmpeg Progress: ${progress.percent}% done, ${progress.timemark}`,
           );
           console.log('DATA : ', metadata.name, progress);
           mainWindow.webContents.send(
             'ffmpeg-progress',
             `FFmpeg Progress: ${progress.percent}% done, ${progress.timemark}`,
             progress.percent,
-            metadata.name
+            metadata.name,
           );
         })
         .on('end', async () => {
@@ -692,7 +700,7 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
     console.error('No song directory selected, returning...');
     mainWindow.webContents.send(
       'download-error',
-      `No valid song directory found. Please choose a song directory from the settings page to download songs.`
+      `No valid song directory found. Please choose a song directory from the settings page to download songs.`,
     );
     return;
   }
@@ -716,37 +724,37 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
       `Audio  | ${(
         (tracker.audio.downloaded / tracker.audio.total) *
         100
-      ).toFixed(2)}% processed `
+      ).toFixed(2)}% processed `,
     );
     process.stdout.write(
       `(${toMB(tracker.audio.downloaded)}MB of ${toMB(
-        tracker.audio.total
-      )}MB).${' '.repeat(10)}\n`
+        tracker.audio.total,
+      )}MB).${' '.repeat(10)}\n`,
     );
 
     process.stdout.write(
       `Video  | ${(
         (tracker.video.downloaded / tracker.video.total) *
         100
-      ).toFixed(2)}% processed `
+      ).toFixed(2)}% processed `,
     );
     process.stdout.write(
       `(${toMB(tracker.video.downloaded)}MB of ${toMB(
-        tracker.video.total
-      )}MB).${' '.repeat(10)}\n`
+        tracker.video.total,
+      )}MB).${' '.repeat(10)}\n`,
     );
 
     process.stdout.write(`Merged | processing frame ${tracker.merged.frame} `);
     process.stdout.write(
       `(at ${tracker.merged.fps} fps => ${tracker.merged.speed}).${' '.repeat(
-        10
-      )}\n`
+        10,
+      )}\n`,
     );
 
     process.stdout.write(
       `running for: ${((Date.now() - tracker.start) / 1000 / 60).toFixed(
-        2
-      )} Minutes.`
+        2,
+      )} Minutes.`,
     );
 
     readline.moveCursor(process.stdout, 0, -3);
@@ -757,11 +765,11 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
   if (!settings.mp4DownloadEnabled) {
     const outputVagueFilePath = path.join(
       songDirectory,
-      `spotify-vague-${videoTitle}.mp3`
+      `spotify-vague-${videoTitle}.mp3`,
     );
     const outputFilePath = path.join(
       songDirectory,
-      `spotify-${videoTitle}.mp3`
+      `spotify-${videoTitle}.mp3`,
     );
     const writeStream = fs.createWriteStream(outputVagueFilePath);
 
@@ -784,7 +792,7 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
           'ffmpeg-progress',
           `FFmpeg Progress: ${downloaded / total}% done`,
           (downloaded / total) * 100,
-          spotifyDetails ? spotifyDetails.name : 'name'
+          spotifyDetails ? spotifyDetails.name : 'name',
         );
         console.error('DOWNLOADING');
       });
@@ -795,25 +803,25 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
         // TODO toggle between this and the commented out bit
         console.error(
           'Attaching extra details? ',
-          settings.attchingExtraDetails
+          settings.attchingExtraDetails,
         );
         if (!settings.attchingExtraDetails) {
           mainWindow.webContents.send(
             'download-success',
             'Download completed!',
-            {}
+            {},
           );
         } else {
           songData = await writeSpotifyDetails(
             outputVagueFilePath,
             // path.join(songDirectory, `TEST.mp3`),
             outputFilePath,
-            spotifyDetails
+            spotifyDetails,
           );
           mainWindow.webContents.send(
             'download-success',
             'Download completed!',
-            songData
+            songData,
           );
         }
       })
@@ -848,14 +856,14 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
     (_, downloaded, total) => {
       tracker.audio = { downloaded, total };
       showProgress();
-    }
+    },
   );
   const videoStream = ytdl(url, { quality: 'highestvideo' }).on(
     'progress',
     (_, downloaded, total) => {
       tracker.video = { downloaded, total };
       showProgress();
-    }
+    },
   );
 
   // Construct the output file path using the video title and song directory
@@ -898,7 +906,7 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
         'pipe',
         'pipe',
       ],
-    }
+    },
   );
   console.log('Created ffmpeg process');
 
@@ -922,7 +930,7 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
         songData = await writeSpotifyDetails(
           outputFilePath,
           path.join(songDirectory, `spotify-${videoTitle}.mp4`),
-          spotifyDetails
+          spotifyDetails,
         );
       } else {
         songData = await processSongMetadata(outputFilePath, {});
@@ -931,14 +939,14 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
       mainWindow.webContents.send(
         'download-success',
         'Download completed!',
-        songData
+        songData,
       );
       console.log('Download completed, sent song data');
     } else {
       console.error(`FFmpeg process exited with code ${code}`);
       mainWindow.webContents.send(
         'download-error',
-        `FFmpeg process exited with code ${code}`
+        `FFmpeg process exited with code ${code}`,
       );
     }
 
@@ -968,7 +976,7 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
     if (err.code === 'EPIPE') {
       mainWindow.webContents.send(
         'download-error',
-        `FFmpeg process exited with code ${err.code}. FILE ALREADY EXISTS`
+        `FFmpeg process exited with code ${err.code}. FILE ALREADY EXISTS`,
       );
     }
   });
@@ -1055,8 +1063,6 @@ function getSettings(settingsPath) {
   if (settingsPath === undefined) {
     settingsPath = createSettingsPath();
   }
-
-  console.error('SETTINGSPATH: ', settingsPath);
 
   const settingsData = fs.readFileSync(settingsPath, 'utf-8');
   return JSON.parse(settingsData);

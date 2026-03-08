@@ -72,7 +72,7 @@ const Queue = () => {
                 <div
                   key={id}
                   className="queue-item"
-                  onDoubleClick={() => handleSongSelectQueue(parseFloat(id))}
+                  onDoubleClick={() => handleSongSelectQueue(id)}
                 >
                   {loadedSongs[id].title}
                 </div>

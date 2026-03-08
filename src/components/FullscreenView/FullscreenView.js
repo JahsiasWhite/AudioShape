@@ -16,8 +16,7 @@ const FullscreenView = ({ toggleFullscreen }) => {
   // TODO: Changing volume rerenders this component...
   console.log(song, currentSong);
 
-  // Need to know if the current song has a video or not
-  const isMP4 = song && song.file.endsWith('.mp4');
+  const isMP4 = song?.isVideo;
 
   return (
     <div className="fullscreen-view">
