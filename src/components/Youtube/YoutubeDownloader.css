@@ -61,5 +61,4 @@ input.video-url-input::placeholder {
 .download-status {
   margin-top: 20px;
   font-size: 16px;
-  color: var(--color-main);
 }
