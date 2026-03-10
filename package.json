@@ -84,6 +84,7 @@
       "./public/preload.js",
       "./public/index.html",
       "./public/index.css",
+      "./public/mainLogger.js",
       "build/**/*"
     ]
   }
