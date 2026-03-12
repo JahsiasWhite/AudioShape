@@ -5,7 +5,7 @@ import { useAudioPlayer } from '../../../AudioController/AudioContext';
 function PlaybackTimer() {
   const { currentSong, changeVideoTime } = useAudioPlayer();
 
-  const [currentTime, setCurrentTime] = useState(0);
+  const [currentTime, setCurrentTime] = useState(currentSong.currentTime);
 
   useEffect(() => {
     currentSong.addEventListener('timeupdate', updateTime);
