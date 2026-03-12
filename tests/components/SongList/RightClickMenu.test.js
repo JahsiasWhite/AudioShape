@@ -25,6 +25,7 @@ window.electron = {
   ipcRenderer: {
     on: jest.fn(),
     once: jest.fn(),
+    sendMessage: jest.fn(),
   },
 };
 

@@ -234,6 +234,10 @@ const SETUP_SETINGS = (mainWindow, dataDirectory) => {
   ipcMain.on('GET_ROW_SIZE', (event) => {
     mainWindow.webContents.send('RETURN_ROW_SIZE', getSettings().rowSize ?? 50);
   });
+
+  ipcMain.on('GET_VOLUME', (event) => {
+    mainWindow.webContents.send('RETURN_VOLUME', getSettings().volume ?? 100);
+  });
 };
 
 const SETUP_PLAYLISTS = (mainWindow, dataDirectory) => {
