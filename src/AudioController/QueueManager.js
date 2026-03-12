@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 // If the current song has played for more than this many seconds,
 // going to the previous song will restart this song instead of going to the previous song
@@ -14,6 +14,17 @@ export const QueueManager = (currentSong, visibleSongs, loadedSongs) => {
   const [playMode, setPlayMode] = useState('normal');
   const shuffleIsEnabled = playMode === 'shuffle';
   const loopIsEnabled = playMode === 'loop';
+
+  // Populate nextSongs when songs first load (so the queue tab isn't empty)
+  useEffect(() => {
+    if (
+      visibleSongs &&
+      Object.keys(visibleSongs).length > 0 &&
+      currentSongId === null
+    ) {
+      setNextSongs(Object.keys(visibleSongs));
+    }
+  }, [visibleSongs]);
 
   // Make playNextSong a useCallback so we can reference it in onSongEnded
   const playNextSong = useCallback(() => {
@@ -64,7 +75,7 @@ export const QueueManager = (currentSong, visibleSongs, loadedSongs) => {
       console.error('INSIDE');
 
       const index = Object.keys(visibleSongs).findIndex(
-        (key) => visibleSongs[key].id === songId
+        (key) => visibleSongs[key].id === songId,
       );
 
       setCurrentSongId(songId);
@@ -81,7 +92,7 @@ export const QueueManager = (currentSong, visibleSongs, loadedSongs) => {
       }
       setNextSongs(upNext);
     },
-    [visibleSongs, shuffleIsEnabled]
+    [visibleSongs, shuffleIsEnabled],
   );
 
   const playPreviousSong = useCallback(() => {
@@ -158,7 +169,7 @@ export const QueueManager = (currentSong, visibleSongs, loadedSongs) => {
       if (current === 'normal') {
         // Enter shuffle
         const upNext = Object.keys(visibleSongs).filter(
-          (key) => key !== currentSongId
+          (key) => key !== currentSongId,
         );
         for (let i = upNext.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
@@ -171,14 +182,16 @@ export const QueueManager = (currentSong, visibleSongs, loadedSongs) => {
 
       if (current === 'shuffle') {
         // Enter loop
-        setNextSongs(Object.keys(visibleSongs).slice(currentSongIndex + 1));
+        const idx = currentSongIndex ?? -1;
+        setNextSongs(Object.keys(visibleSongs).slice(idx + 1));
         currentSong.loop = true;
         return 'loop';
       }
 
       // Back to normal
       currentSong.loop = false;
-      setNextSongs(Object.keys(visibleSongs).slice(currentSongIndex + 1));
+      const idx = currentSongIndex ?? -1;
+      setNextSongs(Object.keys(visibleSongs).slice(idx + 1));
       return 'normal';
     });
   }, [currentSong, visibleSongs, currentSongIndex, currentSongId]);
