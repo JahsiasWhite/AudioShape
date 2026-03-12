@@ -104,6 +104,9 @@ app.on('ready', function () {
     // Hides the toolbar but it can still be reactived by pressing 'alt'
     autoHideMenuBar: true,
 
+    // Remove the native title bar; we use a custom one in React
+    frame: false,
+
     webPreferences: {
       // Set the path of an additional "preload" script that can be used to
       // communicate between node-land and browser-land.
@@ -147,6 +150,14 @@ app.on('ready', function () {
   SETUP_PLAYLISTS(mainWindow, app.getPath('userData'));
   SETUP_EFFECTS(mainWindow, effectCombosFile);
   SETUP_SONG_DOWNLOADS(mainWindow);
+
+  /* Window control handlers for the custom title bar */
+  ipcMain.on('WINDOW_MINIMIZE', () => mainWindow.minimize());
+  ipcMain.on('WINDOW_MAXIMIZE', () => {
+    if (mainWindow.isMaximized()) mainWindow.unmaximize();
+    else mainWindow.maximize();
+  });
+  ipcMain.on('WINDOW_CLOSE', () => mainWindow.close());
 
   /********************************************** */
   /**

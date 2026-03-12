@@ -11,6 +11,7 @@ import Settings from './components/Settings/Settings';
 import Spotify from './components/Spotify/Spotify';
 import Youtube from './components/Youtube/Youtube';
 import LayoutBar from './components/LayoutBar/LayoutBar';
+import TitleBar from './components/TitleBar/TitleBar';
 import Mixer from './components/Mixer/Mixer';
 import PopupMenu from './components/PopupMenu/PopupMenu';
 
@@ -54,7 +55,10 @@ function App() {
   }, []);
 
   window.electron.ipcRenderer.on('RETURN_ROW_SIZE', (rowSize) => {
-    document.documentElement.style.setProperty('--row-image-size', rowSize + 'px');
+    document.documentElement.style.setProperty(
+      '--row-image-size',
+      rowSize + 'px',
+    );
   });
 
   window.electron.ipcRenderer.on('RETURN_COLOR_SETTINGS', (colorSettings) => {
@@ -73,12 +77,12 @@ function App() {
     root.style.setProperty('--color-button', colorSettings.button);
     root.style.setProperty(
       '--color-button-secondary',
-      colorSettings.secondaryButton
+      colorSettings.secondaryButton,
     );
     root.style.setProperty('--color-text', colorSettings.text);
     root.style.setProperty(
       '--color-text-secondary',
-      colorSettings.secondaryText
+      colorSettings.secondaryText,
     );
     root.style.setProperty('--color-text-inverse', colorSettings.textInverse);
   });
@@ -98,17 +102,12 @@ function App() {
     setIsFullscreen(false);
   };
 
-  // const changeColor = () => {
-  // Get the root element
-  // var r = document.querySelector(':root');
-  // r.style.setProperty('--color-main', 'lightblue');
-  // };
-
   return (
     <AudioProvider>
       <div className="app-container">
         {!isFullscreen && (
           <div className="non-fullscreen">
+            <TitleBar />
             <div className="middle-content">
               <LayoutBar
                 toggleSection={toggleSection}
@@ -117,11 +116,7 @@ function App() {
               />
               <div className="main-content">
                 {currentSection === 'allSongs' ? (
-                  <SongList
-                    // handleSongLoad={loadedSongs}
-                    handleSongEdit={handleSongSelect}
-                    // songs={visibleSongs}
-                  />
+                  <SongList handleSongEdit={handleSongSelect} />
                 ) : currentSection === 'playlists' ? (
                   <Playlists toggleSection={toggleSection} />
                 ) : currentSection === 'artists' ? (
@@ -152,7 +147,6 @@ function App() {
 
         <ErrorMessages />
 
-        {/* Popup menu */}
         <PopupMenu />
       </div>
     </AudioProvider>

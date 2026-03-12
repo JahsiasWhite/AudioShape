@@ -1,0 +1,110 @@
+.title-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: 32px;
+  background-color: var(--color-main);
+  flex-shrink: 0;
+  width: 100%;
+  -webkit-app-region: drag;
+}
+
+.title-bar-identity {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding-left: 10px;
+  -webkit-app-region: drag;
+}
+
+.title-bar-logo {
+  width: 12px;
+  height: 12px;
+  filter: invert(1);
+}
+
+.title-bar-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.03em;
+}
+
+.title-bar-drag-region {
+  flex: 1;
+  height: 100%;
+  -webkit-app-region: drag;
+}
+
+.title-bar-buttons {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  -webkit-app-region: no-drag;
+}
+
+.title-bar-btn {
+  width: 46px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  transition: background-color 0.15s;
+}
+
+.title-bar-btn:hover {
+  background-color: rgba(255, 255, 255, 0.07);
+  color: var(--color-text);
+}
+
+/* Minimize — horizontal bar */
+.btn-minimize span {
+  display: block;
+  width: 10px;
+  height: 1px;
+  background: currentColor;
+}
+
+/* Maximize — square outline */
+.btn-maximize span {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border: 1px solid currentColor;
+}
+
+/* Close — × */
+.btn-close span {
+  display: block;
+  width: 12px;
+  height: 12px;
+  position: relative;
+}
+
+.btn-close span::before,
+.btn-close span::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+}
+
+.btn-close span::before {
+  transform: rotate(45deg);
+}
+
+.btn-close span::after {
+  transform: rotate(-45deg);
+}
+
+.btn-close:hover {
+  background-color: #c0392b;
+  color: #fff;
+}

@@ -1,6 +1,11 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 const electronHandler = {
+  windowControls: {
+    minimize: () => ipcRenderer.send('WINDOW_MINIMIZE'),
+    maximize: () => ipcRenderer.send('WINDOW_MAXIMIZE'),
+    close: () => ipcRenderer.send('WINDOW_CLOSE'),
+  },
   ipcRenderer: {
     sendMessage(channel, ...args) {
       ipcRenderer.send(channel, ...args);
