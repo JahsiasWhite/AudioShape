@@ -123,4 +123,93 @@ describe('Queue', () => {
 
     expect(handleSongSelectMock).toHaveBeenCalledTimes(2);
   });
+
+  describe('after switching song directory (stale IDs)', () => {
+    const { useAudioPlayer } = require('../../../src/AudioController/AudioContext');
+
+    it('does not crash when currentSongId is stale and not in loadedSongs', () => {
+      useAudioPlayer.mockReturnValue({
+        loadedSongs: {},
+        visibleSongs: {},
+        currentSongId: 'song1',
+        currentSongIndex: 0,
+        handleSongSelect: jest.fn(),
+        songQueue: [],
+        nextSongs: [],
+      });
+
+      const { container } = render(<Queue />);
+      openQueue(container);
+      expect(container).toBeDefined();
+    });
+
+    it('does not render current song when its id is stale', () => {
+      useAudioPlayer.mockReturnValue({
+        loadedSongs: {},
+        visibleSongs: {},
+        currentSongId: 'song1',
+        currentSongIndex: 0,
+        handleSongSelect: jest.fn(),
+        songQueue: [],
+        nextSongs: [],
+      });
+
+      const { container } = render(<Queue />);
+      openQueue(container);
+      expect(container.querySelector('.current-song-queue')).toBeNull();
+    });
+
+    it('does not render queue items when their ids are stale', () => {
+      useAudioPlayer.mockReturnValue({
+        loadedSongs: {},
+        visibleSongs: {},
+        currentSongId: null,
+        currentSongIndex: 0,
+        handleSongSelect: jest.fn(),
+        songQueue: ['stale-id-1', 'stale-id-2'],
+        nextSongs: [],
+      });
+
+      const { container } = render(<Queue />);
+      openQueue(container);
+      expect(container.querySelectorAll('.queue-item:not(.current-song-queue)').length).toBe(0);
+    });
+
+    it('does not render next song items when their ids are stale', () => {
+      useAudioPlayer.mockReturnValue({
+        loadedSongs: {},
+        visibleSongs: {},
+        currentSongId: null,
+        currentSongIndex: 0,
+        handleSongSelect: jest.fn(),
+        songQueue: [],
+        nextSongs: ['stale-id-3', 'stale-id-4'],
+      });
+
+      const { container } = render(<Queue />);
+      openQueue(container);
+      expect(container.querySelectorAll('.secondary-queue .queue-item').length).toBe(0);
+    });
+
+    it('only renders queue items that exist in the new loadedSongs after partial reload', () => {
+      useAudioPlayer.mockReturnValue({
+        loadedSongs: {
+          'new-song-1': { id: 'new-song-1', title: 'New Song 1' },
+        },
+        visibleSongs: {},
+        currentSongId: 'song1', // stale from old directory
+        currentSongIndex: 0,
+        handleSongSelect: jest.fn(),
+        songQueue: ['stale-id', 'new-song-1'], // one stale, one valid
+        nextSongs: [],
+      });
+
+      const { container } = render(<Queue />);
+      openQueue(container);
+
+      const queueItems = container.querySelectorAll('.queue-item:not(.current-song-queue)');
+      expect(queueItems.length).toBe(1);
+      expect(queueItems[0].textContent).toBe('New Song 1');
+    });
+  });
 });

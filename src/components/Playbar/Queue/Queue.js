@@ -43,7 +43,7 @@ const Queue = () => {
           <div className="test-queue">
             <div>
               <h3>Current Song</h3>
-              {currentSongId && (
+              {currentSongId && loadedSongs[currentSongId] && (
                 <div
                   key={songQueue[0]}
                   className={`queue-item current-song-queue
@@ -55,28 +55,34 @@ const Queue = () => {
             </div>
             <h3>Queue</h3>
             {songQueue.length > 0 &&
-              songQueue.map((id, index) => (
-                <div
-                  key={id}
-                  className="queue-item"
-                  onDoubleClick={() => handleSongSelectQueue(id)}
-                >
-                  {loadedSongs[id].title}
-                </div>
-              ))}
+              songQueue.map(
+                (id, index) =>
+                  loadedSongs[id] && (
+                    <div
+                      key={id}
+                      className="queue-item"
+                      onDoubleClick={() => handleSongSelectQueue(id)}
+                    >
+                      {loadedSongs[id].title}
+                    </div>
+                  ),
+              )}
           </div>
           <div className="secondary-queue">
             <h3>Next</h3>
             {nextSongs &&
-              nextSongs.map((id, index) => (
-                <div
-                  key={id}
-                  className="queue-item"
-                  onDoubleClick={() => handleSongSelectQueue(id)}
-                >
-                  {loadedSongs[id].title}
-                </div>
-              ))}
+              nextSongs.map(
+                (id, index) =>
+                  loadedSongs[id] && (
+                    <div
+                      key={id}
+                      className="queue-item"
+                      onDoubleClick={() => handleSongSelectQueue(id)}
+                    >
+                      {loadedSongs[id].title}
+                    </div>
+                  ),
+              )}
           </div>
         </div>
       )}
