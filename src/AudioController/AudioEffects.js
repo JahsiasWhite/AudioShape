@@ -43,7 +43,7 @@ export const AudioEffects = (
   };
 
   const toggleSavedEffectOff = () => {
-    resetCurrentSong();
+    clearEffects();
   };
 
   /**
