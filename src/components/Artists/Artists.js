@@ -2,6 +2,7 @@ import React from 'react';
 import './Artists.css';
 
 import { useAudioPlayer } from '../../AudioController/AudioContext';
+import { thumbnailCache } from '../SongList/SongListItems';
 
 function Artists({ toggleSection }) {
   const { setVisibleSongs, setCurrentScreen, loadedSongs } = useAudioPlayer();
@@ -28,8 +29,12 @@ function Artists({ toggleSection }) {
       artists[song.artist].push(song);
 
       // Check if the artist's image is not set and the current song has an image
-      if (!artists[song.artist].image && song.albumImage) {
-        artists[song.artist].image = song.albumImage;
+      if (!artists[song.artist].image) {
+        if (song.albumImage) {
+          artists[song.artist].image = song.albumImage;
+        } else if (song.isVideo && thumbnailCache[song.file]) {
+          artists[song.artist].image = thumbnailCache[song.file];
+        }
       }
     });
 

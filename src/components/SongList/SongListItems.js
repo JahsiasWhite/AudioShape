@@ -8,7 +8,7 @@ import MixerSVG from '../LayoutBar/MixerButton/mixer.svg';
 
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
-const thumbnailCache = {};
+export const thumbnailCache = {};
 
 export default function SongListItems({
   filteredSongs,

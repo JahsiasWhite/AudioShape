@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAudioPlayer } from '../../AudioController/AudioContext';
+import { thumbnailCache } from '../SongList/SongListItems';
 import './Playlists.css';
 
 const Playlists = ({ toggleSection }) => {
@@ -56,7 +57,7 @@ const Playlists = ({ toggleSection }) => {
     // Send a message to the main process to delete the playlist
     window.electron.ipcRenderer.sendMessage(
       'DELETE_PLAYLIST',
-      playlistToDelete
+      playlistToDelete,
     );
   };
 
@@ -74,15 +75,15 @@ const Playlists = ({ toggleSection }) => {
     setNewPlaylistName('');
   };
 
-  const getPlaylistImage = () => {
-    // console.error(loadedSongs);
-    // console.error(playlists);
-
-    playlists.forEach((playlist) => {
-      console.error(playlist);
-    });
-
-    // ! Should just have playlist.image, need to have add this when we add a new song to the playlist on the server side
+  const getPlaylistImage = (playlist) => {
+    for (const songId of playlist.songs) {
+      const song = loadedSongs[songId];
+      if (!song) continue;
+      if (song.albumImage) return song.albumImage;
+      if (song.isVideo && thumbnailCache[song.file])
+        return thumbnailCache[song.file];
+    }
+    return null;
   };
 
   return (
@@ -99,24 +100,34 @@ const Playlists = ({ toggleSection }) => {
       </div>
 
       <div className="playlist-cards">
-        {playlists.map((playlist, index) => (
-          <div
-            key={index}
-            className="playlist-card"
-            onClick={() => handlePlaylistClick(playlist)}
-          >
+        {playlists.map((playlist, index) => {
+          const playlistImage = getPlaylistImage(playlist);
+          return (
             <div
-              className="delete-button"
-              onClick={(event) => deletePlaylist(playlist, event)}
+              key={index}
+              className="playlist-card"
+              onClick={() => handlePlaylistClick(playlist)}
             >
-              X
+              <div
+                className="delete-button"
+                onClick={(event) => deletePlaylist(playlist, event)}
+              >
+                X
+              </div>
+              {playlistImage && (
+                <img
+                  className="artist-image"
+                  src={playlistImage}
+                  alt={`${playlist.name} cover`}
+                />
+              )}
+              <div className="playlist-card-details">
+                <h3>{playlist.name}</h3>
+                <p>Songs: {playlist.songs.length}</p>
+              </div>
             </div>
-            <div className="playlist-card-details">
-              <h3>{playlist.name}</h3>
-              <p>Songs: {playlist.songs.length}</p>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

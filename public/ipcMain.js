@@ -535,7 +535,7 @@ const SETUP_GET_SONGS = (mainW) => {
     }
 
     // Get all songs in the given directory as well as all subdirectories
-    const audioTypes = 'mp3,wav,ogg,mp4,flac';
+    const audioTypes = 'mp3,wav,ogg,mp4,flac,m4a';
     const audios = await glob(correctedPath + '/**/*.{' + audioTypes + '}');
 
     // Get and set a map of image files for easier access
