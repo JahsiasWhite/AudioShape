@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './Queue.css';
 import { useAudioPlayer } from '../../../AudioController/AudioContext';
 
-import QueueSVG from './queue.svg';
+import { ReactComponent as QueueSVG } from './queue.svg';
 
 const Queue = () => {
   const {
@@ -30,11 +30,10 @@ const Queue = () => {
 
   return (
     <div className="queue">
-      <img
+      <QueueSVG
         className="queue-button"
-        src={QueueSVG}
         onClick={toggleShowing}
-      ></img>
+      />
       {isVisible && (
         <div className="popup-container">
           <div onClick={handleClose} className="close-menu">

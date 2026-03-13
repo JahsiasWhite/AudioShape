@@ -1,7 +1,7 @@
 import './SpeedupButtonSVG.css';
 
 const ShuffleButtonSVG = ({ shuffleIsEnabled, loopIsEnabled, onClick }) => {
-  const color = loopIsEnabled ? '#aa6b31' : shuffleIsEnabled ? '#316baa' : '#D3D3D3';
+  const color = loopIsEnabled ? '#aa6b31' : shuffleIsEnabled ? '#316baa' : 'var(--color-text)';
 
   if (loopIsEnabled) {
     return (

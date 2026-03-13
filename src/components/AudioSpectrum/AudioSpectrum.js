@@ -29,6 +29,10 @@ const AudioSpectrum = ({ song, loading }) => {
     const barWidth = (canvas.width / bufferLength) * 1;
     let x = 0;
 
+    const computedStyle = getComputedStyle(document.documentElement);
+    const colorMain = computedStyle.getPropertyValue('--color-main').trim();
+    const colorText = computedStyle.getPropertyValue('--color-text').trim();
+
     let frameId;
     function renderFrame() {
       frameId = requestAnimationFrame(renderFrame);
@@ -38,9 +42,7 @@ const AudioSpectrum = ({ song, loading }) => {
       analyser.getByteFrequencyData(dataArray);
 
       // Create background
-      const root = document.documentElement;
-      const computedStyle = getComputedStyle(root);
-      ctx.fillStyle = computedStyle.getPropertyValue('--color-main').trim();
+      ctx.fillStyle = colorMain;
       ctx.fillRect(0, 0, canvas.width, canvas.height); // (x, y, width, height)
 
       let lastBarHeights = [];
@@ -62,7 +64,7 @@ const AudioSpectrum = ({ song, loading }) => {
         // Store the smoothed height as the previous height for the next frame
         lastBarHeights[i] = smoothedBarHeight;
 
-        ctx.fillStyle = '#FFFFFF';
+        ctx.fillStyle = colorText;
 
         ctx.fillRect(
           x,

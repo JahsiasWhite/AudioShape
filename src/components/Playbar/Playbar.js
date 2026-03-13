@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './playbar.css';
 
 import CenterPlaybar from './CenterPlaybar';
-import FullscreenSVG from './Fullscreen.svg';
+import FullscreenButtonSVG from './FullscreenButtonSVG';
 import VolumeControl from './VolumeControl/VolumeControl'; // ! I don't know if I like this name
 import Queue from './Queue/Queue';
 
@@ -91,13 +91,11 @@ function Playbar({ toggleFullscreen }) {
           }}
         />
         <Queue />
-        <img
-          className="fullscreen-button"
-          src={FullscreenSVG}
+        <FullscreenButtonSVG
           onClick={() => {
             toggleFullscreen();
           }}
-        ></img>
+        />
         <VolumeControl />
       </div>
     </div>

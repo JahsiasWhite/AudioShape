@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import './App.css';
 
-import logo from './logo.svg';
-
 import Playbar from './components/Playbar/Playbar';
 import SongList from './components/SongList/SongList';
 import Playlists from './components/Playlists/Playlists';
@@ -19,7 +17,7 @@ import FullscreenView from './components/FullscreenView/FullscreenView';
 
 import ErrorMessages from './components/ErrorMessages/ErrorMessages';
 
-// CONTEXT
+// The brain
 import { AudioProvider } from './AudioController/AudioContext';
 
 function App() {
