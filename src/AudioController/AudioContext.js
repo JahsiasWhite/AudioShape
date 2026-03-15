@@ -317,8 +317,9 @@ export const AudioProvider = ({ children }) => {
    * @param {Audio Object} song
    */
   const addSong = (song) => {
-    loadedSongs[song.id] = song;
-    setLoadedSongs(loadedSongs);
+    const updatedSongs = { ...loadedSongs, [song.id]: song };
+    setLoadedSongs(updatedSongs);
+    setVisibleSongs(updatedSongs);
   };
 
   return (

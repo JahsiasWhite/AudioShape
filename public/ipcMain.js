@@ -43,7 +43,9 @@ function getYoutubeDl() {
     binaryName,
   );
   const binaryPath = fs.existsSync(unpackedPath) ? unpackedPath : devPath;
-  Logger.info(`[youtube-dl] using binary: ${binaryPath} (exists: ${fs.existsSync(binaryPath)})`);
+  Logger.info(
+    `[youtube-dl] using binary: ${binaryPath} (exists: ${fs.existsSync(binaryPath)})`,
+  );
   return createYoutubeDl(binaryPath);
 }
 
@@ -794,18 +796,46 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
 
       console.error('Attaching extra details? ', settings.attchingExtraDetails);
       if (!settings.attchingExtraDetails) {
-        mainWindow.webContents.send('download-success', 'Download completed!', {});
-      } else {
-        const songData = await writeSpotifyDetails(
-          outputVagueFilePath,
-          outputFilePath,
-          spotifyDetails,
+        let songData;
+        try {
+          songData = await processSongMetadata(outputVagueFilePath, {});
+          console.error('[MP3] processSongMetadata result:', songData);
+        } catch (metaErr) {
+          console.error('[MP3] processSongMetadata failed:', metaErr);
+        }
+        mainWindow.webContents.send(
+          'download-success',
+          'Download completed!',
+          songData,
         );
-        mainWindow.webContents.send('download-success', 'Download completed!', songData);
+      } else {
+        let songData;
+        try {
+          await writeSpotifyDetails(
+            outputVagueFilePath,
+            outputFilePath,
+            spotifyDetails,
+          );
+          songData = await processSongMetadata(outputFilePath, {});
+          console.error('[MP3] writeSpotifyDetails+metadata result:', songData);
+        } catch (metaErr) {
+          console.error('[MP3] writeSpotifyDetails failed:', metaErr);
+        }
+        mainWindow.webContents.send(
+          'download-success',
+          'Download completed!',
+          songData,
+        );
       }
     } catch (err) {
-      Logger.error('Error downloading audio:', err.stderr || err.message || err);
-      mainWindow.webContents.send('download-error', `${err.stderr || err.message || err}`);
+      Logger.error(
+        'Error downloading audio:',
+        err.stderr || err.message || err,
+      );
+      mainWindow.webContents.send(
+        'download-error',
+        `${err.stderr || err.message || err}`,
+      );
     }
     return;
   }
@@ -848,11 +878,18 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
       songData = await processSongMetadata(outputFilePath, {});
     }
 
-    mainWindow.webContents.send('download-success', 'Download completed!', songData);
+    mainWindow.webContents.send(
+      'download-success',
+      'Download completed!',
+      songData,
+    );
     console.log('Download completed, sent song data');
   } catch (err) {
     Logger.error('Error downloading video:', err.stderr || err.message || err);
-    mainWindow.webContents.send('download-error', `${err.stderr || err.message || err}`);
+    mainWindow.webContents.send(
+      'download-error',
+      `${err.stderr || err.message || err}`,
+    );
   }
 }
 
