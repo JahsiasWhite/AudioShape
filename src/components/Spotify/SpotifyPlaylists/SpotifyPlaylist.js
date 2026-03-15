@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 import DownloadSVG from './download.svg';
 import ProgressBar from '../../ProgressBar/ProgressBar';
@@ -11,8 +11,16 @@ const LIMIT = 100; // 100 is the max
 var showNextButton = false;
 var showPreviousButton = false;
 
+const formatDuration = (ms) => {
+  const totalSecs = Math.floor(ms / 1000);
+  const mins = Math.floor(totalSecs / 60);
+  const secs = totalSecs % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
 const SpotifyPlaylist = ({ playlistId, unloadPlaylist }) => {
-  const { loadedSongs, setVisibleSongs, handleSongSelect } = useAudioPlayer();
+  const { loadedSongs, setVisibleSongs, handleSongSelect, addSong } =
+    useAudioPlayer();
   const savedSongs = {};
   const [progress, setProgress] = useState({});
   // const [showNextButton, setShowNextButton] = useState(false);
@@ -66,38 +74,111 @@ const SpotifyPlaylist = ({ playlistId, unloadPlaylist }) => {
     // setVisibleSongs(savedSongs);
   };
 
+  const normalize = (str) => (str ?? '').toLowerCase().trim();
+
+  // Normalizes artist names for fuzzy matching:
+  // "Peter, Bjorn & John" → "peter bjorn and john"
+  // "Peter Bjorn and John" → "peter bjorn and john"
+  const normalizeArtist = (str) =>
+    (str ?? '')
+      .toLowerCase()
+      .replace(/&/g, 'and')
+      .replace(/[,\.]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  // Checks if two titles match, accounting for YouTube video titles that contain
+  // the Spotify title as a substring (e.g. "Malice K - Changes (Official Video)" vs "Changes")
+  const titlesMatch = (loadedTitle, spotifyTitle) => {
+    const a = normalize(loadedTitle);
+    const b = normalize(spotifyTitle);
+    return a === b || a.includes(b);
+  };
+
+  const songMatches = (loadedSong, spotifyTrack) => {
+    const title = spotifyTrack.name;
+    const artist = normalizeArtist(spotifyTrack.artists[0].name);
+    const spotifyDurationSec = spotifyTrack.duration_ms / 1000;
+
+    const titleMatch = titlesMatch(loadedSong.title, title);
+    const artistMatch = normalizeArtist(loadedSong.artist) === artist;
+
+    if (titleMatch && artistMatch) return true;
+
+    // Fallback: title match + duration match handles cases where the artist has
+    // an alternate name (e.g. "Starfucker" stored locally vs "STRFKR" on Spotify)
+    if (titleMatch && Math.abs(loadedSong.duration - spotifyDurationSec) < 3)
+      return true;
+
+    return false;
+  };
+
   const isSongLoaded = (song) => {
-    const loadedSongArray = Object.values(loadedSongs);
-    return loadedSongArray.some(
-      (loadedSong) =>
-        song.track &&
-        loadedSong.title === song.track.name &&
-        loadedSong.artist === song.track.artists[0].name
+    if (!song.track) return false;
+    return Object.values(loadedSongs).some((loadedSong) =>
+      songMatches(loadedSong, song.track),
     );
   };
 
   const getLoadedSong = (song) => {
-    console.error(song.track);
-    const loadedSongArray = Object.values(loadedSongs);
-    console.error('GETTING ', song.track.name);
-    let test;
-    loadedSongArray.forEach((loadedSong) => {
-      if (
-        loadedSong.title === song.track.name &&
-        loadedSong.artist === song.track.artists[0].name
-      ) {
-        console.error('WORKS!', loadedSong);
-        test = loadedSong;
-        return loadedSong;
-      }
-    });
-    console.error('HMM : ', test);
-    return test;
+    return Object.values(loadedSongs).find((loadedSong) =>
+      songMatches(loadedSong, song.track),
+    );
   };
 
   const [playlistData, setPlaylistData] = useState(null); // TODO: Does this have to be a useState?
 
   const [downloadStatus, setDownloadStatus] = useState({});
+  const [progressMsg, setProgressMsg] = useState({});
+  // Maps download idx → Spotify track name so global listeners can resolve which row to update
+  const pendingDownloads = useRef({});
+
+  useEffect(() => {
+    const removeProgress = window.electron.ipcRenderer.on(
+      'ffmpeg-progress',
+      (msg, percent, id) => {
+        const pct = Math.min(percent ?? 0, 100);
+        setProgress((prev) => ({ ...prev, [id]: pct }));
+        setProgressMsg((prev) => ({ ...prev, [id]: msg }));
+      },
+    );
+
+    const removeSuccess = window.electron.ipcRenderer.on(
+      'download-success',
+      (message, songData) => {
+        if (songData) addSong(songData);
+        const pending = pendingDownloads.current;
+        const matchIdx = Object.keys(pending).find(
+          (i) => normalize(pending[i]) === normalize(songData?.title ?? ''),
+        );
+        if (matchIdx !== undefined) {
+          setDownloadStatus((prev) => ({ ...prev, [matchIdx]: 'success' }));
+          delete pending[matchIdx];
+        }
+      },
+    );
+
+    const removeError = window.electron.ipcRenderer.on(
+      'download-error',
+      (songName, error) => {
+        console.error('Download error for', songName, ':', error);
+        const pending = pendingDownloads.current;
+        const matchIdx = Object.keys(pending).find(
+          (i) => normalize(pending[i]) === normalize(songName),
+        );
+        if (matchIdx !== undefined) {
+          setDownloadStatus((prev) => ({ ...prev, [matchIdx]: 'error' }));
+          delete pending[matchIdx];
+        }
+      },
+    );
+
+    return () => {
+      removeProgress();
+      removeSuccess();
+      removeError();
+    };
+  }, [addSong]);
 
   function handleLoggedIn(data) {
     // console.log('GOT SPOTIFY PLAYLIST: ', data.tracks.items[1].track);
@@ -112,59 +193,23 @@ const SpotifyPlaylist = ({ playlistId, unloadPlaylist }) => {
     window.electron.ipcRenderer.sendMessage(
       'get-spotify-playlist',
       playlistId,
-      offset
+      offset,
     );
     window.electron.ipcRenderer.once('get-spotify-playlist', handleLoggedIn);
   }, []);
 
   const downloadSong = (song, idx) => {
-    console.error('SENDING ', song);
-    // Extract the details from the song
-    // ? Just the name and artist are being used to search. Could add album if there are false positives happening
     const songDetails = {
       name: song.track.name,
       artist: song.track.artists[0].name,
       album: song.track.album.name,
     };
 
-    // Images come in an array with 3 different resolutions:
-    // 640x640, 300x300, 64x64
-    // song.track.album.images[0].url
-
+    pendingDownloads.current[idx] = song.track.name;
+    setDownloadStatus((prev) => ({ ...prev, [idx]: 'downloading' }));
     window.electron.ipcRenderer.sendMessage(
       'DOWNLOAD_SONG_FROM_YOUTUBE_SEARCH',
-      songDetails
-    );
-    setDownloadStatus((prevStatus) => ({
-      ...prevStatus,
-      [idx]: 'downloading',
-    }));
-
-    window.electron.ipcRenderer.on('download-success', (message, songData) => {
-      console.error('Success: ' + message, songData);
-      console.error('Object ID: ', [idx]);
-      setDownloadStatus((prevStatus) => ({
-        ...prevStatus,
-        [idx]: 'success',
-      }));
-    });
-
-    window.electron.ipcRenderer.on('download-error', (error) => {
-      console.error('Error: ' + error + '. Index clicked:  ' + idx);
-      setDownloadStatus((prevStatus) => ({
-        ...prevStatus,
-        [idx]: 'error',
-      }));
-    });
-
-    window.electron.ipcRenderer.on(
-      'ffmpeg-progress',
-      (progressMsg, progressPercent, progressId) => {
-        console.error(progressMsg);
-        console.error(progressId);
-        if (progressPercent > 99.9) progressPercent = 100;
-        setProgress({ ...progress, [progressId]: progressPercent }); // TODO Remove entry from object once done with using it
-      }
+      songDetails,
     );
   };
 
@@ -190,7 +235,7 @@ const SpotifyPlaylist = ({ playlistId, unloadPlaylist }) => {
     window.electron.ipcRenderer.sendMessage(
       'get-spotify-playlist',
       playlistId,
-      offset
+      offset,
     );
 
     // Scroll to top
@@ -218,7 +263,7 @@ const SpotifyPlaylist = ({ playlistId, unloadPlaylist }) => {
                 {item.track && (
                   <li
                     className="list-item"
-                    onDoubleClick={() => handleSongPlay(item)}
+                    onClick={() => handleSongPlay(item)}
                   >
                     {item.track.album.images[0] && (
                       <img
@@ -226,21 +271,43 @@ const SpotifyPlaylist = ({ playlistId, unloadPlaylist }) => {
                         src={item.track.album.images[0].url}
                       />
                     )}
-                    <div className="song-details">
-                      <div className={`song-title `}>{item.track.name}</div>
+                    <div
+                      className={`song-details ${isSongLoaded(item) ? 'song-downloaded' : ''}`}
+                    >
+                      <div className={`song-title`}>{item.track.name}</div>
                       <div>{item.track.album.name}</div>
                       <div>{item.track.artists[0].name}</div>
+                      <div className="spotify-song-duration">
+                        {formatDuration(item.track.duration_ms)}
+                      </div>
                     </div>
                     <div className="right-side" style={{ flex: 'auto' }}>
-                      {progress[item.track.name] && (
-                        <ProgressBar progress={progress[item.track.name]} />
+                      {downloadStatus[idx] === 'downloading' && (
+                        <>
+                          <ProgressBar
+                            progress={progress[item.track.name] ?? 0}
+                          />
+                          <span className="download-percent">
+                            {progressMsg[item.track.name] ?? 'Starting...'}
+                          </span>
+                        </>
                       )}
-                      {downloadStatus[idx] && <>{downloadStatus[idx]}</>}
-                      <img
-                        className="plus-sign"
-                        src={DownloadSVG}
-                        onClick={() => downloadSong(item, idx)}
-                      ></img>
+                      {downloadStatus[idx] === 'success' && (
+                        <span className="download-success-text">✓ Saved</span>
+                      )}
+                      {downloadStatus[idx] === 'error' && (
+                        <span className="download-error-text">✗ Error</span>
+                      )}
+                      {downloadStatus[idx] !== 'downloading' && (
+                        <img
+                          className="plus-sign"
+                          src={DownloadSVG}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            downloadSong(item, idx);
+                          }}
+                        />
+                      )}
                     </div>
                   </li>
                 )}

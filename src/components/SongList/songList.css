@@ -100,6 +100,10 @@
   font-size: 18px;
 }
 
+.song-downloaded {
+  color: var(--color-button);
+}
+
 .header-color {
   color: var(--color-text);
 }
@@ -115,6 +119,12 @@
   justify-content: flex-end;
   font-size: 14px;
   color: var(--color-text-secondary);
+}
+
+.spotify-song-duration {
+  flex: auto;
+  justify-content: flex-end;
+  font-size: 14px;
 }
 
 .right-side {

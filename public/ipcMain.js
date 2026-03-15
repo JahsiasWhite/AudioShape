@@ -400,17 +400,17 @@ const SETUP_SONG_DOWNLOADS = (mainW) => {
   ipcMain.on(
     'DOWNLOAD_SONG_FROM_YOUTUBE_SEARCH',
     async (event, songDetails) => {
-      // Get the song url
-      const result = await youtubeSearch(songDetails.name + songDetails.artist);
+      const query = `${songDetails.name} ${songDetails.artist} audio`;
+      const result = await youtubeSearch(query);
 
-      // Is this possible? 'all' is an array of the search results...
       if (result.all.length === 0) {
         console.error('No results found for the search query');
+        return;
       }
 
       // download the song from youtube
       const url = result.all[0].url;
-      downloadYoutubeVideo(url);
+      downloadYoutubeVideo(url, songDetails);
     },
   );
 };
@@ -738,10 +738,14 @@ async function downloadYoutubeVideo(url, songDetails) {
   }
 
   const videoTitle = info.title.replace(/[|\\/:*?"<>]/g, '');
-  const embedExtraMetadata = settings.attchingExtraDetails;
+  const embedExtraMetadata = settings.attchingExtraDetails ?? true;
 
   if (songDetails === undefined) {
-    songDetails = { name: videoTitle, artist: 'Unknown Artist', album: 'Unknown Album' };
+    songDetails = {
+      name: videoTitle,
+      artist: 'Unknown Artist',
+      album: 'Unknown Album',
+    };
   }
 
   // Downloading audio only (MP3)
@@ -759,18 +763,20 @@ async function downloadYoutubeVideo(url, songDetails) {
         noCheckCertificates: true,
       });
 
-      subprocess.stdout.on('data', (data) => {
+      const onMp3Progress = (data) => {
         const match = data.toString().match(/\[download\]\s+([\d.]+)%/);
         if (match) {
           const percent = parseFloat(match[1]);
           mainWindow.webContents.send(
             'ffmpeg-progress',
-            `Downloading: ${percent.toFixed(1)}% done`,
+            `${Math.round(percent)}%`,
             percent,
             songDetails.name,
           );
         }
-      });
+      };
+      subprocess.stdout.on('data', onMp3Progress);
+      subprocess.stderr.on('data', onMp3Progress);
 
       await subprocess;
 
@@ -782,10 +788,21 @@ async function downloadYoutubeVideo(url, songDetails) {
         songData = await processSongMetadata(tempFilePath, {});
       }
 
-      mainWindow.webContents.send('download-success', 'Download completed!', songData);
+      mainWindow.webContents.send(
+        'download-success',
+        'Download completed!',
+        songData,
+      );
     } catch (err) {
-      Logger.error('Error downloading audio:', err.stderr || err.message || err);
-      mainWindow.webContents.send('download-error', `${err.stderr || err.message || err}`);
+      Logger.error(
+        'Error downloading audio:',
+        err.stderr || err.message || err,
+      );
+      mainWindow.webContents.send(
+        'download-error',
+        songDetails.name,
+        `${err.stderr || err.message || err}`,
+      );
     }
     return;
   }
@@ -803,18 +820,51 @@ async function downloadYoutubeVideo(url, songDetails) {
       noCheckCertificates: true,
     });
 
-    subprocess.stdout.on('data', (data) => {
-      const match = data.toString().match(/\[download\]\s+([\d.]+)%/);
-      if (match) {
-        const percent = parseFloat(match[1]);
+    // MP4 downloads video first (0→100%) then audio (0→100%), then merges.
+    // We map these two phases onto a single 0–100% bar so it never resets.
+    let mp4Phase = 1; // 1 = video, 2 = audio
+    let lastMp4Percent = 0;
+    const onMp4Progress = (data) => {
+      const str = data.toString();
+      if (
+        str.includes('[Merger]') ||
+        (str.includes('[ffmpeg]') && !str.match(/\[download\]/))
+      ) {
         mainWindow.webContents.send(
           'ffmpeg-progress',
-          `Downloading: ${percent.toFixed(1)}% done`,
-          percent,
+          'Merging...',
+          99,
+          videoTitle,
+        );
+        return;
+      }
+      const match = str.match(/\[download\]\s+([\d.]+)%/);
+      if (match) {
+        const percent = parseFloat(match[1]);
+        // Detect phase switch: percent drops sharply after video finished
+        if (
+          mp4Phase === 1 &&
+          percent < lastMp4Percent - 50 &&
+          lastMp4Percent > 50
+        ) {
+          mp4Phase = 2;
+        }
+        lastMp4Percent = percent;
+        const overall = mp4Phase === 1 ? percent / 2 : 50 + percent / 2;
+        const label =
+          mp4Phase === 1
+            ? `Video ${Math.round(percent)}%`
+            : `Audio ${Math.round(percent)}%`;
+        mainWindow.webContents.send(
+          'ffmpeg-progress',
+          label,
+          overall,
           videoTitle,
         );
       }
-    });
+    };
+    subprocess.stdout.on('data', onMp4Progress);
+    subprocess.stderr.on('data', onMp4Progress);
 
     await subprocess;
 
@@ -826,10 +876,18 @@ async function downloadYoutubeVideo(url, songDetails) {
       songData = await processSongMetadata(tempFilePath, {});
     }
 
-    mainWindow.webContents.send('download-success', 'Download completed!', songData);
+    mainWindow.webContents.send(
+      'download-success',
+      'Download completed!',
+      songData,
+    );
   } catch (err) {
     Logger.error('Error downloading video:', err.stderr || err.message || err);
-    mainWindow.webContents.send('download-error', `${err.stderr || err.message || err}`);
+    mainWindow.webContents.send(
+      'download-error',
+      songDetails.name,
+      `${err.stderr || err.message || err}`,
+    );
   }
 }
 
