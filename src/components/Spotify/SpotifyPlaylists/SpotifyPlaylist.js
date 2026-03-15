@@ -263,7 +263,7 @@ const SpotifyPlaylist = ({ playlistId, unloadPlaylist }) => {
                 {item.track && (
                   <li
                     className="list-item"
-                    onClick={() => handleSongPlay(item)}
+                    onDoubleClick={() => handleSongPlay(item)}
                   >
                     {item.track.album.images[0] && (
                       <img

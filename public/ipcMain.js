@@ -570,6 +570,7 @@ const SETUP_GET_SONGS = (mainW) => {
         songs[songData.id] = songData;
       } catch (error) {
         console.error('ERROR AT', count, '\nFile: ', file, '\nError: ', error);
+        Logger.error('Error processing song metadata for file:', file, error);
         // mainWindow.webContents.send('ERROR_MESSAGE', {
         //   title: 'Error',
         //   description: error.message,
