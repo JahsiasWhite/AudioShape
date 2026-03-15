@@ -3,7 +3,7 @@
   "productName": "AudioShape",
   "author": "Jahsias",
   "license": "ISC",
-  "version": "1.0.0",
+  "version": "0.3.0",
   "description": "Music player with extra customizations",
   "homepage": "./",
   "main": "./public/electron.js",
