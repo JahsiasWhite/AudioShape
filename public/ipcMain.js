@@ -625,13 +625,14 @@ const SETUP_GET_SONGS = (mainW) => {
  */
 
 /**
- * Writes the given file details from Spotify into the file
- * @param {string} inputFilePath - Path to the original MP4 file
- * @param {string} outputFilePath - Path to the new output file
- * @param {object} metadata - New metadata values
- * @returns {Promise<void>} - A promise that resolves when the metadata is edited successfully
+ * Embeds title/artist/album metadata into an audio file via ffmpeg.
+ * Reads from inputFilePath, writes to outputFilePath, then deletes inputFilePath.
+ * @param {string} inputFilePath
+ * @param {string} outputFilePath
+ * @param {object} metadata - { name, artist, album }
+ * @returns {Promise<void>}
  */
-function writeSpotifyDetails(inputFilePath, outputFilePath, metadata) {
+function embedMetadata(inputFilePath, outputFilePath, metadata) {
   return new Promise(async (resolve, reject) => {
     try {
       console.log('--------------------------------');
@@ -705,21 +706,11 @@ function writeMetadata(title, filePath) {
   });
 }
 
-/* 
-    I dont like spotifyDetails. It was the easiest way to implement albeit a bit ugly
-    TODO Clean this up...
-  */
-async function downloadYoutubeVideo(url, spotifyDetails) {
-  console.log('----------------------------------------------------');
-  console.log('DOWNLOADING VIDEO');
-  console.log('Youtube URL is: ', url);
-
+async function downloadYoutubeVideo(url, songDetails) {
   const settings = getSettings();
   const songDirectory = settings.libraryDirectory;
-  console.log('SONG DIRECTORY: ', songDirectory);
 
   if (songDirectory === '') {
-    console.error('No song directory selected, returning...');
     mainWindow.webContents.send(
       'download-error',
       `No valid song directory found. Please choose a song directory from the settings page to download songs.`,
@@ -747,34 +738,23 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
   }
 
   const videoTitle = info.title.replace(/[|\\/:*?"<>]/g, '');
-  console.log('Got video title: ', videoTitle);
+  const embedExtraMetadata = settings.attchingExtraDetails;
 
-  // Downloading audio only
+  if (songDetails === undefined) {
+    songDetails = { name: videoTitle, artist: 'Unknown Artist', album: 'Unknown Album' };
+  }
+
+  // Downloading audio only (MP3)
   if (!settings.mp4DownloadEnabled) {
-    const outputVagueFilePath = path.join(
-      songDirectory,
-      `spotify-vague-${videoTitle}.mp3`,
-    );
-    const outputFilePath = path.join(
-      songDirectory,
-      `spotify-${videoTitle}.mp3`,
-    );
-
-    if (spotifyDetails === undefined) {
-      spotifyDetails = {
-        name: videoTitle,
-        artist: 'Unknown Artist',
-        album: 'Unknown Album',
-      };
-    }
-    console.log('SPOTIFY DETAILS: ', spotifyDetails);
+    const tempFilePath = path.join(songDirectory, `temp-${videoTitle}.mp3`);
+    const finalFilePath = path.join(songDirectory, `${videoTitle}.mp3`);
 
     try {
       const subprocess = youtubeDl.exec(url, {
         extractAudio: true,
         audioFormat: 'mp3',
         audioQuality: 0,
-        output: outputVagueFilePath,
+        output: tempFilePath,
         noPlaylist: true,
         noCheckCertificates: true,
       });
@@ -787,67 +767,38 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
             'ffmpeg-progress',
             `Downloading: ${percent.toFixed(1)}% done`,
             percent,
-            spotifyDetails ? spotifyDetails.name : 'name',
+            songDetails.name,
           );
         }
       });
 
       await subprocess;
 
-      console.error('Attaching extra details? ', settings.attchingExtraDetails);
-      if (!settings.attchingExtraDetails) {
-        let songData;
-        try {
-          songData = await processSongMetadata(outputVagueFilePath, {});
-          console.error('[MP3] processSongMetadata result:', songData);
-        } catch (metaErr) {
-          console.error('[MP3] processSongMetadata failed:', metaErr);
-        }
-        mainWindow.webContents.send(
-          'download-success',
-          'Download completed!',
-          songData,
-        );
+      let songData;
+      if (embedExtraMetadata) {
+        await embedMetadata(tempFilePath, finalFilePath, songDetails);
+        songData = await processSongMetadata(finalFilePath, {});
       } else {
-        let songData;
-        try {
-          await writeSpotifyDetails(
-            outputVagueFilePath,
-            outputFilePath,
-            spotifyDetails,
-          );
-          songData = await processSongMetadata(outputFilePath, {});
-          console.error('[MP3] writeSpotifyDetails+metadata result:', songData);
-        } catch (metaErr) {
-          console.error('[MP3] writeSpotifyDetails failed:', metaErr);
-        }
-        mainWindow.webContents.send(
-          'download-success',
-          'Download completed!',
-          songData,
-        );
+        songData = await processSongMetadata(tempFilePath, {});
       }
+
+      mainWindow.webContents.send('download-success', 'Download completed!', songData);
     } catch (err) {
-      Logger.error(
-        'Error downloading audio:',
-        err.stderr || err.message || err,
-      );
-      mainWindow.webContents.send(
-        'download-error',
-        `${err.stderr || err.message || err}`,
-      );
+      Logger.error('Error downloading audio:', err.stderr || err.message || err);
+      mainWindow.webContents.send('download-error', `${err.stderr || err.message || err}`);
     }
     return;
   }
 
-  // Downloading video + audio (mp4)
-  const outputFilePath = path.join(songDirectory, `${videoTitle}.mp4`);
+  // Downloading video + audio (MP4)
+  const tempFilePath = path.join(songDirectory, `temp-${videoTitle}.mp4`);
+  const finalFilePath = path.join(songDirectory, `${videoTitle}.mp4`);
 
   try {
     const subprocess = youtubeDl.exec(url, {
-      format: 'bestvideo+bestaudio',
+      format: 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best',
       mergeOutputFormat: 'mp4',
-      output: outputFilePath,
+      output: tempFilePath,
       noPlaylist: true,
       noCheckCertificates: true,
     });
@@ -868,28 +819,17 @@ async function downloadYoutubeVideo(url, spotifyDetails) {
     await subprocess;
 
     let songData;
-    if (spotifyDetails) {
-      songData = await writeSpotifyDetails(
-        outputFilePath,
-        path.join(songDirectory, `spotify-${videoTitle}.mp4`),
-        spotifyDetails,
-      );
+    if (embedExtraMetadata) {
+      await embedMetadata(tempFilePath, finalFilePath, songDetails);
+      songData = await processSongMetadata(finalFilePath, {});
     } else {
-      songData = await processSongMetadata(outputFilePath, {});
+      songData = await processSongMetadata(tempFilePath, {});
     }
 
-    mainWindow.webContents.send(
-      'download-success',
-      'Download completed!',
-      songData,
-    );
-    console.log('Download completed, sent song data');
+    mainWindow.webContents.send('download-success', 'Download completed!', songData);
   } catch (err) {
     Logger.error('Error downloading video:', err.stderr || err.message || err);
-    mainWindow.webContents.send(
-      'download-error',
-      `${err.stderr || err.message || err}`,
-    );
+    mainWindow.webContents.send('download-error', `${err.stderr || err.message || err}`);
   }
 }
 
