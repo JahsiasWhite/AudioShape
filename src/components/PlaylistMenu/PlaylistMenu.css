@@ -1,15 +1,20 @@
 .playlist-circle {
   width: 16px;
   height: 16px;
-  border: 1.5px solid var(--color-text);
+  border: 1.5px solid var(--color-text-secondary);
   border-radius: 50%;
   margin-right: 10px;
   cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.playlist-circle:hover {
+  border-color: var(--color-text);
 }
 
 .playlist-circle.selected {
-  background-color: #00ff00;
-  border-color: #00ff00;
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
 }
 
 .create-playlist {
@@ -20,25 +25,25 @@
 }
 
 .create-playlist input {
-  flex-grow: 1; /* Input field expands to fill available space */
+  flex-grow: 1;
   padding: 8px;
-  border: 1px solid #ccc;
+  border: 1px solid #2a2a38;
   border-radius: 4px;
-  margin-right: 8px; /* Spacing between input and button */
+  margin-right: 8px;
+  background-color: var(--color-secondary);
+  color: white;
 }
 
 .create-playlist button {
   padding: 8px 16px;
-  background-color: var(
-    --color-button
-  ); /* Green color for Create Playlist button */
+  background-color: var(--color-button);
   color: var(--color-text);
   border: none;
   cursor: pointer;
   border-radius: 4px;
+  transition: opacity 0.15s;
 }
 
 .create-playlist button:hover {
-  /* background-color: #45a049; */
-  opacity: 90%;
+  opacity: 0.85;
 }

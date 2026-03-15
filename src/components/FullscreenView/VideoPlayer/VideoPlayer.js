@@ -9,13 +9,10 @@ function VideoPlayer({ songFile, song }) {
   const videoRef = useRef(null);
 
   useEffect(() => {
-    // Whenever the song or song ID changes, update the video source
-    // videoRef.current.src = songFile;
-
-    videoRef.current.currentTime = song.currentTime; // Set the video's currentTime
-
-    // videoRef.current.playbackRate = currentSpeed; // TODO ! Takes time to render, setCurrentSpeed fires too fast meaning song.currentTime isn't updated properly
-  }, [videoTime]); // TODO: Better way to do this? Need this component to update but would rather not have an extra useState
+    // Use videoTime directly — song.currentTime may not have updated yet when this effect runs
+    // (the browser's audio seek is async, so reading song.currentTime here could return the old position)
+    videoRef.current.currentTime = videoTime;
+  }, [videoTime]);
 
   useEffect(() => {
     // If loading is done, update the video
@@ -33,6 +30,10 @@ function VideoPlayer({ songFile, song }) {
       videoRef.current.playbackRate = currentSpeed; // TODO ! Takes time to render, setCurrentSpeed fires too fast meaning song.currentTime isn't updated properly
     }
   }, [loadingQueue]);
+
+  useEffect(() => {
+    videoRef.current.playbackRate = currentSpeed;
+  }, [currentSpeed]);
 
   // ? Will the current time slowly lose sync? If we update currentTime everytime though, there is a visual stutter
   useEffect(() => {

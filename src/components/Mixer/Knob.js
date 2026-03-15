@@ -1,190 +1,169 @@
-import React, { useState, useEffect } from 'react';
-
+import { useState, useEffect, useRef, useCallback } from 'react';
 import './Knob.css';
 
-const Knob = ({ customProps, knobValue, onChange }) => {
-  /**
-   * This is required so we don't send back 100 inputs when the user drags the knob around. We only want to send the last one
-   * @param {*} func
-   * @param {*} delay
-   * @returns
-   */
-  const debounce = (func, delay) => {
-    let timer;
-    return (...args) => {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        func.apply(this, args);
-      }, delay);
-    };
-  };
-  const handleChange = debounce(onChange, 300);
+let _uidCounter = 0;
 
-  class Knob extends React.Component {
-    constructor(props) {
-      super(props);
-      this.fullAngle = props.degrees;
-      this.startAngle = (360 - props.degrees) / 2;
-      this.endAngle = this.startAngle + props.degrees;
-      this.margin = props.size * 0.15;
-      this.currentDeg = Math.floor(
-        this.convertRange(
-          props.min,
-          props.max,
-          this.startAngle,
-          this.endAngle,
-          props.value
-        )
-      );
-      this.state = { deg: this.currentDeg };
+const convertRange = (oldMin, oldMax, newMin, newMax, val) =>
+  ((val - oldMin) * (newMax - newMin)) / (oldMax - oldMin) + newMin;
+
+const Knob = ({ customProps, knobValue, onChange, live = true }) => {
+  const {
+    size = 75,
+    degrees = 260,
+    min = 0,
+    max = 100,
+    value: defaultValue = 0,
+  } = customProps;
+
+  const startAngle = (360 - degrees) / 2;
+  const endAngle = startAngle + degrees;
+
+  // Stable unique ID per instance for SVG gradient
+  const [uid] = useState(() => `kg${++_uidCounter}`);
+
+  const valueToDeg = useCallback(
+    (val) => {
+      const clamped = Math.min(Math.max(val, min), max);
+      return convertRange(min, max, startAngle, endAngle, clamped);
+    },
+    [min, max, startAngle, endAngle]
+  );
+
+  const degToValue = useCallback(
+    (deg) => Math.floor(convertRange(startAngle, endAngle, min, max, deg)),
+    [min, max, startAngle, endAngle]
+  );
+
+  const initVal = knobValue !== undefined ? knobValue : defaultValue;
+  const [currentDeg, setCurrentDeg] = useState(() => valueToDeg(initVal));
+  const degRef = useRef(valueToDeg(initVal));
+
+  useEffect(() => {
+    if (knobValue !== undefined) {
+      const d = valueToDeg(knobValue);
+      degRef.current = d;
+      setCurrentDeg(d);
     }
+  }, [knobValue, valueToDeg]);
 
-    startDrag = (e) => {
+  const startDrag = useCallback(
+    (e) => {
       e.preventDefault();
-      const knob = e.target.getBoundingClientRect();
-      const pts = {
-        x: knob.left + knob.width / 2,
-        y: knob.top + knob.height / 2,
+      const rect = e.currentTarget.getBoundingClientRect();
+      const ocx = rect.left + rect.width / 2;
+      const ocy = rect.top + rect.height / 2;
+
+      const getAngle = (mx, my) => {
+        const dx = mx - ocx;
+        const dy = my - ocy;
+        // atan2(dx, -dy) gives clockwise angle from top (12 o'clock = 0°)
+        let a = (Math.atan2(dx, -dy) * 180) / Math.PI;
+        if (a < 0) a += 360;
+        return Math.min(Math.max(startAngle, a), endAngle);
       };
 
-      /* User is currently dragging */
-      const moveHandler = (e) => {
-        this.currentDeg = this.getDeg(e.clientX, e.clientY, pts);
-
-        if (this.currentDeg === this.startAngle) this.currentDeg--;
-
-        this.setState({ deg: this.currentDeg });
+      const onMove = (ev) => {
+        const newDeg = getAngle(ev.clientX, ev.clientY);
+        degRef.current = newDeg;
+        setCurrentDeg(newDeg);
+        if (live) onChange(degToValue(newDeg));
       };
 
-      /* User has stopped dragging */
-      const endHandler = () => {
-        // Add a delay before triggering the change to account for a brief stop in dragging
-        const newValue = Math.floor(
-          this.convertRange(
-            this.startAngle,
-            this.endAngle,
-            this.props.min,
-            this.props.max,
-            this.currentDeg
-          )
-        );
-        handleChange(newValue);
-
-        document.removeEventListener('mousemove', moveHandler);
-        document.removeEventListener('mouseup', endHandler);
+      const onUp = () => {
+        onChange(degToValue(degRef.current));
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
       };
 
-      document.addEventListener('mousemove', moveHandler);
-      document.addEventListener('mouseup', (e) => {
-        document.removeEventListener('mousemove', moveHandler);
-      });
-      document.addEventListener('mouseup', endHandler);
-    };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    },
+    [startAngle, endAngle, live, onChange, degToValue]
+  );
 
-    getDeg = (cX, cY, pts) => {
-      const x = cX - pts.x;
-      const y = cY - pts.y;
-      let deg = (Math.atan(y / x) * 180) / Math.PI;
-      if ((x < 0 && y >= 0) || (x < 0 && y < 0)) {
-        deg += 90;
-      } else {
-        deg += 270;
-      }
-      let finalDeg = Math.min(Math.max(this.startAngle, deg), this.endAngle);
-      return finalDeg;
-    };
+  // ── SVG geometry ──────────────────────────────────────────────────────────
+  const pad = 9;
+  const svgSize = size + pad * 2;
+  const cx = svgSize / 2;
+  const cy = svgSize / 2;
+  const arcR = size / 2 - 1;   // arc ring radius
+  const knobR = size / 2 - 9;  // knob body radius
 
-    convertRange = (oldMin, oldMax, newMin, newMax, oldValue) => {
-      return (
-        ((oldValue - oldMin) * (newMax - newMin)) / (oldMax - oldMin) + newMin
-      );
-    };
+  // Convert clockwise-from-top degrees to SVG {x, y}
+  const toXY = (angleDeg, r) => {
+    const rad = (angleDeg * Math.PI) / 180;
+    return { x: cx + r * Math.sin(rad), y: cy - r * Math.cos(rad) };
+  };
 
-    renderTicks = () => {
-      let ticks = [];
-      const incr = this.fullAngle / this.props.numTicks;
-      const size = this.margin + this.props.size / 2;
-      for (let deg = this.startAngle; deg <= this.endAngle; deg += incr) {
-        const tick = {
-          deg: deg,
-          tickStyle: {
-            height: size + 10,
-            left: size - 1,
-            top: size + 2,
-            transform: 'rotate(' + deg + 'deg)',
-            transformOrigin: 'top',
-          },
-        };
-        ticks.push(tick);
-      }
-      return ticks;
-    };
+  const arcPath = (from, to, r) => {
+    const s = toXY(from, r);
+    const e = toXY(to, r);
+    const large = to - from > 180 ? 1 : 0;
+    return `M${s.x.toFixed(2)},${s.y.toFixed(2)} A${r},${r} 0 ${large} 1 ${e.x.toFixed(2)},${e.y.toFixed(2)}`;
+  };
 
-    dcpy = (o) => {
-      return JSON.parse(JSON.stringify(o));
-    };
-
-    render() {
-      let kStyle = {
-        width: this.props.size,
-        height: this.props.size,
-      };
-      let iStyle = this.dcpy(kStyle);
-      let oStyle = this.dcpy(kStyle);
-      oStyle.margin = this.margin;
-      if (this.props.color) {
-        oStyle.backgroundImage =
-          'radial-gradient(100% 70%,hsl(210, ' +
-          this.currentDeg +
-          '%, ' +
-          this.currentDeg / 5 +
-          '%),hsl(' +
-          Math.random() * 100 +
-          ',20%,' +
-          this.currentDeg / 36 +
-          '%))';
-      }
-      iStyle.transform = 'rotate(' + this.state.deg + 'deg)';
-
-      return (
-        <div className="knob" style={{ top: '3vh' }}>
-          <div className="ticks">
-            {this.props.numTicks
-              ? this.renderTicks().map((tick, i) => (
-                  <div
-                    key={i}
-                    className={
-                      'tick' + (tick.deg <= this.currentDeg ? ' active' : '')
-                    }
-                    style={tick.tickStyle}
-                  />
-                ))
-              : null}
-          </div>
-          <div
-            className="knob outer"
-            style={oStyle}
-            onMouseDown={this.startDrag}
-          >
-            <div className="knob inner" style={iStyle}>
-              <div className="grip" onClick={this.startDrag} />
-            </div>
-          </div>
-        </div>
-      );
-    }
-  }
+  const ind = toXY(currentDeg, knobR * 0.55);
+  const hasActiveArc = currentDeg > startAngle + 0.5;
 
   return (
-    <Knob
-      size={customProps.size}
-      numTicks={customProps.numTicks}
-      degrees={customProps.degrees}
-      min={customProps.min}
-      max={customProps.max}
-      value={knobValue ? knobValue : customProps.value}
-      color={customProps.color}
-    />
+    <svg
+      className="knob-svg"
+      width={svgSize}
+      height={svgSize}
+      onMouseDown={startDrag}
+    >
+      <defs>
+        <radialGradient id={uid} cx="38%" cy="32%" r="65%">
+          <stop offset="0%"   stopColor="#52525e" />
+          <stop offset="55%"  stopColor="#1e1e28" />
+          <stop offset="100%" stopColor="#0c0c12" />
+        </radialGradient>
+      </defs>
+
+      {/* Track arc */}
+      <path
+        d={arcPath(startAngle, endAngle, arcR)}
+        fill="none"
+        stroke="#1a1a24"
+        strokeWidth={3.5}
+        strokeLinecap="round"
+      />
+
+      {/* Active arc */}
+      {hasActiveArc && (
+        <path
+          d={arcPath(startAngle, currentDeg, arcR)}
+          fill="none"
+          stroke="#00c8ff"
+          strokeWidth={3.5}
+          strokeLinecap="round"
+          style={{ filter: 'drop-shadow(0 0 2px rgba(0,200,255,0.55))' }}
+        />
+      )}
+
+      {/* Knob body */}
+      <circle
+        cx={cx}
+        cy={cy}
+        r={knobR}
+        fill={`url(#${uid})`}
+        stroke="#090910"
+        strokeWidth={1.5}
+      />
+
+      {/* Subtle inner highlight ring */}
+      <circle
+        cx={cx}
+        cy={cy}
+        r={knobR - 2}
+        fill="none"
+        stroke="rgba(255,255,255,0.04)"
+        strokeWidth={1}
+      />
+
+      {/* Indicator dot */}
+      <circle cx={ind.x} cy={ind.y} r={2.5} fill="rgba(255,255,255,0.85)" />
+    </svg>
   );
 };
 

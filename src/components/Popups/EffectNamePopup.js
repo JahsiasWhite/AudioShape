@@ -1,21 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 // TODO: Add song.id !!!!
 
 function EffectNamePopup({ effects, closeNamePopup }) {
-  const [newEffectName, setNewEffectName] = useState('');
+  const { saveEffects, currentSpeed } = useAudioPlayer();
+
+  const [effectName, setEffectName] = useState('');
+  const [error, setError] = useState('');
+
+  const hasEffects = Object.keys(effects).length > 0 || currentSpeed !== 1;
 
   const saveEffect = () => {
-    if (newEffectName === '') return;
+    if (effectName === '') {
+      setError('Please enter a name for this effect.');
+      return;
+    }
+    if (!hasEffects) {
+      setError('No effects are active. Add at least one effect before saving.');
+      return;
+    }
 
-    // Save the effectCombo permanently
-    window.electron.ipcRenderer.sendMessage(
-      'SAVE_EFFECT_COMBO',
-      newEffectName,
-      effects
-    );
-
+    saveEffects(effectName);
     closeNamePopup();
   };
 
@@ -24,14 +30,21 @@ function EffectNamePopup({ effects, closeNamePopup }) {
       <div className="close-menu" onClick={closeNamePopup}>
         X
       </div>
-      <div className="create-playlist">
-        <input
-          type="text"
-          placeholder="Enter effect name"
-          value={newEffectName}
-          onChange={(e) => setNewEffectName(e.target.value)}
-        />
-        <button onClick={saveEffect}>Save</button>
+      <div className="create-playlist" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <input
+            type="text"
+            placeholder="Enter effect name"
+            value={effectName}
+            onChange={(e) => { setEffectName(e.target.value); setError(''); }}
+          />
+          <button onClick={saveEffect}>Save</button>
+        </div>
+        {error && (
+          <p style={{ color: 'var(--color-accent)', fontSize: '0.8rem', margin: 0 }}>
+            {error}
+          </p>
+        )}
       </div>
     </div>
   );

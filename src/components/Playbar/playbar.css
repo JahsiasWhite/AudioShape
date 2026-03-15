@@ -15,16 +15,11 @@
   align-items: center;
 }
 
-/* Each 'section' in the playbar */
-/* .playbar div {
-} */
-
 .current-song {
   margin-left: 1%;
   display: flex;
   align-items: center;
   position: relative;
-
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -33,18 +28,22 @@
 
 .current-song span {
   display: block;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .playbar-image {
-  height: 50px;
-  width: 50px;
-  margin-right: 5px;
+  height: 48px;
+  width: 48px;
+  border-radius: 4px;
+  margin-right: 10px;
+  flex-shrink: 0;
 }
 
 .song-details {
   display: flex;
   flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
 }
 
 .playbar-controls {
@@ -57,8 +56,8 @@
 }
 
 .playbar-controls button {
-  background-color: #666;
-  color: white;
+  background-color: transparent;
+  color: var(--color-text-secondary);
   border: none;
   padding: 5px 10px;
   margin: 0 5px;
@@ -67,7 +66,6 @@
 
 .buttons-container {
   display: flex;
-  /* gap: 1vw; */
   align-items: center;
   margin-right: 3vw;
 }
@@ -76,7 +74,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 13px;
+  font-size: 11px;
+  letter-spacing: 0.4px;
   color: var(--color-text-secondary);
 }
 
@@ -89,34 +88,29 @@
 }
 
 .playback-bar input[type='range']::-webkit-slider-thumb {
-  box-shadow: -400px 0 0 400px var(--color-button-secondary);
+  box-shadow: -400px 0 0 400px var(--color-accent);
 }
 
-/* Generic, applies to playback and volume */
+/* Generic — applies to playback and volume */
 input[type='range'] {
   overflow: hidden;
   width: 80px;
-  height: 5px;
+  height: 3px;
   appearance: none;
   -webkit-appearance: none;
   border-radius: 100px;
-  background-color: var(--color-secondary);
+  background-color: #252530;
 }
 
 input[type='range']::-webkit-slider-runnable-track {
-  /* height: 10px; */
   -webkit-appearance: none;
-  /* color: #13bba4; */
   margin-top: -1px;
 }
 
 input[type='range']::-webkit-slider-thumb {
-  /* display: none; */
   width: 0px;
   -webkit-appearance: none;
   height: 10px;
-  /* border-radius: 50%; */
-  /* cursor: ew-resize; */
   background: transparent;
   box-shadow: -80px 0 0 80px var(--color-button-secondary);
 }
@@ -124,4 +118,6 @@ input[type='range']::-webkit-slider-thumb {
 .fullscreen-button {
   height: 20px;
   width: 20px;
+  color: var(--color-text);
+  cursor: pointer;
 }

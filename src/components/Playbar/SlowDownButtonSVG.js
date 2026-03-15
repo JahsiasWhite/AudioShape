@@ -6,7 +6,7 @@ const SlowDownButtonSVG = ({ slowDownIsEnabled, onClick }) => {
       className="speedup-button"
       height="800px"
       width="800px"
-      fill={slowDownIsEnabled ? '#316baa' : 'white'}
+      fill={slowDownIsEnabled ? '#316baa' : 'var(--color-text)'}
       version="1.1"
       id="slowdown"
       xmlns="http://www.w3.org/2000/svg"

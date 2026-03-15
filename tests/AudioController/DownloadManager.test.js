@@ -5,6 +5,11 @@ import { DownloadManager } from '../../src/AudioController/DownloadManager';
 window.electron = {
   ipcRenderer: {
     sendMessage: jest.fn(),
+    once: jest.fn().mockImplementation((event, callback) => {
+      if (event === 'SAVE_SONG_RESULT') {
+        callback({ success: true });
+      }
+    }),
   },
 };
 
@@ -37,8 +42,8 @@ describe('DownloadManager', () => {
         currentSongMock,
         finishLoadingMock,
         initCurrentSongMock,
-        getCurrentAudioBufferMock
-      )
+        getCurrentAudioBufferMock,
+      ),
     );
 
     // Act: Call handleSongExport
@@ -49,7 +54,8 @@ describe('DownloadManager', () => {
     // Assert: Ensure that ipcRenderer.sendMessage has been called with the expected arguments
     expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith(
       'SAVE_SONG',
-      expect.any(String)
+      expect.any(String),
+      undefined,
     );
   });
 
@@ -79,8 +85,8 @@ describe('DownloadManager', () => {
         currentSongMock,
         finishLoadingMock,
         initCurrentSongMock,
-        getCurrentAudioBufferMock
-      )
+        getCurrentAudioBufferMock,
+      ),
     );
 
     // Act: Call handleSongExport
@@ -107,8 +113,8 @@ describe('DownloadManager', () => {
         currentSongMock,
         finishLoadingMock,
         initCurrentSongMock,
-        getCurrentAudioBufferMock
-      )
+        getCurrentAudioBufferMock,
+      ),
     );
 
     // Act: Call handleTempSongSaved
@@ -118,7 +124,7 @@ describe('DownloadManager', () => {
 
     // Assert: Ensure that ipcRenderer.sendMessage has been called with the expected arguments
     expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith(
-      'DELETE_TEMP_SONG'
+      'DELETE_TEMP_SONG',
     );
   });
 
@@ -144,14 +150,14 @@ describe('DownloadManager', () => {
         currentSongMock,
         finishLoadingMock,
         initCurrentSongMock,
-        getCurrentAudioBufferMock
-      )
+        getCurrentAudioBufferMock,
+      ),
     );
 
     // Act: Call handleTempSongSaved
     await act(async () => {
       await result.current.downloadAudio(
-        await getCurrentAudioBufferMock(currentSongMock.src)
+        await getCurrentAudioBufferMock(currentSongMock.src),
       );
     });
 
@@ -162,7 +168,7 @@ describe('DownloadManager', () => {
     expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith(
       'SAVE_TEMP_SONG',
       // expect.arrayContaining([expect.anything()]) // Contains at least one element
-      expect.anything()
+      expect.anything(),
     );
   });
 });

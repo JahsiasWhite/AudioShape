@@ -6,21 +6,48 @@ const { v4: uuidv4 } = require('uuid');
 const { glob } = require('glob');
 const ffmpeg = require('fluent-ffmpeg');
 
+// Logging
+const Logger = require('./mainLogger');
+
 // Annoying way to import this tbh
 let metadata;
 import('music-metadata').then((module) => {
   metadata = module;
 });
 
-// For outputting to terminal
-const readline = require('readline');
-
 // For searching youtube videos. The spotify downloader requires this
 const youtubeSearch = require('yt-search');
 
-const ytdl = require('@distube/ytdl-core');
-const ffmpegPath = require('ffmpeg-static');
-const cp = require('child_process');
+const { create: createYoutubeDl } = require('youtube-dl-exec');
+
+/**
+ * Resolves the yt-dlp binary path for both dev and packaged Electron builds.
+ * In packaged builds, asarUnpack places the binary in app.asar.unpacked.
+ */
+function getYoutubeDl() {
+  const binaryName = process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp';
+  const unpackedPath = path.join(
+    process.resourcesPath,
+    'app.asar.unpacked',
+    'node_modules',
+    'youtube-dl-exec',
+    'bin',
+    binaryName,
+  );
+  const devPath = path.join(
+    __dirname,
+    '..',
+    'node_modules',
+    'youtube-dl-exec',
+    'bin',
+    binaryName,
+  );
+  const binaryPath = fs.existsSync(unpackedPath) ? unpackedPath : devPath;
+  Logger.info(
+    `[youtube-dl] using binary: ${binaryPath} (exists: ${fs.existsSync(binaryPath)})`,
+  );
+  return createYoutubeDl(binaryPath);
+}
 
 const path = require('path');
 
@@ -34,6 +61,7 @@ let effectCombosFile = null;
 let mainWindow = undefined;
 
 /* When auto playing with edits on, we have to save the song to have full editing control */
+// TODO: Is there a way to not have to save file? Can't we just use in-memory buffers?
 const SAVE_TEMP_SONG = (dataDirectory, mainWindow) => {
   ipcMain.on('SAVE_TEMP_SONG', async (event, audioData) => {
     console.error('Saving temp song');
@@ -81,28 +109,88 @@ const DELETE_TEMP_SONG = () => {
 };
 
 /**
- * Exports the given song to the same location it was copied from
+ * Builds a chain of atempo filters to cover the full 0.1–2.0 speed range.
+ * The atempo filter only accepts values between 0.5 and 2.0, so speeds outside
+ * that range are achieved by chaining multiple filters.
+ */
+function buildAtempoFilters(speed) {
+  const filters = [];
+  let s = speed;
+  while (s < 0.5) {
+    filters.push('atempo=0.5');
+    s /= 0.5;
+  }
+  while (s > 2.0) {
+    filters.push('atempo=2.0');
+    s /= 2.0;
+  }
+  filters.push(`atempo=${parseFloat(s.toFixed(6))}`);
+  return filters.join(',');
+}
+
+/**
+ * Exports the given song, baking in the speed effect if needed.
+ * Preserves the source file format: .mp4 sources are exported as .mp4 (with
+ * video speed adjusted), everything else is exported as .mp3.
  */
 const SAVE_SONG = (dataDirectory) => {
-  ipcMain.on('SAVE_SONG', async (event, sourcePath) => {
-    console.error('Saving song...');
+  ipcMain.on('SAVE_SONG', async (event, sourcePath, speed) => {
+    try {
+      // Cleanup the sourcePath: 'file:///C:/Example' -> 'C:/Example'
+      sourcePath = decodeURIComponent(sourcePath.replace('file:///', ''));
 
-    // Create the new file path
-    newFilePath = path.join(dataDirectory, `export-${uuidv4()}.mp3`);
+      // Preserve the source format: .mp4 stays .mp4, everything else → .mp3
+      const sourceExt = path.extname(sourcePath).toLowerCase();
+      const outputExt = sourceExt === '.mp4' ? '.mp4' : '.mp3';
+      const newFilePath = path.join(
+        dataDirectory,
+        `export-${uuidv4()}${outputExt}`,
+      );
 
-    // Cleanup the sourcePath
-    // 'file:///C:/Example' -> 'C:/Example'
-    sourcePath = sourcePath.replace('file:///', '');
+      console.error('Source: ', sourcePath);
+      console.error('New Path: ', newFilePath);
+      console.error('Speed: ', speed);
 
-    // Copy the file to the new path
-    console.error('Source: ', sourcePath);
-    console.error('New Path: ', newFilePath);
-    await fs.promises.copyFile(sourcePath, newFilePath);
-    console.error('Saved song...');
+      if (speed && speed !== 1) {
+        const atempoChain = buildAtempoFilters(speed);
+        await new Promise((resolve, reject) => {
+          let cmd = ffmpeg(sourcePath).audioFilters(atempoChain);
+
+          if (sourceExt === '.mp4') {
+            // Adjust video speed to match audio
+            cmd = cmd.videoFilters(`setpts=PTS/${speed}`);
+          } else {
+            cmd = cmd.noVideo();
+          }
+
+          cmd
+            .output(newFilePath)
+            .on('end', () => {
+              console.error('Saved song with speed effect.');
+              resolve();
+            })
+            .on('error', (err) => {
+              console.error('Error applying speed effect:', err);
+              reject(err);
+            })
+            .run();
+        });
+      } else {
+        await fs.promises.copyFile(sourcePath, newFilePath);
+        console.error('Saved song.');
+      }
+
+      event.reply('SAVE_SONG_RESULT', { success: true, path: newFilePath });
+    } catch (err) {
+      console.error('Error saving song:', err);
+      event.reply('SAVE_SONG_RESULT', { success: false, error: err.message });
+    }
   });
 };
 
 const SETUP_SETINGS = (mainWindow, dataDirectory) => {
+  Logger.info('Initializing settings');
+
   userDataPath = dataDirectory; // TODO I dont like this tbh
   /**
    * Gets all user settings. Called when the user navigates to the settings page
@@ -113,7 +201,7 @@ const SETUP_SETINGS = (mainWindow, dataDirectory) => {
   ipcMain.on('GET_LAYOUT_SETTINGS', (event) => {
     mainWindow.webContents.send(
       'GET_LAYOUT_SETTINGS',
-      getSettings().spotifyEnabled
+      getSettings().spotifyEnabled,
     );
   });
 
@@ -142,8 +230,15 @@ const SETUP_SETINGS = (mainWindow, dataDirectory) => {
   });
 
   ipcMain.on('GET_COLOR_SETTINGS', (event) => {
-    console.error('GETTING COLOR SETTINGS: ', getSettings());
     mainWindow.webContents.send('RETURN_COLOR_SETTINGS', getSettings().colors);
+  });
+
+  ipcMain.on('GET_ROW_SIZE', (event) => {
+    mainWindow.webContents.send('RETURN_ROW_SIZE', getSettings().rowSize ?? 50);
+  });
+
+  ipcMain.on('GET_VOLUME', (event) => {
+    mainWindow.webContents.send('RETURN_VOLUME', getSettings().volume ?? 100);
   });
 };
 
@@ -175,22 +270,25 @@ const SETUP_PLAYLISTS = (mainWindow, dataDirectory) => {
     // Get playlists
     const playlists = getPlaylists(playlistsFilePath);
 
-    // Find and remove the playlist with the matching name
-    const updatedPlaylists = playlists.filter(
-      (playlist) => playlist.name !== playlistToDelete.name
-    );
+    // Find the target playlist by ID (preferred) or by name (legacy fallback)
+    const targetIndex = playlistToDelete.id
+      ? playlists.findIndex((p) => p.id === playlistToDelete.id)
+      : playlists.findIndex((p) => p.name === playlistToDelete.name);
+
+    if (targetIndex !== -1) playlists.splice(targetIndex, 1);
+    const updatedPlaylists = playlists;
 
     try {
       // Write the updated playlists back to the file
       fs.writeFileSync(
         playlistsFilePath,
-        JSON.stringify(updatedPlaylists, null, 2)
+        JSON.stringify(updatedPlaylists, null, 2),
       );
 
       // Update the new playlists
       mainWindow.webContents.send('GRAB_PLAYLISTS', updatedPlaylists);
     } catch (error) {
-      console.error('Error deleting playlist:', error);
+      Logger.error('Error deleting playlist:', error);
 
       // Send an error message back to the renderer process
       // event.sender.send('PLAYLIST_DELETE_ERROR', error.message);
@@ -207,18 +305,18 @@ const SETUP_PLAYLISTS = (mainWindow, dataDirectory) => {
       const playlistsFilePath = path.join(
         userDataPath,
         'Data',
-        'playlists.json'
+        'playlists.json',
       );
       const playlists = getPlaylists(playlistsFilePath);
 
       // Find the playlist by name
       const playlistIndex = playlists.findIndex(
-        (playlist) => playlist.name === playlistName
+        (playlist) => playlist.name === playlistName,
       );
 
       if (playlistIndex === -1) {
         // Playlist not found, handle accordingly (e.g., show an error)
-        console.error(`Playlist "${playlistName}" not found.`);
+        Logger.error(`Playlist "${playlistName}" not found.`);
         return;
       }
 
@@ -232,7 +330,7 @@ const SETUP_PLAYLISTS = (mainWindow, dataDirectory) => {
       if (playlists[playlistIndex].songs.includes(songName)) {
         // Remove the song from the playlist
         playlists[playlistIndex].songs = playlists[playlistIndex].songs.filter(
-          (s) => s !== songName
+          (s) => s !== songName,
         );
       } else {
         // Add the song to the playlist
@@ -248,7 +346,7 @@ const SETUP_PLAYLISTS = (mainWindow, dataDirectory) => {
       mainWindow.webContents.send('GRAB_PLAYLISTS', playlists);
     } catch (error) {
       // Handle any errors that occur during the process
-      console.error('Error adding song to playlist:', error);
+      Logger.error('Error adding song to playlist:', error);
     }
   });
 };
@@ -279,7 +377,7 @@ const SETUP_EFFECTS = (mainWindow, directory) => {
     try {
       fs.writeFileSync(effectCombosFile, JSON.stringify(effectCombos, null, 2));
     } catch (error) {
-      console.error('Error writing combos file:', error);
+      Logger.error('Error writing combos file:', error);
     }
 
     // Send the new effects back to the client
@@ -296,21 +394,29 @@ const SETUP_SONG_DOWNLOADS = (mainW) => {
     downloadYoutubeVideo(videoUrl);
   });
 
+  /**
+   * Downloads a song from youtube using the search query
+   */
   ipcMain.on(
     'DOWNLOAD_SONG_FROM_YOUTUBE_SEARCH',
     async (event, songDetails) => {
-      // Get the song url
-      const result = await youtubeSearch(songDetails.name + songDetails.artist);
-      const url = result.all[0].url; // TODO: What happens if all is empty? Is that possible? 'all' is an array of the search results...
+      const query = `${songDetails.name} ${songDetails.artist} audio`;
+      const result = await youtubeSearch(query);
+
+      if (result.all.length === 0) {
+        console.error('No results found for the search query');
+        return;
+      }
 
       // download the song from youtube
+      const url = result.all[0].url;
       downloadYoutubeVideo(url, songDetails);
-    }
+    },
   );
 };
 
 // Function to process song metadata
-const processSongMetadata = (file, imageFiles) => {
+const processSongMetadata = (file, imageMap) => {
   return new Promise((resolve, reject) => {
     try {
       metadata
@@ -321,8 +427,7 @@ const processSongMetadata = (file, imageFiles) => {
           let album = data.common.album;
           let duration = data.format.duration;
 
-          // Unique key, consider using a more robust method
-          let key = duration;
+          let key = file;
 
           // To avoid empty fields, if the file doesn't have the appropriate metadata, use defaults
           if (
@@ -362,15 +467,24 @@ const processSongMetadata = (file, imageFiles) => {
           }
 
           /* Gets image for the song/album */
+          // Prioritizes the image with the same name as the song file
+          // If none match, it will use an image found in the song directory
+          // If no image is found, the frontend will check if the song is an .mp4 file
+          // If it is, it will use a frame from the video as the album image
           const albumDir = path.dirname(file);
+          const fileName = path
+            .basename(file)
+            .substring(0, file.lastIndexOf('.'));
           let savedImage = undefined;
-          for (const image in imageFiles) {
-            const imageDir = path.dirname(imageFiles[image]);
-            if (albumDir === imageDir) {
-              savedImage = imageFiles[image];
-              break;
+          imageMap[albumDir]?.forEach((imageFile) => {
+            if (savedImage === fileName) {
+              savedImage = imageFile;
+              return;
             }
-          }
+            if (!savedImage) {
+              savedImage = imageFile;
+            }
+          });
 
           const songData = {
             id: key,
@@ -379,7 +493,8 @@ const processSongMetadata = (file, imageFiles) => {
             artist: artist,
             album: album,
             duration: duration,
-            albumImage: savedImage, // Initialize image
+            albumImage: savedImage,
+            isVideo: path.extname(file).toLowerCase() === '.mp4',
           };
 
           resolve(songData);
@@ -422,9 +537,20 @@ const SETUP_GET_SONGS = (mainW) => {
     }
 
     // Get all songs in the given directory as well as all subdirectories
-    const audioTypes = 'mp3,wav,ogg,mp4,flac';
+    const audioTypes = 'mp3,wav,ogg,mp4,flac,m4a';
     const audios = await glob(correctedPath + '/**/*.{' + audioTypes + '}');
+
+    // Get and set a map of image files for easier access
     const imageFiles = await glob(correctedPath + '/**/*.{jpg,jpeg,png}');
+    const imageMap = {};
+    imageFiles.forEach((imageFile) => {
+      const imageDir = path.dirname(imageFile);
+      if (!imageMap[imageDir]) {
+        imageMap[imageDir] = [];
+      }
+      imageMap[imageDir].push(imageFile);
+    });
+    console.error('Image Map: ', imageMap);
 
     // Make sure we have at least one song in the directory
     if (audios.length === 0) {
@@ -437,13 +563,14 @@ const SETUP_GET_SONGS = (mainW) => {
     let count = 0; // This is so we know when we ran out of files to parse and can return
     songs = {}; // ? Reset songs here?
 
-    console.error('Grabbing song data...');
+    console.log('Grabbing song data...');
     audios.forEach(async (file) => {
       try {
-        const songData = await processSongMetadata(file, imageFiles);
+        const songData = await processSongMetadata(file, imageMap);
         songs[songData.id] = songData;
       } catch (error) {
         console.error('ERROR AT', count, '\nFile: ', file, '\nError: ', error);
+        Logger.error('Error processing song metadata for file:', file, error);
         // mainWindow.webContents.send('ERROR_MESSAGE', {
         //   title: 'Error',
         //   description: error.message,
@@ -499,13 +626,14 @@ const SETUP_GET_SONGS = (mainW) => {
  */
 
 /**
- * Writes the given file details from Spotify into the file
- * @param {string} inputFilePath - Path to the original MP4 file
- * @param {string} outputFilePath - Path to the new output file
- * @param {object} metadata - New metadata values
- * @returns {Promise<void>} - A promise that resolves when the metadata is edited successfully
+ * Embeds title/artist/album metadata into an audio file via ffmpeg.
+ * Reads from inputFilePath, writes to outputFilePath, then deletes inputFilePath.
+ * @param {string} inputFilePath
+ * @param {string} outputFilePath
+ * @param {object} metadata - { name, artist, album }
+ * @returns {Promise<void>}
  */
-function writeSpotifyDetails(inputFilePath, outputFilePath, metadata) {
+function embedMetadata(inputFilePath, outputFilePath, metadata) {
   return new Promise(async (resolve, reject) => {
     try {
       console.log('--------------------------------');
@@ -520,14 +648,14 @@ function writeSpotifyDetails(inputFilePath, outputFilePath, metadata) {
         .output(outputFilePath)
         .on('progress', (progress) => {
           console.log(
-            `FFmpeg Progress: ${progress.percent}% done, ${progress.timemark}`
+            `FFmpeg Progress: ${progress.percent}% done, ${progress.timemark}`,
           );
           console.log('DATA : ', metadata.name, progress);
           mainWindow.webContents.send(
             'ffmpeg-progress',
             `FFmpeg Progress: ${progress.percent}% done, ${progress.timemark}`,
             progress.percent,
-            metadata.name
+            metadata.name,
           );
         })
         .on('end', async () => {
@@ -579,308 +707,189 @@ function writeMetadata(title, filePath) {
   });
 }
 
-/* 
-    I dont like spotifyDetails. It was the easiest way to implement albeit a bit ugly
-    TODO Clean this up...
-  */
-async function downloadYoutubeVideo(url, spotifyDetails) {
-  console.log('----------------------------------------------------');
-  console.log('DOWNLOADING VIDEO');
-  console.log('Youtube URL is: ', url);
-
-  // Get the youtube video title
-  const info = await ytdl.getInfo(url);
-  const videoTitle = info.videoDetails.title.replace('|', ''); // Must remove special characters or FFMPEG will crash
-  console.log('Got video detail: ', videoTitle);
-
-  // Get where we are saving the video to
+async function downloadYoutubeVideo(url, songDetails) {
   const settings = getSettings();
   const songDirectory = settings.libraryDirectory;
-  console.log('SONG DIRECTORY: ', songDirectory);
 
   if (songDirectory === '') {
-    console.error('No song directory selected, returning...');
     mainWindow.webContents.send(
       'download-error',
-      `No valid song directory found. Please choose a song directory from the settings page to download songs.`
+      `No valid song directory found. Please choose a song directory from the settings page to download songs.`,
     );
     return;
   }
 
-  /* Setup progress tracking */
-  const tracker = {
-    start: Date.now(),
-    audio: { downloaded: 0, total: Infinity },
-    video: { downloaded: 0, total: Infinity },
-    merged: { frame: 0, speed: '0x', fps: 0 },
-  };
-
-  // Prepare the progress bar
-  let progressbarHandle = null;
-  const progressbarInterval = 1000;
-  const showProgress = () => {
-    readline.cursorTo(process.stdout, 0);
-    const toMB = (i) => (i / 1024 / 1024).toFixed(2);
-
-    process.stdout.write(
-      `Audio  | ${(
-        (tracker.audio.downloaded / tracker.audio.total) *
-        100
-      ).toFixed(2)}% processed `
-    );
-    process.stdout.write(
-      `(${toMB(tracker.audio.downloaded)}MB of ${toMB(
-        tracker.audio.total
-      )}MB).${' '.repeat(10)}\n`
-    );
-
-    process.stdout.write(
-      `Video  | ${(
-        (tracker.video.downloaded / tracker.video.total) *
-        100
-      ).toFixed(2)}% processed `
-    );
-    process.stdout.write(
-      `(${toMB(tracker.video.downloaded)}MB of ${toMB(
-        tracker.video.total
-      )}MB).${' '.repeat(10)}\n`
-    );
-
-    process.stdout.write(`Merged | processing frame ${tracker.merged.frame} `);
-    process.stdout.write(
-      `(at ${tracker.merged.fps} fps => ${tracker.merged.speed}).${' '.repeat(
-        10
-      )}\n`
-    );
-
-    process.stdout.write(
-      `running for: ${((Date.now() - tracker.start) / 1000 / 60).toFixed(
-        2
-      )} Minutes.`
-    );
-
-    readline.moveCursor(process.stdout, 0, -3);
-  };
-
-  // Downloading audio only
-  if (!settings.mp4DownloadEnabled) {
-    const outputVagueFilePath = path.join(
-      songDirectory,
-      `spotify-vague-${videoTitle}.mp3`
-    );
-    const outputFilePath = path.join(
-      songDirectory,
-      `spotify-${videoTitle}.mp3`
-    );
-    const writeStream = fs.createWriteStream(outputVagueFilePath);
-
-    // TODO ugly
-    if (spotifyDetails === undefined) {
-      spotifyDetails = {
-        name: videoTitle,
-        artist: 'Unknown Artist',
-        album: 'Unknown Album',
-      };
-    }
-    console.log('SPOTIFY DETAILS: ', spotifyDetails);
-
-    const audioStream = ytdl(url, { filter: 'audioonly' })
-      // .pipe(writeStream)
-      .on('progress', (_, downloaded, total) => {
-        tracker.audio = { downloaded, total };
-        showProgress();
-        mainWindow.webContents.send(
-          'ffmpeg-progress',
-          `FFmpeg Progress: ${downloaded / total}% done`,
-          (downloaded / total) * 100,
-          spotifyDetails ? spotifyDetails.name : 'name'
-        );
-        console.error('DOWNLOADING');
-      });
-
-    audioStream
-      .pipe(writeStream)
-      .on('close', async (msg) => {
-        // TODO toggle between this and the commented out bit
-        console.error(
-          'Attaching extra details? ',
-          settings.attchingExtraDetails
-        );
-        if (!settings.attchingExtraDetails) {
-          mainWindow.webContents.send(
-            'download-success',
-            'Download completed!',
-            {}
-          );
-        } else {
-          songData = await writeSpotifyDetails(
-            outputVagueFilePath,
-            // path.join(songDirectory, `TEST.mp3`),
-            outputFilePath,
-            spotifyDetails
-          );
-          mainWindow.webContents.send(
-            'download-success',
-            'Download completed!',
-            songData
-          );
-        }
-      })
-      .on('error', (err) => {
-        console.error('Error downloading song', err);
-      });
-
-    return new Promise((resolve, reject) => {
-      console.error('RETURNING?');
-      audioStream.on('finish', () => {
-        console.error('SUCCESSFULLY DOWNLOADED');
-        resolve(outputFilePath);
-        // mainWindow.webContents.send(
-        //   'download-success',
-        //   'Download completed!',
-        //   songData
-        // );
-      });
-      audioStream.on('error', (error) => {
-        console.error('ERROR DOWNLOADING');
-        reject(error);
-        mainWindow.webContents.send('download-error', `${error}`);
-      });
+  // Get video info
+  const youtubeDl = getYoutubeDl();
+  let info;
+  try {
+    info = await youtubeDl(url, {
+      dumpSingleJson: true,
+      noWarnings: true,
+      noCheckCertificates: true,
+      preferFreeFormats: true,
     });
+  } catch (err) {
+    Logger.error('Failed to get video info:', err.stderr || err.message || err);
+    mainWindow.webContents.send(
+      'download-error',
+      `Failed to get video info: ${err.stderr || err.message}`,
+    );
+    return;
   }
 
-  // Use ytdl to download the video and audio separately
-  // This is necessary because for higher quality videos, Youtube downloads the audio and video separately
-  // Get audio and video streams
-  const audioStream = ytdl(url, { quality: 'highestaudio' }).on(
-    'progress',
-    (_, downloaded, total) => {
-      tracker.audio = { downloaded, total };
-      showProgress();
-    }
-  );
-  const videoStream = ytdl(url, { quality: 'highestvideo' }).on(
-    'progress',
-    (_, downloaded, total) => {
-      tracker.video = { downloaded, total };
-      showProgress();
-    }
-  );
+  const videoTitle = info.title.replace(/[|\\/:*?"<>]/g, '');
+  const embedExtraMetadata = settings.attchingExtraDetails ?? true;
 
-  // Construct the output file path using the video title and song directory
-  const outputFilePath = path.join(songDirectory, `${videoTitle}.mp4`);
+  if (songDetails === undefined) {
+    songDetails = {
+      name: videoTitle,
+      artist: 'Unknown Artist',
+      album: 'Unknown Album',
+    };
+  }
 
-  // Spawn FFmpeg process to combine video and audio
-  console.log('Creating ffmpeg process...');
-  const ffmpegProcess = cp.spawn(
-    ffmpegPath,
-    [
-      // Remove ffmpeg's console spamming
-      '-loglevel',
-      '8',
-      '-hide_banner',
-      // Set inputs
-      '-i',
-      'pipe:4',
-      '-i',
-      'pipe:5',
-      // Map audio & video from streams
-      '-map',
-      '0:a',
-      '-map',
-      '1:v',
-      // Keep encoding
-      '-c:v',
-      'copy',
-      // Define output file
-      outputFilePath,
-    ],
-    {
-      windowsHide: true,
-      stdio: [
-        /* Standard: stdin, stdout, stderr */
-        'inherit',
-        'inherit',
-        'inherit',
-        /* Custom: pipe:3, pipe:4, pipe:5 */
-        'pipe',
-        'pipe',
-        'pipe',
-      ],
-    }
-  );
-  console.log('Created ffmpeg process');
+  // Downloading audio only (MP3)
+  if (!settings.mp4DownloadEnabled) {
+    const tempFilePath = path.join(songDirectory, `temp-${videoTitle}.mp3`);
+    const finalFilePath = path.join(songDirectory, `${videoTitle}.mp3`);
 
-  // C O M B I N E
-  console.log('Combining video and audio...');
-  audioStream.pipe(ffmpegProcess.stdio[4]);
-  videoStream.pipe(ffmpegProcess.stdio[5]);
+    try {
+      const subprocess = youtubeDl.exec(url, {
+        extractAudio: true,
+        audioFormat: 'mp3',
+        audioQuality: 0,
+        output: tempFilePath,
+        noPlaylist: true,
+        noCheckCertificates: true,
+      });
 
-  // When an error is encountered or we finished processing
-  ffmpegProcess.on('close', async (code) => {
-    if (code === 0) {
-      console.log('Video downloaded and combined successfully');
+      const onMp3Progress = (data) => {
+        const match = data.toString().match(/\[download\]\s+([\d.]+)%/);
+        if (match) {
+          const percent = parseFloat(match[1]);
+          mainWindow.webContents.send(
+            'ffmpeg-progress',
+            `${Math.round(percent)}%`,
+            percent,
+            songDetails.name,
+          );
+        }
+      };
+      subprocess.stdout.on('data', onMp3Progress);
+      subprocess.stderr.on('data', onMp3Progress);
 
-      // We can download from both the youtube tab and the spotify tab
-      // If we are downloading from spotify, we want to use the data supplied from them
-      // If just from youtube, we have to get our data from the video information
+      await subprocess;
+
       let songData;
-      if (spotifyDetails) {
-        //TODO I think since we have to download it a second time, it is reducing quality... Also doubles the time it takes to download
-        // So I should add a button in settings to toggle if spotifyDetails is used. Toggle it in DOWNLOAD_SONG_FROM_YOUTUBE_SEARCH
-        songData = await writeSpotifyDetails(
-          outputFilePath,
-          path.join(songDirectory, `spotify-${videoTitle}.mp4`),
-          spotifyDetails
-        );
+      if (embedExtraMetadata) {
+        await embedMetadata(tempFilePath, finalFilePath, songDetails);
+        songData = await processSongMetadata(finalFilePath, {});
       } else {
-        songData = await processSongMetadata(outputFilePath, []);
+        songData = await processSongMetadata(tempFilePath, {});
       }
 
       mainWindow.webContents.send(
         'download-success',
         'Download completed!',
-        songData
+        songData,
       );
-      console.log('Download completed, sent song data');
+    } catch (err) {
+      Logger.error(
+        'Error downloading audio:',
+        err.stderr || err.message || err,
+      );
+      mainWindow.webContents.send(
+        'download-error',
+        songDetails.name,
+        `${err.stderr || err.message || err}`,
+      );
+    }
+    return;
+  }
+
+  // Downloading video + audio (MP4)
+  const tempFilePath = path.join(songDirectory, `temp-${videoTitle}.mp4`);
+  const finalFilePath = path.join(songDirectory, `${videoTitle}.mp4`);
+
+  try {
+    const subprocess = youtubeDl.exec(url, {
+      format: 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best',
+      mergeOutputFormat: 'mp4',
+      output: tempFilePath,
+      noPlaylist: true,
+      noCheckCertificates: true,
+    });
+
+    // MP4 downloads video first (0→100%) then audio (0→100%), then merges.
+    // We map these two phases onto a single 0–100% bar so it never resets.
+    let mp4Phase = 1; // 1 = video, 2 = audio
+    let lastMp4Percent = 0;
+    const onMp4Progress = (data) => {
+      const str = data.toString();
+      if (
+        str.includes('[Merger]') ||
+        (str.includes('[ffmpeg]') && !str.match(/\[download\]/))
+      ) {
+        mainWindow.webContents.send(
+          'ffmpeg-progress',
+          'Merging...',
+          99,
+          videoTitle,
+        );
+        return;
+      }
+      const match = str.match(/\[download\]\s+([\d.]+)%/);
+      if (match) {
+        const percent = parseFloat(match[1]);
+        // Detect phase switch: percent drops sharply after video finished
+        if (
+          mp4Phase === 1 &&
+          percent < lastMp4Percent - 50 &&
+          lastMp4Percent > 50
+        ) {
+          mp4Phase = 2;
+        }
+        lastMp4Percent = percent;
+        const overall = mp4Phase === 1 ? percent / 2 : 50 + percent / 2;
+        const label =
+          mp4Phase === 1
+            ? `Video ${Math.round(percent)}%`
+            : `Audio ${Math.round(percent)}%`;
+        mainWindow.webContents.send(
+          'ffmpeg-progress',
+          label,
+          overall,
+          videoTitle,
+        );
+      }
+    };
+    subprocess.stdout.on('data', onMp4Progress);
+    subprocess.stderr.on('data', onMp4Progress);
+
+    await subprocess;
+
+    let songData;
+    if (embedExtraMetadata) {
+      await embedMetadata(tempFilePath, finalFilePath, songDetails);
+      songData = await processSongMetadata(finalFilePath, {});
     } else {
-      console.error(`FFmpeg process exited with code ${code}`);
-      mainWindow.webContents.send(
-        'download-error',
-        `FFmpeg process exited with code ${code}`
-      );
+      songData = await processSongMetadata(tempFilePath, {});
     }
 
-    clearInterval(progressbarHandle);
-  });
-
-  // Updates the progress bar
-  // ffmpegProcess.stdio[3].on('data', (chunk) => {
-  //   console.log('WORKING');
-  //   // Start the progress bar
-  //   if (!progressbarHandle)
-  //     progressbarHandle = setInterval(showProgress, progressbarInterval);
-  //   // Parse the param=value list returned by ffmpeg
-  //   const lines = chunk.toString().trim().split('\n');
-  //   const args = {};
-  //   for (const l of lines) {
-  //     const [key, value] = l.split('=');
-  //     args[key.trim()] = value.trim();
-  //   }
-  //   tracker.merged = args;
-  // });
-
-  // When a file of the same name already exists in the current dir. Im not entirely sure if this code only applies to that but good enough for now
-  ffmpegProcess.stdio[4].on('error', (err) => {
-    console.error('FFmpeg audio output error:', err);
-
-    if (err.code === 'EPIPE') {
-      mainWindow.webContents.send(
-        'download-error',
-        `FFmpeg process exited with code ${err.code}. FILE ALREADY EXISTS`
-      );
-    }
-  });
+    mainWindow.webContents.send(
+      'download-success',
+      'Download completed!',
+      songData,
+    );
+  } catch (err) {
+    Logger.error('Error downloading video:', err.stderr || err.message || err);
+    mainWindow.webContents.send(
+      'download-error',
+      songDetails.name,
+      `${err.stderr || err.message || err}`,
+    );
+  }
 }
 
 function getEffectCombos(filePath) {
@@ -909,6 +918,7 @@ function createPlaylist(playlistName) {
 
   // Create a new playlist object
   const newPlaylist = {
+    id: uuidv4(),
     name: playlistName,
     image: '',
     songs: [],
@@ -963,8 +973,6 @@ function getSettings(settingsPath) {
   if (settingsPath === undefined) {
     settingsPath = createSettingsPath();
   }
-
-  console.error('SETTINGSPATH: ', settingsPath);
 
   const settingsData = fs.readFileSync(settingsPath, 'utf-8');
   return JSON.parse(settingsData);

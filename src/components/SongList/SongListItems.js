@@ -8,6 +8,8 @@ import MixerSVG from '../LayoutBar/MixerButton/mixer.svg';
 
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
+export const thumbnailCache = {};
+
 export default function SongListItems({
   filteredSongs,
   setFilteredSongs,
@@ -124,52 +126,79 @@ export default function SongListItems({
   }
 
   /**
-   * Returns the Data URL of a jpeg frame from the given mp4 video at a specified time
-   *
-   * TODO
-   * Maybe have the time be more variable? It's harder than it seems though. If I do random, I'd want the
-   * max time to be the video duration. I have to get that in loadeddata though. And then I need to wait
-   * an unspecified time for it to be set in video. So when I drawImage, it actually is the image.
+   * Returns the Data URL of a jpeg frame from the given mp4 video at a specified time.
+   * Seeks to currentTime=1 after metadata loads, then draws on the `seeked` event so
+   * the frame is actually ready before calling drawImage.
    *
    * @param {String} videoSrc
-   * @returns
+   * @returns {Promise<string>}
    */
   const extractThumbnail = (videoSrc) => {
+    if (thumbnailCache[videoSrc]) {
+      return Promise.resolve(thumbnailCache[videoSrc]);
+    }
     return new Promise((resolve) => {
       const video = document.createElement('video');
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
 
-      video.addEventListener('loadeddata', () => {
+      const cleanup = (dataUrl) => {
+        video.src = '';
+        resolve(dataUrl);
+      };
+
+      video.addEventListener('seeked', () => {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         context.drawImage(video, 0, 0);
-        resolve(canvas.toDataURL('image/jpeg'));
-      });
+        const dataUrl = canvas.toDataURL('image/jpeg');
+        thumbnailCache[videoSrc] = dataUrl;
+        cleanup(dataUrl);
+      }, { once: true });
 
+      video.addEventListener('loadedmetadata', () => {
+        video.currentTime = Math.min(1, video.duration || 1);
+      }, { once: true });
+
+      // If the video fails to load, resolve null so the loop isn't stuck
+      video.addEventListener('error', () => cleanup(null), { once: true });
+
+      video.preload = 'metadata';
       video.src = videoSrc;
-
-      // Get the picture from the video at a certain time
-      video.currentTime = 1;
     });
   };
 
-  const [thumbnails, setThumbnails] = useState();
+  // Build initial state from cache so cached thumbnails show immediately on re-navigation
+  const buildFromCache = (songs) => {
+    const result = {};
+    for (const key of Object.keys(songs)) {
+      if (songs[key].isVideo && thumbnailCache[songs[key].file]) {
+        result[key] = thumbnailCache[songs[key].file];
+      }
+    }
+    return result;
+  };
+
+  const [thumbnails, setThumbnails] = useState(() => buildFromCache(filteredSongs));
+
   useEffect(() => {
+    // Immediately restore any cached thumbnails (avoids flash on re-navigation)
+    setThumbnails(buildFromCache(filteredSongs));
+
+    let cancelled = false;
     const loadThumbnails = async () => {
-      console.error('LOADING THUMBNAILS');
-      const newThumbnails = {};
       for (const key of Object.keys(filteredSongs)) {
-        if (
-          filteredSongs[key].file &&
-          filteredSongs[key].file.includes('.mp4')
-        ) {
-          newThumbnails[key] = await extractThumbnail(filteredSongs[key].file);
+        if (cancelled) break;
+        if (filteredSongs[key].isVideo && !thumbnailCache[filteredSongs[key].file]) {
+          const dataUrl = await extractThumbnail(filteredSongs[key].file);
+          if (!cancelled && dataUrl) {
+            setThumbnails((prev) => ({ ...prev, [key]: dataUrl }));
+          }
         }
       }
-      setThumbnails(newThumbnails);
     };
     loadThumbnails();
+    return () => { cancelled = true; };
   }, [filteredSongs]);
 
   // ? TODO I had <div> here instead of <>... I can't remember if it fixed a small glitch...
@@ -200,11 +229,9 @@ export default function SongListItems({
             {!filteredSongs[key].albumImage ? (
               // If there is no album image, check if the file is an mp4.
               // If it is, we can use a frame from the video as the image
-              filteredSongs[key].file &&
-              filteredSongs[key].file.includes('.mp4') &&
-              thumbnails ? (
+              filteredSongs[key].isVideo && thumbnails[key] ? (
                 <img
-                  className="list-image-header"
+                  className="list-image"
                   src={thumbnails[key]}
                   alt={`${filteredSongs[key].album} cover`}
                 />
@@ -214,7 +241,7 @@ export default function SongListItems({
             ) : (
               // If there was an image in the immediate file directory, use that as the image
               <img
-                className="list-image-header"
+                className="list-image"
                 src={filteredSongs[key].albumImage}
                 alt={`${filteredSongs[key].album} cover`}
               />

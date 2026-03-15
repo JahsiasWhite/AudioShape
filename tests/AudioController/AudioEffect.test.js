@@ -1,4 +1,4 @@
-import { renderHook, act, fireEvent } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { AudioEffects } from '../../src/AudioController/AudioEffects';
 
 // import * as Tone from 'tone';
@@ -20,21 +20,15 @@ const currentSong = {
   removeEventListener: jest.fn(),
   src: 'sample-file',
   play: jest.fn(),
+  playbackRate: 1,
+  defaultPlaybackRate: 1,
 };
 
-const fileLocation = 'sample-file';
 const visibleSongs = {
   song1: { id: 'song1', file: 'sample-file' },
   song2: { id: 'song2', file: 'sample-file2' },
 };
 const currentSongId = 'song1';
-
-const mockAudioBuffer = jest.fn().mockResolvedValue({
-  getChannelData: jest.fn(),
-  numberOfChannels: 2,
-  sampleRate: 44100,
-  duration: 10,
-});
 
 jest.mock('../../src/AudioController/ToneEffects', () => {
   return {
@@ -56,21 +50,13 @@ jest.mock('../../src/AudioController/ToneEffects', () => {
 describe('AudioEffects', () => {
   it('should initialize with default values', () => {
     const { result } = renderHook(() =>
-      AudioEffects({
-        currentSong: currentSong,
-        fileLocation: fileLocation,
-        onSongEnded: jest.fn(),
-        visibleSongs: visibleSongs,
-        currentSongId: currentSongId,
-        startLoading: jest.fn(),
-        finishLoading: jest.fn(),
-        downloadAudio: jest.fn(),
-        handleTempSongSaved: jest.fn(),
-        initCurrentSong: jest.fn(),
-        DEFAULT_SPEEDUP: 1,
-        DEFAULT_SLOWDOWN: 0.5,
-        getCurrentAudioBuffer: jest.fn(),
-      })
+      AudioEffects(
+        currentSong,
+        visibleSongs,
+        currentSongId,
+        1,
+        0.5,
+      ),
     );
 
     // Initial state assertions
@@ -85,19 +71,11 @@ describe('AudioEffects', () => {
     const { result } = renderHook(() =>
       AudioEffects(
         currentSong,
-        fileLocation,
-        jest.fn(),
         visibleSongs,
         currentSongId,
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
         1,
         0.5,
-        jest.fn()
-      )
+      ),
     );
 
     act(() => {
@@ -112,19 +90,11 @@ describe('AudioEffects', () => {
     const { result } = renderHook(() =>
       AudioEffects(
         currentSong,
-        fileLocation,
-        jest.fn(),
         visibleSongs,
         currentSongId,
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
         1,
         0.5,
-        jest.fn()
-      )
+      ),
     );
 
     act(() => {
@@ -147,19 +117,11 @@ describe('AudioEffects', () => {
     const { result } = renderHook(() =>
       AudioEffects(
         currentSong,
-        fileLocation,
-        jest.fn(),
         visibleSongs,
         currentSongId,
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
         1,
         0.5,
-        jest.fn()
-      )
+      ),
     );
 
     act(() => {
@@ -185,20 +147,12 @@ describe('AudioEffects', () => {
   it('should turn off the current effect if there is no song', async () => {
     const { result } = renderHook(() =>
       AudioEffects(
-        currentSong, // currentSong
-        fileLocation,
-        jest.fn(),
+        currentSong,
         visibleSongs,
         undefined, // currentSongId
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
         1,
         0.5,
-        jest.fn()
-      )
+      ),
     );
 
     act(() => {
@@ -225,19 +179,11 @@ describe('AudioEffects', () => {
     const { result } = renderHook(() =>
       AudioEffects(
         currentSong,
-        fileLocation,
-        jest.fn(),
         visibleSongs,
         currentSongId,
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
         1,
         0.5,
-        jest.fn()
-      )
+      ),
     );
 
     act(() => {
@@ -264,19 +210,11 @@ describe('AudioEffects', () => {
     const { result } = renderHook(() =>
       AudioEffects(
         currentSong,
-        fileLocation,
-        jest.fn(),
         visibleSongs,
         currentSongId,
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
         1,
         0.5,
-        jest.fn()
-      )
+      ),
     );
 
     act(() => {
@@ -295,19 +233,11 @@ describe('AudioEffects', () => {
     const { result } = renderHook(() =>
       AudioEffects(
         currentSong,
-        fileLocation,
-        jest.fn(),
         visibleSongs,
         currentSongId,
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
         1,
         0.5,
-        jest.fn()
-      )
+      ),
     );
 
     act(() => {
@@ -330,19 +260,11 @@ describe('AudioEffects', () => {
     const { result } = renderHook(() =>
       AudioEffects(
         currentSong,
-        fileLocation,
-        jest.fn(),
         visibleSongs,
         currentSongId,
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
-        jest.fn(),
         1,
         0.5,
-        jest.fn()
-      )
+      ),
     );
 
     act(() => {
@@ -359,5 +281,74 @@ describe('AudioEffects', () => {
     expect(result.current.currentSpeed).toBe(1);
     expect(result.current.speedupIsEnabled).toBe(false);
     expect(result.current.slowDownIsEnabled).toBe(false);
+  });
+
+  it('should remove saved combo effects when switching to a different saved combo', async () => {
+    const { result } = renderHook(() =>
+      AudioEffects(
+        currentSong,
+        visibleSongs,
+        currentSongId,
+        1,
+        0.5,
+      ),
+    );
+
+    act(() => {
+      result.current.setSavedEffects({ effect: { speed: 0.5, p: 0.5 } });
+    });
+
+    act(() => {
+      result.current.applySavedEffects('effect');
+    });
+
+    act(() => {
+      result.current.setSavedEffects({ effect0: { delay: 0.5 } });
+    });
+
+    act(() => {
+      result.current.applySavedEffects('effect0');
+    });
+
+    act(() => {
+      result.current.setSavedEffects({ effect2: { reverb: 0.5 } });
+    });
+
+    act(() => {
+      result.current.applySavedEffects('effect2');
+    });
+
+    // Initial state assertions
+    expect(result.current.effects).toEqual({ reverb: 0.5 });
+    expect(result.current.effectsEnabled).toBe(true);
+    expect(result.current.currentEffectCombo).toBe('effect2');
+    expect(result.current.currentSpeed).toBe(1);
+    expect(result.current.speedupIsEnabled).toBe(false);
+    expect(result.current.slowDownIsEnabled).toBe(false);
+  });
+
+  it('should handle a saved combo with only speed (no rendered effects)', async () => {
+    const { result } = renderHook(() =>
+      AudioEffects(
+        currentSong,
+        visibleSongs,
+        currentSongId,
+        1,
+        0.5,
+      ),
+    );
+
+    act(() => {
+      result.current.setSavedEffects({ speedOnly: { speed: 1.5 } });
+    });
+
+    act(() => {
+      result.current.applySavedEffects('speedOnly');
+    });
+
+    expect(result.current.effectsEnabled).toBe(true);
+    expect(result.current.currentEffectCombo).toBe('speedOnly');
+    expect(result.current.currentSpeed).toBe(1.5);
+    expect(currentSong.playbackRate).toBe(1.5);
   });
 });

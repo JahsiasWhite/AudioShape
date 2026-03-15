@@ -7,6 +7,8 @@ import { AudioEffects } from './AudioEffects';
 import { DownloadManager } from './DownloadManager';
 import { PlaylistsManager } from './PlaylistsManager';
 import { Tools } from './Tools';
+import { setupLiveEffectsChain } from './LiveEffectsChain';
+import { renderAudioWithAllEffects } from './ToneEffects';
 
 // Sets up this context to be the main controller for the application
 const AudioContext = createContext();
@@ -27,11 +29,17 @@ export const AudioProvider = ({ children }) => {
   /* General */
   const [loadingQueue, setLoadingQueue] = useState([]);
 
-  const initCurrentSong = () => {
+  const initCurrentSong = async () => {
+    await setupLiveEffectsChain(currentSong); // No-op after first call (resolves instantly)
     currentSong.volume = volume;
-    // currentSong.load(); // Load the new song's data
-    currentSong.play();
-    setIsPlaying(true);
+    try {
+      await currentSong.play();
+      setIsPlaying(true);
+    } catch (err) {
+      console.error('Failed to play song:', err);
+      setIsPlaying(false);
+      return;
+    }
 
     console.error('Adding event listener for onSongEnded');
     currentSong.addEventListener('ended', onSongEnded);
@@ -44,26 +52,33 @@ export const AudioProvider = ({ children }) => {
    * @returns
    */
   const getCurrentAudioBuffer = async (file) => {
-    // let filePath = currentSongId;
-    // let filePath = index === undefined ? currentSongIndex : index;
-    // if (filePath === null) return;
-    const audioContext = new (window.AudioContext ||
-      window.webkitAudioContext)();
+    try {
+      // let filePath = currentSongId;
+      // let filePath = index === undefined ? currentSongIndex : index;
+      // if (filePath === null) return;
+      const audioContext = new (
+        window.AudioContext || window.webkitAudioContext
+      )();
 
-    // const response = await fetch(visibleSongs[filePath].file);
-    // const response = await fetch(currentSong.src);
+      // const response = await fetch(visibleSongs[filePath].file);
+      // const response = await fetch(currentSong.src);
 
-    if (file) {
-      fileLocation = file;
+      if (file) {
+        fileLocation = file;
+      }
+
+      console.error(file);
+      console.error(fileLocation);
+      const response = await fetch(fileLocation);
+      const audioData = await response.arrayBuffer();
+      const audioBuffer = await audioContext.decodeAudioData(audioData);
+
+      return audioBuffer;
+    } catch (error) {
+      // TODO: Sometimes this comes in here when it shouldn't
+      console.error('Error fetching audio buffer:', error);
+      return null;
     }
-
-    console.error(file);
-    console.error(fileLocation);
-    const response = await fetch(fileLocation);
-    const audioData = await response.arrayBuffer();
-    const audioBuffer = await audioContext.decodeAudioData(audioData);
-
-    return audioBuffer;
   };
 
   /**
@@ -124,12 +139,12 @@ export const AudioProvider = ({ children }) => {
     isMuted,
   } = AudioControls(currentSong);
 
-  const { handleSongExport, handleTempSongSaved, downloadAudio } =
+  const { handleSongExport, downloadAudio } =
     DownloadManager(
       currentSong,
       finishLoading,
       initCurrentSong,
-      getCurrentAudioBuffer
+      getCurrentAudioBuffer,
     );
 
   // Handles the overall functionality of playing and switching songs
@@ -147,48 +162,31 @@ export const AudioProvider = ({ children }) => {
     nextSongs,
     toggleShuffle,
     shuffleIsEnabled,
+    loopIsEnabled,
   } = QueueManager(currentSong, visibleSongs, loadedSongs);
 
   // Handles all audio effects
   const {
-    runEffect,
     addEffect,
     applySavedEffects,
     toggleSpeedup,
     toggleSlowDown,
-    renderAudioWithEffect,
-    handleSpeedChange,
     saveEffects,
+    clearEffects,
     resetCurrentSong,
     effects,
     setEffects,
     savedEffects,
-    setSavedEffects,
-    effectsEnabled,
-    setEffectsEnabled,
     currentEffectCombo,
-    setCurrentEffectCombo,
     currentSpeed,
-    setCurrentSpeed,
     speedupIsEnabled,
-    setSpeedupIsEnabled,
     slowDownIsEnabled,
-    setSlowDownIsEnabled,
   } = AudioEffects(
     currentSong,
-    fileLocation,
-    onSongEnded,
     visibleSongs,
     currentSongId,
-    startLoading,
-    finishLoading,
-    downloadAudio,
-    handleTempSongSaved,
-    initCurrentSong,
     DEFAULT_SPEEDUP,
     DEFAULT_SLOWDOWN,
-    getCurrentAudioBuffer,
-    loadingQueue
   );
 
   // Handles playlists
@@ -220,68 +218,93 @@ export const AudioProvider = ({ children }) => {
     setVideoTime(newVideoTime);
   };
 
-  // ! I can put this in AudioEffects.js and it will work properly.
-  // Current song changed! Update our variables
-  // Essentially create the new song :)
+  // Current song changed — just point the audio element at the new file.
+  // The live effects chain stays wired and automatically applies to whatever is playing.
   useEffect(() => {
-    console.error('SONG CHANGED');
-    // ? Can we do something here so if this is null, we never would even end up here
+    console.error('SONG CHANGED TO ', currentSongId);
     if (currentSongId === null) return;
-
-    // TODO If we are on a non songpage, spotify playlist for example, and the song ends, visibleSongs will be []
-    // visibleSongs should NOT BE DEPENDENT on what screen is showing
-    // Shouldn't need once I implement
-    // if (!visibleSongs[currentSongId]) return;
+    if (!loadedSongs[currentSongId]) return;
 
     startLoading();
 
-    /* Update the new file location */
-    // We need to fix some characters. Unfortunatley we cant use encodeURIComponent() because
-    // setting the src has its own encode :(
-    // So we have to manually fix these here
     fileLocation = loadedSongs[currentSongId].file;
-    fileLocation = fileLocation.replace(/[#\$]/g, function (match) {
-      // TODO This is used in multiple spots...
-      if (match === '#') {
-        return '%23';
-      } else {
-        return '$';
-      }
-    });
+    fileLocation = fileLocation.replace(/[#\$]/g, (match) =>
+      match === '#' ? '%23' : '$'
+    );
     console.error('SETTING FILE LOCATION TO : ' + fileLocation);
-
-    /* If effects are enabled, apply them to the new song */
-    if (effectsEnabled) {
-      applySavedEffects(currentEffectCombo);
-      return;
-    }
-
-    /* If speed is changed, edit the song first and then play */
-    if (speedupIsEnabled) {
-      // handleSpeedChange(DEFAULT_SPEEDUP);
-      addEffect('speed', DEFAULT_SPEEDUP);
-      return;
-    } else if (slowDownIsEnabled) {
-      // handleSpeedChange(DEFAULT_SLOWDOWN);
-      addEffect('speed', DEFAULT_SLOWDOWN);
-      return;
-    }
 
     currentSong.src = fileLocation;
 
-    /* (Re)Initializes the current song */
+    /* Restore speed for the new song (non-speed effects apply automatically via the live chain) */
+    if (speedupIsEnabled) {
+      addEffect('speed', DEFAULT_SPEEDUP);
+    } else if (slowDownIsEnabled) {
+      addEffect('speed', DEFAULT_SLOWDOWN);
+    } else if (currentSpeed !== 1) {
+      currentSong.playbackRate = currentSpeed;
+      currentSong.defaultPlaybackRate = currentSpeed;
+    }
+
     initCurrentSong();
-
-    // setCurrentSong(currentSong);
-
     finishLoading();
+
+    if ('mediaSession' in navigator) {
+      const song = loadedSongs[currentSongId];
+      const artwork = song?.albumImage
+        ? [{ src: `file:///${song.albumImage.replace(/\\/g, '/')}`, type: 'image/jpeg' }]
+        : [];
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: song?.title ?? '',
+        artist: song?.artist ?? '',
+        album: song?.album ?? '',
+        artwork,
+      });
+    }
   }, [currentSongId]);
+
+  /* Media key IPC + navigator.mediaSession action handlers */
+  useEffect(() => {
+    const handlePlayPause = () => { if (isPlaying) pauseAudio(); else playAudio(); };
+    const r1 = window.electron.ipcRenderer.on('MEDIA_PLAY_PAUSE', handlePlayPause);
+    const r2 = window.electron.ipcRenderer.on('MEDIA_NEXT_TRACK', playNextSong);
+    const r3 = window.electron.ipcRenderer.on('MEDIA_PREV_TRACK', playPreviousSong);
+    const r4 = window.electron.ipcRenderer.on('MEDIA_STOP', pauseAudio);
+
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.setActionHandler('play', playAudio);
+      navigator.mediaSession.setActionHandler('pause', pauseAudio);
+      navigator.mediaSession.setActionHandler('nexttrack', playNextSong);
+      navigator.mediaSession.setActionHandler('previoustrack', playPreviousSong);
+      navigator.mediaSession.setActionHandler('stop', pauseAudio);
+    }
+
+    return () => { r1?.(); r2?.(); r3?.(); r4?.(); };
+  }, [isPlaying, playAudio, pauseAudio, playNextSong, playPreviousSong]);
+
+  /* Keep isPlaying in sync with the actual audio element state */
+  useEffect(() => {
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+    currentSong.addEventListener('play', onPlay);
+    currentSong.addEventListener('pause', onPause);
+    return () => {
+      currentSong.removeEventListener('play', onPlay);
+      currentSong.removeEventListener('pause', onPause);
+    };
+  }, []);
 
   /* When the songs first load, we want all songs to be shown */
   const initialSongLoad = (songs) => {
     setLoadedSongs(songs);
     setVisibleSongs(songs);
     setInitSongsLoading(false);
+  };
+
+  /* Called when a new directory is selected — clears old songs and shows loading */
+  const startSongsLoading = () => {
+    setInitSongsLoading(true);
+    setVisibleSongs({});
+    setLoadedSongs({});
   };
 
   window.electron.ipcRenderer.on('GRAB_SONGS', (retrievedSongs) => {
@@ -294,15 +317,18 @@ export const AudioProvider = ({ children }) => {
    * @param {Audio Object} song
    */
   const addSong = (song) => {
-    loadedSongs[song.id] = song;
-    setLoadedSongs(loadedSongs);
+    const updatedSongs = { ...loadedSongs, [song.id]: song };
+    setLoadedSongs(updatedSongs);
+    setVisibleSongs(updatedSongs);
   };
 
   return (
     <AudioContext.Provider
       value={{
         initialSongLoad,
+        startSongsLoading,
         loadingQueue,
+        clearEffects,
         resetCurrentSong,
         loadedSongs,
         visibleSongs,
@@ -337,7 +363,24 @@ export const AudioProvider = ({ children }) => {
         toggleSlowDown,
         speedupIsEnabled,
         slowDownIsEnabled,
-        handleSongExport,
+        handleSongExport: async () => {
+          const nonSpeedEffects = Object.entries(effects).filter(([name]) => name !== 'speed');
+          if (nonSpeedEffects.length > 0) {
+            // Render all active effects offline first, then export the result
+            const audioBuffer = await getCurrentAudioBuffer(fileLocation);
+            if (audioBuffer) {
+              const rendered = await renderAudioWithAllEffects(audioBuffer, effects);
+              downloadAudio(rendered);
+              const tempPath = await new Promise((resolve) => {
+                window.electron.ipcRenderer.once('TEMP_SONG_SAVED', (outputPath) => resolve(outputPath));
+              });
+              const result = await handleSongExport(currentSpeed, tempPath);
+              window.electron.ipcRenderer.sendMessage('DELETE_TEMP_SONG');
+              return result;
+            }
+          }
+          return handleSongExport(currentSpeed);
+        },
         addSong,
         playlists,
         setPlaylists,
@@ -347,6 +390,7 @@ export const AudioProvider = ({ children }) => {
         nextSongs,
         toggleShuffle,
         shuffleIsEnabled,
+        loopIsEnabled,
         togglePopup,
         setTogglePopup,
       }}

@@ -3,7 +3,7 @@ import React, { useState, useImperativeHandle, useEffect } from 'react';
 import Knob from '../Knob';
 
 const EQ = React.forwardRef(({ interpolateValue, addEffect }, ref) => {
-  const [eqValues, setEqValues] = useState([1, 1, 1]);
+  const [eqValues, setEqValues] = useState([0, 0, 0]);
   const [eqKnobStyles, setEqKnobStyles] = useState({
     degrees: 260,
     color: true,
@@ -59,21 +59,21 @@ const EQ = React.forwardRef(({ interpolateValue, addEffect }, ref) => {
       <div className="speed-body">
         <Knob
           customProps={{ ...eqKnobStyles, value: eqKnobStyles.eq.low }}
+          knobValue={eqKnobStyles.eq.low}
           onChange={(val) => updateEqValue('low', val)}
         />
         <p>LOW: {eqKnobStyles.eq.low}</p>
 
         <Knob
           customProps={{ ...eqKnobStyles, value: eqKnobStyles.eq.mid }}
+          knobValue={eqKnobStyles.eq.mid}
           onChange={(val) => updateEqValue('mid', val)}
         />
         <p>MID: {eqKnobStyles.eq.mid}</p>
 
         <Knob
-          customProps={{
-            ...eqKnobStyles,
-            value: eqKnobStyles.eq.high,
-          }}
+          customProps={{ ...eqKnobStyles, value: eqKnobStyles.eq.high }}
+          knobValue={eqKnobStyles.eq.high}
           onChange={(val) => updateEqValue('high', val)}
         />
         <p>HIGH: {eqKnobStyles.eq.high}</p>

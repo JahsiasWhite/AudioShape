@@ -4,8 +4,7 @@
 }
 
 .song-list-header {
-  /* height: 10%; */
-  font-size: 100px;
+  font-size: 60px;
   display: flex;
   align-items: center;
   margin-top: 10px;
@@ -24,20 +23,19 @@
 
 .empty-message label {
   display: inline-block;
-  background-color: #007bff;
+  background-color: var(--color-button);
   color: var(--color-text);
   border: none;
   padding: 8px 20px;
   border-radius: 5px;
   cursor: pointer;
-  transition: background-color 0.3s ease-in-out;
+  transition: opacity 0.2s;
 }
 
 .empty-message label:hover {
-  background-color: #0056b3;
+  opacity: 0.8;
 }
 
-/* Hide the input element */
 #folderInput {
   display: none;
 }
@@ -62,28 +60,30 @@
 }
 
 .list-item {
-  padding: 10px;
-  /* border-bottom: 1px solid #ccc; */
+  padding: 4px 10px;
   display: flex;
   align-items: center;
   position: relative;
   border-radius: 5px;
+  transition: background 0.15s;
 }
 
 .list-item:hover {
-  background-color: rgba(1, 1, 1, 0.2);
+  background-color: rgba(255, 255, 255, 0.04);
 }
 
 .list-image {
-  height: 70px;
-  width: 70px;
+  height: var(--row-image-size);
+  width: var(--row-image-size);
+  border-radius: 4px;
   margin-right: 10px;
 }
 
 .list-image-header {
-  height: 200px;
-  width: 200px;
+  height: 120px;
+  width: 120px;
   margin-right: 10px;
+  border-radius: 6px;
 }
 
 .song-details {
@@ -97,7 +97,11 @@
 }
 
 .song-title {
-  font-size: 25px;
+  font-size: 18px;
+}
+
+.song-downloaded {
+  color: var(--color-button);
 }
 
 .header-color {
@@ -105,21 +109,26 @@
 }
 
 .highlighted {
-  color: var(--color-button-secondary);
-  background-color: rgba(1, 1, 1, 0.5);
+  color: var(--color-accent);
+  background-color: rgba(0, 200, 255, 0.06);
 }
 
 .song-duration {
   display: flex;
   flex: auto;
   justify-content: flex-end;
-  font-size: 16px;
-  color: var(--color-text);
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.spotify-song-duration {
+  flex: auto;
+  justify-content: flex-end;
+  font-size: 14px;
 }
 
 .right-side {
   display: flex;
-  /* flex: auto; */
   justify-content: flex-end;
   align-items: center;
   margin-left: 10px;

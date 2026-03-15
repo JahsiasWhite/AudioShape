@@ -13,10 +13,12 @@ jobs:
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v1
         with:
-          node-version: 14
+          node-version: 20
 
       - name: Install dependencies
         run: npm install
+        env:
+          YOUTUBE_DL_SKIP_DOWNLOAD: true
 
       - name: Install jest
         run: npm install jest

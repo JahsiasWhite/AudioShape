@@ -5,7 +5,7 @@ const SpeedupButtonSVG = ({ speedupIsEnabled, onClick }) => {
     <svg
       className="speedup-button"
       //   fill="#e76f51"
-      fill={speedupIsEnabled ? '#316baa' : 'white'}
+      fill={speedupIsEnabled ? '#316baa' : 'var(--color-text)'}
       width="25px"
       height="25px"
       viewBox="0 0 256 256"

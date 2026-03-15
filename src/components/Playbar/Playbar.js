@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './playbar.css';
 
 import CenterPlaybar from './CenterPlaybar';
-import FullscreenSVG from './Fullscreen.svg';
+import FullscreenButtonSVG from './FullscreenButtonSVG';
 import VolumeControl from './VolumeControl/VolumeControl'; // ! I don't know if I like this name
 import Queue from './Queue/Queue';
 
@@ -17,6 +17,7 @@ function Playbar({ toggleFullscreen }) {
     currentSongId,
     toggleShuffle,
     shuffleIsEnabled,
+    loopIsEnabled,
     loadingQueue,
     effects,
     setVisibleSongs,
@@ -27,11 +28,11 @@ function Playbar({ toggleFullscreen }) {
     'LoadingQueue.length: ',
     loadingQueue.length,
     'Object.keys(effects).length : ',
-    Object.keys(effects).length
+    Object.keys(effects).length,
   );
 
   const shuffleHelper = () => {
-    console.error(shuffleIsEnabled);
+    console.log('shuffleIsEnabled:', shuffleIsEnabled);
     toggleShuffle();
   };
 
@@ -46,6 +47,8 @@ function Playbar({ toggleFullscreen }) {
     <div className="playbar">
       <div className="current-song">
         {/* TODO Clean this up? */}
+        {/* Loading queue - how many more effects to load
+         * effects - how many effects in total should be loaded */}
         {loadedSongs[currentSongId] &&
           loadedSongs[currentSongId].albumImage && (
             <img
@@ -57,10 +60,9 @@ function Playbar({ toggleFullscreen }) {
         {loadingQueue.length > 0 ? (
           <>
             <LoadingSpinner />
-            {-1 * (loadingQueue.length - Object.keys(effects).length) +
-              '/' +
-              Object.keys(effects).length +
-              'effects'}
+            {`${Object.keys(effects).length - loadingQueue.length}/${
+              Object.keys(effects).length
+            } effects`}
           </>
         ) : (
           <div className="song-details">
@@ -83,18 +85,17 @@ function Playbar({ toggleFullscreen }) {
       <div className="playbar-right-side">
         <ShuffleButtonSVG
           shuffleIsEnabled={shuffleIsEnabled}
+          loopIsEnabled={loopIsEnabled}
           onClick={() => {
             shuffleHelper();
           }}
         />
         <Queue />
-        <img
-          className="fullscreen-button"
-          src={FullscreenSVG}
+        <FullscreenButtonSVG
           onClick={() => {
             toggleFullscreen();
           }}
-        ></img>
+        />
         <VolumeControl />
       </div>
     </div>

@@ -9,7 +9,7 @@
   </h4>
 
   <p>
-      <img src="https://img.shields.io/badge/version-0.2.7-green.svg" alt="version"/>
+      <img src="https://img.shields.io/badge/version-0.3.0-green.svg" alt="version"/>
       <img src="https://img.shields.io/badge/OS-windows-blue?style=flat&labelColor=363D44" alt="Operating systems"/>
       <a href="https://github.com/JahsiasWhite/AudioShape/actions/workflows/tests.yml" alt="tests"><img src="https://github.com/JahsiasWhite/AudioShape/actions/workflows/tests.yml/badge.svg" alt="tests"/></a>
   </p>
@@ -17,7 +17,7 @@
 </div>
 
 <p align="center">
-  <img src="images/edit-screen1.png" alt="main screen" width="650">
+  <img src="images/edit-screen.png" alt="main screen" width="650">
 </p
 
 ### Core Features
@@ -50,6 +50,8 @@ Go to [releases](https://github.com/JahsiasWhite/AudioShape/releases) and downlo
 This will create a new folder titled 'build'
 
 #### Build App
+
+`npm run react-build`
 
 `npm run electron-build`
 This will create a new folder titled 'dist'. Inside is where the installer.exe is

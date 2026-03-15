@@ -7,19 +7,25 @@
   border-bottom: 1px solid var(--color-accent);
   width: 30%;
   margin-top: 10px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.search-bar:focus-within {
+  opacity: 1;
 }
 
 .search-bar input {
-  flex: 1; /* Allow input to fill remaining space */
+  flex: 1;
   border: none;
   background-color: transparent;
-  font-size: 16px;
+  font-size: 14px;
   outline: none;
-  color: var(--color-text-secondary);
+  color: var(--color-text);
 }
 
 .search-bar input::placeholder {
-  color: inherit;
+  color: var(--color-text-secondary);
   opacity: 0.7;
 }
 

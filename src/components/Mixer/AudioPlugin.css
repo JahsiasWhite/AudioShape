@@ -1,36 +1,33 @@
 .audio-plugin {
   margin: auto;
-
-  /* background-color: rgb(150 98 72); */
-  /* color: rgb(181 197 217); */
   display: flex;
   flex-direction: column;
+  gap: 8px;
 }
 
 .audio-plugin .module-container {
-  /* border: 1px rgb(181 197 217) solid; */
-  border-radius: 10px;
-
-  top: 10px;
+  background: #141418;
+  border: 1px solid #232330;
+  border-radius: 8px;
+  padding: 10px 8px 14px;
   position: relative;
-  margin: auto;
-  width: 90%;
-  min-width: 169px;
+  margin: 0;
+  min-width: 110px;
 }
 
 .header {
-  /* background-color: rgb(181 197 217); */
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
-
   width: 100%;
-  /* color: rgb(150 98 72); */
-  font-size: 40px;
-
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #57576a;
   display: flex;
   align-items: center;
   flex-direction: row;
   justify-content: center;
+  padding-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .speed-body {
@@ -38,101 +35,93 @@
   justify-content: center;
   align-items: center;
   flex-direction: column;
+  gap: 0;
+}
+
+.audio-plugin p {
+  margin: 2px 0 0;
+  font-size: 10px;
+  color: #00c8ff;
+  letter-spacing: 0.8px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
 }
 
 p {
-  margin-top: 15%;
-}
-
-.knob-details {
-  margin-top: 9%;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  width: 23%;
-}
-
-.export-button {
-  background-color: #444;
-  color: #ffffff;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.export-button:hover {
-  background-color: #666;
+  margin-top: 0;
 }
 
 .plugin-button-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 10px;
+  gap: 5px;
+  margin: 3px 8px;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: #50506a;
+  text-transform: uppercase;
 }
 
 .header-button {
   position: absolute;
-  right: 60%;
+  left: 10px;
+  top: 6px;
+  margin: 0;
 }
 
 .synth-button {
-  background-color: #9a9a9a;
-  width: 30px;
-  height: 30px;
+  background: #1c1c28;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  /* margin-top: 5px; */
+  border: 1px solid #323244;
+  cursor: pointer;
+  transition: background 0.12s, box-shadow 0.12s, transform 0.12s;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 2px 5px rgba(0, 0, 0, 0.7);
+}
 
-  transition: all 0.2s linear;
-  box-shadow: -1px 0px 6px rgba(0, 0, 0, 0.5);
-  box-shadow: inset -2px 0 1px 1px rgba(255, 255, 255, 0.2),
-    inset 0 0 8px 8px rgba(128, 128, 128, 0.1),
-    inset -10px 4px 10px 2px rgba(0, 0, 0, 0.05), -4px 2px rgba(0, 0, 0, 0.1),
-    0px 1px 2px rgba(0, 0, 0, 0.05), -1px 2px 2px transparent;
+.synth-button:hover {
+  background: #242438;
+  border-color: #424256;
 }
 
 .synth-button:active {
-  box-shadow: none; /* Remove the shadow when the button is pressed */
-  transform: translateY(2px); /* Push the button down by 2 pixels */
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.7);
+  transform: translateY(1px);
 }
 
 .button-active {
-  /* box-shadow: inset -2px 0 1px 1px rgba(255, 255, 255, 0.2),
-    inset 0 0 8px 8px rgba(128, 128, 128, 0.1),
-    inset -10px 4px 10px 2px rgba(206, 44, 44, 0.05),
-    -1px 1px rgba(0, 0, 0, 0.1); */
-
-  background-color: red;
-  box-shadow: 0px 0px 5px red; /* Add a red glow around the button */
-
-  transform: translateY(2px); /* Push the button down by 2 pixels */
+  background: #aa0000;
+  border-color: #ee2222;
+  box-shadow:
+    0 0 8px rgba(255, 44, 44, 0.75),
+    0 0 2px rgba(255, 44, 44, 1);
+  transform: translateY(1px);
 }
 
 .plugin-settings-container {
   display: flex;
   flex-direction: row-reverse;
-  /* position: absolute; */
-  /* right: 0; */
+  justify-content: flex-start;
+  align-items: center;
+  padding: 4px 2px 8px;
 }
 
 .modifiers-container {
-  /* display: flex;
-  flex: 1;
-  height: 120%;
-  flex-wrap: wrap; */
-  row-gap: 40px;
+  row-gap: 10px;
+  column-gap: 10px;
   display: grid;
   justify-items: stretch;
   grid-auto-flow: row;
-  /* grid-gap: 2rem; */
   grid-template-columns: repeat(3, 1fr);
 }
 
 .inactive-module {
   pointer-events: none;
-  opacity: 0.5;
+  opacity: 0.35;
 }
 
 .unclickable {

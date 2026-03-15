@@ -3,14 +3,18 @@ import React, { useEffect, useState } from 'react';
 import FolderSelection from '../FolderSelection/FolderSelection';
 import './Settings.css';
 import ColorSettings from './ColorSettings';
+import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 function Settings() {
+  const { startSongsLoading } = useAudioPlayer();
+
   const [settings, setSettings] = useState({
     songDirectory: '',
     dataDirectory: '',
     mp4DownloadEnabled: false,
     spotifyEnabled: false,
     colors: {},
+    rowSize: 50,
   });
 
   /**
@@ -28,6 +32,12 @@ function Settings() {
     window.electron.ipcRenderer.on('GET_SETTINGS', (updatedSettings) => {
       setSettings(updatedSettings);
       console.error(updatedSettings);
+      if (updatedSettings.rowSize != null) {
+        document.documentElement.style.setProperty(
+          '--row-image-size',
+          updatedSettings.rowSize + 'px',
+        );
+      }
       window.electron.ipcRenderer.removeAllListeners('GET_SETTINGS');
     });
   };
@@ -51,6 +61,16 @@ function Settings() {
       window.electron.ipcRenderer.sendMessage('GET_LAYOUT_SETTINGS');
   };
 
+  const saveRowSize = (value) => {
+    const newSettings = { ...settings, rowSize: value };
+    setSettings(newSettings);
+    document.documentElement.style.setProperty(
+      '--row-image-size',
+      value + 'px',
+    );
+    window.electron.ipcRenderer.sendMessage('SAVE_SETTINGS', newSettings);
+  };
+
   return (
     <div className="settings">
       <div className="settings-container">
@@ -63,7 +83,7 @@ function Settings() {
           {settings.libraryDirectory}
           {/* Choose Song Directory */}
         </div>
-        <FolderSelection onSettingsUpdate={handleSettingsUpdate} />
+        <FolderSelection onSettingsUpdate={handleSettingsUpdate} onLoadingStart={startSongsLoading} />
 
         <div className="setting-item">
           <strong>Settings Directory:</strong> {settings.dataDirectory}
@@ -78,7 +98,7 @@ function Settings() {
             Toggle showing image in fullscreen view{' '}
           </label>
         </div> */}
-        {/* <div className="setting-item">
+        <div className="setting-item">
           <input
             type="checkbox"
             id="toggleMP4"
@@ -86,7 +106,7 @@ function Settings() {
             onChange={() => saveSettings('mp4DownloadEnabled')}
           />
           <label htmlFor="toggleMP4"> Download songs as MP4s </label>
-        </div> */}
+        </div>
         <div className="setting-item">
           <input
             type="checkbox"
@@ -95,6 +115,33 @@ function Settings() {
             onChange={() => saveSettings('spotifyEnabled')}
           />
           <label htmlFor="spotifyEnabled"> Enable Spotify </label>
+        </div>
+
+        <div className="setting-item">
+          <label htmlFor="rowSize">
+            Song Row Size: {settings.rowSize ?? 50}px
+          </label>
+          <br />
+          <input
+            type="range"
+            id="rowSize"
+            className="row-size-slider"
+            min="30"
+            max="150"
+            step="10"
+            list="rowSizeTicks"
+            value={settings.rowSize ?? 50}
+            onChange={(e) => saveRowSize(Number(e.target.value))}
+          />
+          <datalist id="rowSizeTicks">
+            <option value="30" />
+            <option value="50" />
+            <option value="70" />
+            <option value="90" />
+            <option value="110" />
+            <option value="130" />
+            <option value="150" />
+          </datalist>
         </div>
 
         <ColorSettings />

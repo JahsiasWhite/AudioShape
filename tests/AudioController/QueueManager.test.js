@@ -15,7 +15,7 @@ describe('QueueManager', () => {
     };
 
     const { result } = renderHook(() =>
-      QueueManager(mockCurrentSong, mockVisibleSongs)
+      QueueManager(mockCurrentSong, mockVisibleSongs),
     );
 
     // Trigger a song selection
@@ -107,7 +107,7 @@ describe('QueueManager', () => {
     const loadedSongs = ['test'];
 
     const { result } = renderHook(() =>
-      QueueManager(mockCurrentSong, mockVisibleSongs, loadedSongs)
+      QueueManager(mockCurrentSong, mockVisibleSongs, loadedSongs),
     );
 
     // Set initial state
@@ -138,7 +138,7 @@ describe('QueueManager', () => {
     const loadedSongs = [];
 
     const { result } = renderHook(() =>
-      QueueManager(mockCurrentSong, mockVisibleSongs, loadedSongs)
+      QueueManager(mockCurrentSong, mockVisibleSongs, loadedSongs),
     );
 
     // Trigger playing the next song
@@ -157,18 +157,21 @@ describe('QueueManager', () => {
     };
 
     const mockVisibleSongs = {
-      111.111: { id: 111.111, title: 'Song 1' },
-      222.222: { id: 222.222, title: 'Song 2' },
-      333.333: { id: 333.333, title: 'Song 3' },
+      'C:/Users/User/Music/Song 1.mp3': {
+        id: 'C:/Users/User/Music/Song 1.mp3',
+        title: 'Song 1',
+      },
+      222.222: { id: '222.222', title: 'Song 2' },
+      333.333: { id: '333.333', title: 'Song 3' },
     };
 
     const { result } = renderHook(() =>
-      QueueManager(mockCurrentSong, mockVisibleSongs, mockVisibleSongs)
+      QueueManager(mockCurrentSong, mockVisibleSongs, mockVisibleSongs),
     );
 
     // Set initial state
     act(() => {
-      result.current.handleSongSelect(111.111);
+      result.current.handleSongSelect('C:/Users/User/Music/Song 1.mp3');
     });
 
     // Trigger playing the next song
@@ -178,24 +181,27 @@ describe('QueueManager', () => {
 
     // Assertions
     expect(result.current.songQueue).toEqual([]);
-    expect(result.current.currentSongId).toBe(222.222);
+    expect(result.current.currentSongId).toBe('222.222');
     expect(result.current.currentSongIndex).toBe(1); // Assuming 'song2' is at index 1 in mockVisibleSongs
   });
 
   it('should play the next song when there is no current song', () => {
     const mockVisibleSongs = {
-      111.111: { id: 111.111, title: 'Song 1' },
-      222.222: { id: 222.222, title: 'Song 2' },
-      333.333: { id: 333.333, title: 'Song 3' },
+      'C:/Users/User/Music/Song 1.mp3': {
+        id: 'C:/Users/User/Music/Song 1.mp3',
+        title: 'Song 1',
+      },
+      222.222: { id: '222.222', title: 'Song 2' },
+      333.333: { id: '333.333', title: 'Song 3' },
     };
 
     const { result } = renderHook(() =>
-      QueueManager(undefined, mockVisibleSongs, mockVisibleSongs)
+      QueueManager(undefined, mockVisibleSongs, mockVisibleSongs),
     );
 
     // Set initial state
     act(() => {
-      result.current.handleSongSelect(111.111);
+      result.current.handleSongSelect('C:/Users/User/Music/Song 1.mp3');
     });
 
     // Trigger playing the next song
@@ -205,7 +211,7 @@ describe('QueueManager', () => {
 
     // Assertions
     // expect(result.current.songQueue).toEqual(['song2', 'song3']);
-    expect(result.current.currentSongId).toBe(222.222);
+    expect(result.current.currentSongId).toBe('222.222');
     expect(result.current.currentSongIndex).toBe(1); // Assuming 'song2' is at index 1 in mockVisibleSongs
   });
 
@@ -222,7 +228,7 @@ describe('QueueManager', () => {
     };
 
     const { result } = renderHook(() =>
-      QueueManager(mockCurrentSong, mockVisibleSongs, mockVisibleSongs)
+      QueueManager(mockCurrentSong, mockVisibleSongs, mockVisibleSongs),
     );
 
     // Set initial state
@@ -250,7 +256,7 @@ describe('QueueManager', () => {
     };
 
     const { result } = renderHook(() =>
-      QueueManager(undefined, mockVisibleSongs)
+      QueueManager(undefined, mockVisibleSongs),
     );
 
     // Set initial state
@@ -277,7 +283,7 @@ describe('QueueManager', () => {
     };
 
     const { result } = renderHook(() =>
-      QueueManager(undefined, mockVisibleSongs)
+      QueueManager(undefined, mockVisibleSongs),
     );
 
     // Set initial state
@@ -311,7 +317,7 @@ describe('QueueManager', () => {
     const loadedSongs = ['test'];
 
     const { result } = renderHook(() =>
-      QueueManager(mockCurrentSong, mockVisibleSongs, loadedSongs)
+      QueueManager(mockCurrentSong, mockVisibleSongs, loadedSongs),
     );
 
     // Set initial state
@@ -346,7 +352,7 @@ describe('QueueManager', () => {
     };
 
     const { result } = renderHook(() =>
-      QueueManager(mockCurrentSong, mockVisibleSongs, mockVisibleSongs)
+      QueueManager(mockCurrentSong, mockVisibleSongs, mockVisibleSongs),
     );
 
     // Set initial state
@@ -360,7 +366,7 @@ describe('QueueManager', () => {
     });
 
     // Assertions
-    expect(result.current.currentSongId).toBe(111);
+    expect(result.current.currentSongId).toBe('111');
     expect(result.current.currentSongIndex).toBe(0);
   });
 });

@@ -3,15 +3,8 @@
 }
 
 .centered-content {
-  /* display: flex; */
-  /* justify-content: center; */
-  /* align-items: baseline; */
-  /* flex-direction: column; */
-
   margin-right: 20px;
   margin-left: 20px;
-
-  /* width: 100%; */
 }
 
 .centered-content > * {
@@ -19,37 +12,33 @@
   height: 30px;
   margin-top: 20%;
   border-radius: 5px;
-
-  /* margin-left: 5px; */
   margin-right: 40px;
-
   display: flex;
   justify-content: center;
   flex-direction: column;
-
   cursor: pointer;
+  transition: background 0.15s;
+  border-left: 2px solid transparent;
 }
 
 .centered-content > *:hover {
-  background-color: var(--color-button);
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .tab-selected {
-  background-color: var(--color-button);
+  background-color: rgba(0, 200, 255, 0.08);
+  border-left: 2px solid var(--color-accent) !important;
 }
 
 .centered-content .icon {
   width: 20px;
   height: 20px;
-
   margin-right: 5px;
 }
 
-/* Some icons must be different */
 .force {
   width: 25px;
   height: 21px;
-
   margin-right: 5px;
 }
 
@@ -57,14 +46,12 @@
   display: flex;
   align-items: center;
   color: var(--color-text);
-
   margin-left: 5px;
 }
 
-/* Responsive styles */
 @media screen and (max-width: 768px) {
   .layout-bar {
-    width: 60px; /* Smaller width for mobile screens */
+    width: 60px;
   }
 
   .centered-content {
@@ -73,16 +60,16 @@
   }
 
   .button-container span {
-    display: none; /* Hide text on mobile */
+    display: none;
   }
 
   .icon,
   .force {
-    margin-right: 0; /* Remove margin since text is hidden */
+    margin-right: 0;
   }
 
   .button-container {
-    justify-content: center; /* Center the icons */
+    justify-content: center;
     margin-left: 0;
   }
 }

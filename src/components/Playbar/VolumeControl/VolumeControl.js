@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './VolumeControl.css';
 
-import VolumeMaxSVG from './volume-max.svg';
-import VolumeLowSVG from './volume-low.svg';
-import VolumeQuietSVG from './volume-quiet.svg';
+import { ReactComponent as VolumeMaxSVG } from './volume-max.svg';
+import { ReactComponent as VolumeLowSVG } from './volume-low.svg';
+import { ReactComponent as VolumeQuietSVG } from './volume-quiet.svg';
 
 import { useAudioPlayer } from '../../../AudioController/AudioContext';
 
@@ -41,17 +41,13 @@ function VolumeControl() {
 
   return (
     <div className="volume-control">
-      <img
-        className="volume-icon"
-        src={
-          localVolume > 60
-            ? VolumeMaxSVG
-            : localVolume > 0
-            ? VolumeLowSVG
-            : VolumeQuietSVG
-        }
-        onClick={toggleMute}
-      ></img>
+      {localVolume > 60 ? (
+        <VolumeMaxSVG className="volume-icon" onClick={toggleMute} />
+      ) : localVolume > 0 ? (
+        <VolumeLowSVG className="volume-icon" onClick={toggleMute} />
+      ) : (
+        <VolumeQuietSVG className="volume-icon" onClick={toggleMute} />
+      )}
       <input
         type="range"
         min="0"

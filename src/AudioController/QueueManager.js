@@ -1,4 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+
+// If the current song has played for more than this many seconds,
+// going to the previous song will restart this song instead of going to the previous song
+const TOTAL_SECONDS_TO_RESTART = 3;
 
 export const QueueManager = (currentSong, visibleSongs, loadedSongs) => {
   const [currentSongId, setCurrentSongId] = useState(null);
@@ -6,7 +10,21 @@ export const QueueManager = (currentSong, visibleSongs, loadedSongs) => {
   const [songQueue, setQueue] = useState([]);
   const [nextSongs, setNextSongs] = useState([]);
   const [history, setHistory] = useState([]);
-  const [shuffleIsEnabled, setShuffleIsEnabled] = useState(false);
+  // playMode cycles: 'normal' → 'shuffle' → 'loop' → 'normal'
+  const [playMode, setPlayMode] = useState('normal');
+  const shuffleIsEnabled = playMode === 'shuffle';
+  const loopIsEnabled = playMode === 'loop';
+
+  // Populate nextSongs when songs first load (so the queue tab isn't empty)
+  useEffect(() => {
+    if (
+      visibleSongs &&
+      Object.keys(visibleSongs).length > 0 &&
+      currentSongId === null
+    ) {
+      setNextSongs(Object.keys(visibleSongs));
+    }
+  }, [visibleSongs]);
 
   // Make playNextSong a useCallback so we can reference it in onSongEnded
   const playNextSong = useCallback(() => {
@@ -34,12 +52,12 @@ export const QueueManager = (currentSong, visibleSongs, loadedSongs) => {
 
           if (nextSongId === undefined) {
             nextSongId = Object.keys(visibleSongs)[0];
-            handleSongSelect(parseFloat(nextSongId));
+            handleSongSelect(nextSongId);
             return remainingNextSongs;
           }
 
           setCurrentSongIndex(Object.keys(loadedSongs).indexOf(nextSongId)); // TODO: Not loadedSongs or visibleSongs but visibleSongs when the player selected play on a song
-          setCurrentSongId(parseFloat(nextSongId));
+          setCurrentSongId(nextSongId);
           return remainingNextSongs;
         });
       }
@@ -57,7 +75,7 @@ export const QueueManager = (currentSong, visibleSongs, loadedSongs) => {
       console.error('INSIDE');
 
       const index = Object.keys(visibleSongs).findIndex(
-        (key) => visibleSongs[key].id === songId
+        (key) => visibleSongs[key].id === songId,
       );
 
       setCurrentSongId(songId);
@@ -74,10 +92,17 @@ export const QueueManager = (currentSong, visibleSongs, loadedSongs) => {
       }
       setNextSongs(upNext);
     },
-    [visibleSongs, shuffleIsEnabled]
+    [visibleSongs, shuffleIsEnabled],
   );
 
   const playPreviousSong = useCallback(() => {
+    // Should just restart the current song if it has been playing for more than a few seconds
+    if (currentSong && currentSong.currentTime > TOTAL_SECONDS_TO_RESTART) {
+      currentSong.currentTime = 0;
+      currentSong.play();
+      return;
+    }
+
     if (currentSong) {
       currentSong.removeEventListener('ended', onSongEnded);
     }
@@ -138,24 +163,38 @@ export const QueueManager = (currentSong, visibleSongs, loadedSongs) => {
     });
   }, []);
 
+  // Cycles: normal → shuffle → loop → normal
   const toggleShuffle = useCallback(() => {
-    setShuffleIsEnabled((current) => {
-      if (current) {
-        setNextSongs(Object.keys(visibleSongs).slice(currentSongIndex + 1));
-        return false;
+    setPlayMode((current) => {
+      if (current === 'normal') {
+        // Enter shuffle
+        const upNext = Object.keys(visibleSongs).filter(
+          (key) => key !== currentSongId,
+        );
+        for (let i = upNext.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [upNext[i], upNext[j]] = [upNext[j], upNext[i]];
+        }
+        setNextSongs(upNext);
+        currentSong.loop = false;
+        return 'shuffle';
       }
 
-      const upNext = Object.keys(visibleSongs).filter(
-        (key) => parseFloat(key) !== currentSongId
-      );
-      for (let i = upNext.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [upNext[i], upNext[j]] = [upNext[j], upNext[i]];
+      if (current === 'shuffle') {
+        // Enter loop
+        const idx = currentSongIndex ?? -1;
+        setNextSongs(Object.keys(visibleSongs).slice(idx + 1));
+        currentSong.loop = true;
+        return 'loop';
       }
-      setNextSongs(upNext);
-      return true;
+
+      // Back to normal
+      currentSong.loop = false;
+      const idx = currentSongIndex ?? -1;
+      setNextSongs(Object.keys(visibleSongs).slice(idx + 1));
+      return 'normal';
     });
-  }, [visibleSongs, currentSongIndex, currentSongId]);
+  }, [currentSong, visibleSongs, currentSongIndex, currentSongId]);
 
   return {
     handleSongSelect,
@@ -171,5 +210,6 @@ export const QueueManager = (currentSong, visibleSongs, loadedSongs) => {
     nextSongs,
     toggleShuffle,
     shuffleIsEnabled,
+    loopIsEnabled,
   };
 };

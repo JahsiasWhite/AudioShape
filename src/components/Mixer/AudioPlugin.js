@@ -18,6 +18,7 @@ import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 const AudioPlugin = () => {
   const [showSavePopup, setShowSavePopup] = useState(false);
+  const [exportStatus, setExportStatus] = useState(null); // null | 'exporting' | 'success' | 'error'
 
   // References to all child components
   // Required so we can use the reset button
@@ -42,7 +43,8 @@ const AudioPlugin = () => {
   const {
     addEffect,
     effects,
-    resetCurrentSong,
+    setEffects,
+    clearEffects,
     currentEffectCombo,
     savedEffects,
     saveEffects,
@@ -75,6 +77,14 @@ const AudioPlugin = () => {
   });
 
   const [multiplier, setMultiplier] = useState(INIT_MULTIPLIER);
+
+  // Sync speed knob position with currentSpeed changes from audio context
+  useEffect(() => {
+    // Only update if currentSpeed has changed
+    const newSpeedKnobValue = initialKnobValues.speedKnobValue * currentSpeed;
+    setKnobs((prevKnobs) => ({ ...prevKnobs, speed: newSpeedKnobValue }));
+    setMultiplier(currentSpeed);
+  }, [currentSpeed, savedEffects]);
 
   /* Styles for the different knobs */
   const speedKnobStyles = {
@@ -132,10 +142,11 @@ const AudioPlugin = () => {
     // Round to two decimal places
     const roundedMappedValue = parseFloat(mappedValue.toFixed(2));
 
-    // Make sure the input value isn't outside of the range
-    // This really shouldn't happen but the sliders are annoying sometimes
-    if (roundedMappedValue < range[0]) return range[0];
-    if (roundedMappedValue > range[1]) return range[1];
+    // Clamp to the range — use min/max so inverted ranges (e.g. [0, -20]) work correctly
+    const clampMin = Math.min(range[0], range[1]);
+    const clampMax = Math.max(range[0], range[1]);
+    if (roundedMappedValue < clampMin) return clampMin;
+    if (roundedMappedValue > clampMax) return clampMax;
 
     return roundedMappedValue;
   };
@@ -165,7 +176,7 @@ const AudioPlugin = () => {
     const mappedValue = interpolateValue(
       reverbRange,
       newValue,
-      reverbKnobStyles
+      reverbKnobStyles,
     );
 
     setKnobs((prevKnobs) => ({ ...prevKnobs, ['reverbWetness']: newValue }));
@@ -199,13 +210,8 @@ const AudioPlugin = () => {
   };
 
   const resetSong = () => {
-    console.log('Resetting song...');
-
-    // Reset knob values to their initial values
     resetKnobValues();
-
-    // Restart the current playing song
-    resetCurrentSong();
+    clearEffects();
   };
 
   /**
@@ -213,7 +219,8 @@ const AudioPlugin = () => {
    */
   const resetKnobValues = () => {
     setKnobs({
-      speed: initialKnobValues.speedKnobValue * INIT_MULTIPLIER,
+      speed: initialKnobValues.speedKnobValue,
+      reverbIsActive: false,
       reverbWetness: initialKnobValues.reverbKnobValue,
       delay: initialKnobValues.delayKnobValue,
       bitCrusher: initialKnobValues.bitCrusherKnobValue,
@@ -221,6 +228,8 @@ const AudioPlugin = () => {
     });
     setMultiplier(1);
     eqRef.current.resetEq();
+    autoWahRef.current.resetAutoWah();
+    chorusRef.current.resetChorus();
   };
 
   return (
@@ -232,10 +241,28 @@ const AudioPlugin = () => {
           Export
           <div
             className="synth-button"
-            onClick={() => {
-              handleSongExport();
+            onClick={async () => {
+              if (exportStatus === 'exporting') return;
+              setExportStatus('exporting');
+              try {
+                await handleSongExport();
+                setExportStatus('success');
+              } catch {
+                setExportStatus('error');
+              } finally {
+                setTimeout(() => setExportStatus(null), 3000);
+              }
             }}
           ></div>
+          {exportStatus === 'exporting' && (
+            <span style={{ fontSize: '10px', color: '#aaa' }}>Saving...</span>
+          )}
+          {exportStatus === 'success' && (
+            <span style={{ fontSize: '10px', color: '#4caf50' }}>Saved!</span>
+          )}
+          {exportStatus === 'error' && (
+            <span style={{ fontSize: '10px', color: '#f44336' }}>Failed</span>
+          )}
         </div>
         <div className="plugin-button-container">
           Save
@@ -280,9 +307,11 @@ const AudioPlugin = () => {
                 className={`synth-button  ${
                   knobs.reverbIsActive ? 'button-active' : ''
                 }`}
-                onClick={() =>
-                  updateKnobValue('reverbIsActive', !knobs.reverbIsActive)
-                }
+                onClick={() => {
+                  const newActive = !knobs.reverbIsActive;
+                  updateKnobValue('reverbIsActive', newActive);
+                  if (newActive) mapValueToReverbWetness(knobs.reverbWetness);
+                }}
               ></div>
             </div>
             <div className={`${knobs.reverbIsActive ? '' : 'inactive-module'}`}>
@@ -296,6 +325,7 @@ const AudioPlugin = () => {
           >
             <Knob
               customProps={reverbKnobStyles}
+              knobValue={knobs.reverbWetness}
               onChange={mapValueToReverbWetness}
             />
             <p>WET: {knobs.reverbWetness}%</p>
@@ -304,7 +334,11 @@ const AudioPlugin = () => {
         <div className="module-container">
           <div className="header">DELAY</div>
           <div className="speed-body">
-            <Knob customProps={delayKnobStyles} onChange={mapValueToDelay} />
+            <Knob
+              customProps={delayKnobStyles}
+              knobValue={knobs.delay}
+              onChange={mapValueToDelay}
+            />
             <p>DELAY: {knobs.delay}s</p>
           </div>
         </div>
@@ -313,6 +347,7 @@ const AudioPlugin = () => {
           <div className="speed-body">
             <Knob
               customProps={bitCrusherKnobStyles}
+              knobValue={knobs.bitCrusher}
               onChange={(val) => updateKnobValue('bitCrusher', val)}
             />
             <p>CRUSH: {knobs.bitCrusher} bit</p>
@@ -323,6 +358,7 @@ const AudioPlugin = () => {
           <div className="speed-body">
             <Knob
               customProps={pitchShiftKnobStyles}
+              knobValue={knobs.pitchShift}
               onChange={(val) => updateKnobValue('pitchShift', val)}
             />
             <p>SHIFT: {knobs.pitchShift}</p>

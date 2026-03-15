@@ -1,10 +1,16 @@
-const { app, BrowserWindow, ipcMain, protocol } = require('electron');
+const {
+  app,
+  BrowserWindow,
+  ipcMain,
+  protocol,
+  globalShortcut,
+} = require('electron');
 
 const path = require('path');
 const fs = require('fs');
 const url = require('url');
+const logger = require('./mainLogger');
 
-// TODO Put these all in one function...
 const {
   SAVE_TEMP_SONG,
   DELETE_TEMP_SONG,
@@ -16,26 +22,49 @@ const {
   SETUP_GET_SONGS,
 } = require('./ipcMain');
 
-// TODO: Use these instead of 'path.join()'. I don't know why I have so many duplicates
-const dataDirectory = path.join(app.getPath('userData'), 'Data'); // Gets the path to the data folder
+// Initialize application constants and file paths
+function initializeAppConstants() {
+  const dataDirectory = path.join(app.getPath('userData'), 'Data');
 
-/* Globals */
-let defaultSettings = JSON.stringify({
-  libraryDirectory: '',
-  loop: 'none',
-  volume: 100,
-  allowRemote: true,
-  mp4DownloadEnabled: false,
-  spotifyEnabled: false,
-  dataDirectory: dataDirectory,
-  attchingExtraDetails: true,
+  const defaultSettings = JSON.stringify({
+    libraryDirectory: '',
+    loop: 'none',
+    volume: 100,
+    allowRemote: true,
+    mp4DownloadEnabled: false,
+    spotifyEnabled: false,
+    dataDirectory: dataDirectory,
+    attchingExtraDetails: true,
+  });
+
+  const settingsFile = path.join(dataDirectory, 'settings.json');
+  const playlistsFile = path.join(dataDirectory, 'playlists.json');
+  const effectCombosFile = path.join(dataDirectory, 'effectCombos.json');
+  const tempSongFolder = path.join(dataDirectory, 'temp-songs');
+
+  return {
+    dataDirectory,
+    defaultSettings,
+    settingsFile,
+    playlistsFile,
+    effectCombosFile,
+    tempSongFolder,
+  };
+}
+
+const {
+  dataDirectory,
+  defaultSettings,
+  settingsFile,
+  playlistsFile,
+  effectCombosFile,
+  tempSongFolder,
+} = initializeAppConstants();
+
+logger.init(dataDirectory);
+ipcMain.on('LOG', (_event, { ts, level, msg }) => {
+  logger[level === 'ERROR' ? 'error' : 'warn'](`[renderer] ${msg}`);
 });
-
-/* Create the files to save settings */
-const settingsFile = dataDirectory + '\\settings.json';
-const playlistsFile = dataDirectory + '\\playlists.json';
-const effectCombosFile = dataDirectory + '\\effectCombos.json';
-const tempSongFolder = dataDirectory + '\\temp-songs';
 if (!fs.existsSync(dataDirectory)) {
   fs.mkdirSync(dataDirectory);
 }
@@ -75,6 +104,9 @@ app.on('ready', function () {
     // Hides the toolbar but it can still be reactived by pressing 'alt'
     autoHideMenuBar: true,
 
+    // Remove the native title bar; we use a custom one in React
+    frame: false,
+
     webPreferences: {
       // Set the path of an additional "preload" script that can be used to
       // communicate between node-land and browser-land.
@@ -97,7 +129,7 @@ app.on('ready', function () {
   // In development, set it to localhost to allow live/hot-reloading.
   const appURL = app.isPackaged
     ? url.format({
-        pathname: path.join(__dirname, 'index.html'),
+        pathname: path.join(__dirname, '..', 'build', 'index.html'),
         protocol: 'file:',
         slashes: true,
       })
@@ -119,83 +151,81 @@ app.on('ready', function () {
   SETUP_EFFECTS(mainWindow, effectCombosFile);
   SETUP_SONG_DOWNLOADS(mainWindow);
 
+  /* Window control handlers for the custom title bar */
+  ipcMain.on('WINDOW_MINIMIZE', () => mainWindow.minimize());
+  ipcMain.on('WINDOW_MAXIMIZE', () => {
+    if (mainWindow.isMaximized()) mainWindow.unmaximize();
+    else mainWindow.maximize();
+  });
+  ipcMain.on('WINDOW_CLOSE', () => mainWindow.close());
+
   /********************************************** */
   /**
    * Starts the spotify login with the user id
    */
 
+  const crypto = require('crypto');
   var spotify_client_id = '0f4a9e39a958421b8650f7a9142baefd';
   const redirectUri = 'myapp://oauth-callback';
   var SpotifyWebApi = require('spotify-web-api-node');
   var spotifyApi;
+  var loginWindowRef = null;
+  var pkceCodeVerifier = null;
 
-  function createSpotifyClient(code) {
-    // credentials are optional
+  function generateCodeVerifier() {
+    return crypto.randomBytes(32).toString('base64url');
+  }
+
+  function generateCodeChallenge(verifier) {
+    return crypto.createHash('sha256').update(verifier).digest('base64url');
+  }
+
+  function createSpotifyClient() {
     spotifyApi = new SpotifyWebApi({
       clientId: spotify_client_id,
-      // clientSecret: spotify_client_secret,
       redirectUri: redirectUri,
     });
-    console.log('SETTING WITH : ', code);
 
-    // Create the authorization URL
     const scopes = ['streaming', 'user-read-email', 'user-read-private'];
     const state = generateRandomString(16);
-    const showDialog = true;
-    const responseType = 'token';
-    var authorizeURL = spotifyApi.createAuthorizeURL(
-      scopes,
-      state,
-      showDialog,
-      responseType
-    );
+    pkceCodeVerifier = generateCodeVerifier();
+    const codeChallenge = generateCodeChallenge(pkceCodeVerifier);
+
+    const authorizeURL =
+      `https://accounts.spotify.com/authorize?` +
+      `client_id=${spotify_client_id}&` +
+      `response_type=code&` +
+      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+      `scope=${encodeURIComponent(scopes.join(' '))}&` +
+      `state=${encodeURIComponent(state)}&` +
+      `show_dialog=true&` +
+      `code_challenge=${codeChallenge}&` +
+      `code_challenge_method=S256`;
+
     console.log('URL  IS : ', authorizeURL);
     return authorizeURL;
+  }
 
-    // Retrieve an access token and a refresh token
-    // spotifyApi.authorizationCodeGrant(code).then(
-    //   function (data) {
-    //     console.log('The token expires in ' + data.body['expires_in']);
-    //     console.log('The access token is ' + data.body['access_token']);
-    //     console.log('The refresh token is ' + data.body['refresh_token']);
+  async function exchangeCodeForToken(code) {
+    const body = new URLSearchParams({
+      grant_type: 'authorization_code',
+      code: code,
+      redirect_uri: redirectUri,
+      client_id: spotify_client_id,
+      code_verifier: pkceCodeVerifier,
+    });
 
-    //     // Set the access token on the API object to use it in later calls
-    //     spotifyApi.setAccessToken(data.body['access_token']);
-    //     spotifyApi.setRefreshToken(data.body['refresh_token']);
+    const response = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+    });
 
-    //     // getMe();
-    //     getUserPlaylists(code);
-    //   },
-    //   function (err) {
-    //     console.log('Something went wrong!', err);
-    //   }
-    // );
-
-    // function getMe() {
-    //   spotifyApi.getMe().then(
-    //     function (data) {
-    //       console.log(
-    //         'Some information about the authenticated user',
-    //         data.body
-    //       );
-    //     },
-    //     function (err) {
-    //       console.log('Something went wrong!', err);
-    //     }
-    //   );
-    // }
-
-    // function getUserPlaylists(code) {
-    //   spotifyApi.getUserPlaylists().then(
-    //     function (data) {
-    //       console.log('Retrieved playlists', data.body);
-    //       mainWindow.webContents.send('start-spotify-login', code, data.body);
-    //     },
-    //     function (err) {
-    //       console.log('Something went wrong!', err);
-    //     }
-    //   );
-    // }
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error_description || data.error || 'Token exchange failed');
+    }
+    return data;
   }
 
   ipcMain.on('get-spotify-playlist', (event, playlistId, offset) => {
@@ -207,7 +237,7 @@ app.on('ready', function () {
       },
       function (err) {
         console.log('Something went wrong!', err);
-      }
+      },
     );
   });
 
@@ -223,51 +253,35 @@ app.on('ready', function () {
     console.log('request IS: ', request);
     const url = request.url;
 
-    // if (url.includes('error=access_denied')) {
-    //   mainWindow.webContents.send('start-spotify-login', 'quit');
-    //   return;
-    // }
+    // Parse the authorization code from the callback URL: myapp://oauth-callback?code=...
+    const callbackUrl = new URL(url);
+    const code = callbackUrl.searchParams.get('code');
+    const error = callbackUrl.searchParams.get('error');
 
-    const accessTokenData = url.split('#')[1];
-    console.log('accessTokenData   ', accessTokenData);
-    // Split the access token parameters by the ampersand (&) symbol
-    const paramPairs = accessTokenData.split('&');
-    console.log('paramPairs   ', paramPairs);
-    // Iterate through each parameter pair to find the access token
-    let accessToken;
-    for (const paramPair of paramPairs) {
-      console.log('paramPair   ', paramPair);
-      const [key, value] = paramPair.split('=');
-      if (key === 'access_token') {
-        accessToken = value;
-        break; // Stop iterating after finding the access token
-      }
+    callback({ error: -3 }); // Resolve the protocol request (no file to serve)
+
+    if (loginWindowRef) {
+      loginWindowRef.close();
+      loginWindowRef = null;
     }
-    console.log('ACCESS TOKEN IS: ', accessToken);
-    spotifyApi.setAccessToken(accessToken);
-    // mainWindow.webContents.send('spotify-get-user-playlists', code, data.body);
-    getUserPlaylists();
 
-    // Retrieve an access token and a refresh token
-    // spotifyApi.authorizationCodeGrant(accessToken).then(
-    //   function (data) {
-    //     console.log('The token expires in ' + data.body['expires_in']);
-    //     console.log('The access token is ' + data.body['access_token']);
-    //     console.log('The refresh token is ' + data.body['refresh_token']);
+    if (error || !code) {
+      console.error('Spotify auth error or missing code:', error || url);
+      return;
+    }
 
-    //     // Set the access token on the API object to use it in later calls
-    //     spotifyApi.setAccessToken(data.body['access_token']);
-    //     spotifyApi.setRefreshToken(data.body['refresh_token']);
-
-    //     // getMe();
-    //     getUserPlaylists(code);
-    //   },
-    //   function (err) {
-    //     console.log('Something went wrong!', err);
-    //   }
-    // );
-
-    // createSpotifyClient(code);
+    exchangeCodeForToken(code)
+      .then((tokenData) => {
+        console.log('Access token received');
+        spotifyApi.setAccessToken(tokenData.access_token);
+        if (tokenData.refresh_token) {
+          spotifyApi.setRefreshToken(tokenData.refresh_token);
+        }
+        getUserPlaylists();
+      })
+      .catch((err) => {
+        console.error('Token exchange failed:', err.message);
+      });
   });
 
   function getUserPlaylists() {
@@ -278,36 +292,12 @@ app.on('ready', function () {
       },
       function (err) {
         console.log('Something went wrong!', err);
-      }
+      },
     );
   }
 
   ipcMain.on('start-spotify-login', (event) => {
-    // const spotifyClientId = spotify_client_id;
-    // const scopes = ['streaming', 'user-read-email', 'user-read-private'];
-    // const state = generateRandomString(16);
-    // const showDialog = true;
-    // const responseType = 'token';
-    // const authUrl =
-    //   `https://accounts.spotify.com/authorize/?` +
-    //   `response_type=code&` +
-    //   `client_id=${spotifyClientId}&` +
-    //   `scope=${encodeURIComponent(scope)}&` +
-    //   `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-    //   `state=${state}`;
-
-    // function getUserPlaylists(code) {
-    //   spotifyApi.getUserPlaylists().then(
-    //     function (data) {
-    //       console.log('Retrieved playlists', data.body);
-    //       mainWindow.webContents.send('get-user-playlists', code, data.body);
-    //     },
-    //     function (err) {
-    //       console.log('Something went wrong!', err);
-    //     }
-    //   );
-    // }
-    if (spotifyApi !== undefined) {
+    if (spotifyApi !== undefined && spotifyApi.getAccessToken()) {
       getUserPlaylists();
       return;
     }
@@ -319,33 +309,20 @@ app.on('ready', function () {
     // shell.openExternal(authUrl);
     createLoginWindow(authUrl);
     function createLoginWindow(url) {
-      const loginWindow = new BrowserWindow({
+      loginWindowRef = new BrowserWindow({
         width: 800,
         height: 600,
-        show: false, // Initially hide the window
+        show: false,
       });
 
-      loginWindow.loadURL(url);
+      loginWindowRef.loadURL(url);
 
-      // Listen for the window to be ready to receive messages
-      // loginWindow.webContents.on('did-finish-load', (e) => {
-      //   console.log('FINISHED LOADING:   ', e);
-      // loginWindow.webContents.send('start-spotify-login'); // Send a message to the login window
+      loginWindowRef.once('ready-to-show', () => {
+        loginWindowRef.show();
+      });
 
-      // getUserPlaylists('test');
-      // loginWindow.close();
-      // });
-
-      // Listen for messages from the login window
-      // ipcMain.on('did-navigate', (event, message) => {
-      //   console.log('MESSAGE IS: ', message);
-      //   // if (message.type === 'close-login-window') {
-      //   loginWindow.close(); // Close the login window
-      //   // }
-      // });
-
-      loginWindow.once('ready-to-show', () => {
-        loginWindow.show();
+      loginWindowRef.on('closed', () => {
+        loginWindowRef = null;
       });
     }
 
@@ -363,6 +340,20 @@ app.on('ready', function () {
   //   // More complex code to handle tokens goes here
   // });
 
+  /* Media key global shortcuts */
+  globalShortcut.register('MediaPlayPause', () => {
+    mainWindow.webContents.send('MEDIA_PLAY_PAUSE');
+  });
+  globalShortcut.register('MediaNextTrack', () => {
+    mainWindow.webContents.send('MEDIA_NEXT_TRACK');
+  });
+  globalShortcut.register('MediaPreviousTrack', () => {
+    mainWindow.webContents.send('MEDIA_PREV_TRACK');
+  });
+  globalShortcut.register('MediaStop', () => {
+    mainWindow.webContents.send('MEDIA_STOP');
+  });
+
   /****************************************************** */
 
   var generateRandomString = function (length) {
@@ -375,6 +366,10 @@ app.on('ready', function () {
     }
     return text;
   };
+});
+
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll();
 });
 
 /* MAC OS STUFF */

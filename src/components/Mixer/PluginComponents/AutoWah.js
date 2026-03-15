@@ -1,4 +1,4 @@
-import React, { useState, useImperativeHandle, useEffect } from 'react';
+import React, { useState, useImperativeHandle } from 'react';
 
 import Knob from '../Knob';
 
@@ -50,6 +50,7 @@ const AutoWah = React.forwardRef(({ interpolateValue, addEffect }, ref) => {
       <div className="speed-body">
         <Knob
           customProps={autoWahKnobStyles}
+          knobValue={autoWahKnobStyles.value}
           onChange={(val) => mapValueToAutoWah(val)}
         />
         <p>FREQ: {autoWahKnobStyles.value}</p>

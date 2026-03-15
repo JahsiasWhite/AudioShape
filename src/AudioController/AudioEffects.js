@@ -1,24 +1,13 @@
 import { useState, useEffect } from 'react';
 
-import {
-  renderAudioWithEffect,
-  renderAudioWithSpeedChange,
-} from './ToneEffects.js';
+import { updateLiveEffect, resetAllLiveEffects } from './LiveEffectsChain.js';
 
 export const AudioEffects = (
   currentSong,
-  fileLocation,
-  onSongEnded,
   visibleSongs,
   currentSongId,
-  startLoading,
-  finishLoading,
-  downloadAudio,
-  handleTempSongSaved,
-  initCurrentSong,
   DEFAULT_SPEEDUP,
   DEFAULT_SLOWDOWN,
-  getCurrentAudioBuffer
 ) => {
   const [effects, setEffects] = useState({});
   const [savedEffects, setSavedEffects] = useState({});
@@ -27,153 +16,73 @@ export const AudioEffects = (
   const [currentSpeed, setCurrentSpeed] = useState(1);
   const [speedupIsEnabled, setSpeedupIsEnabled] = useState(false);
   const [slowDownIsEnabled, setSlowDownIsEnabled] = useState(false);
-
-  //   var fileLocation; // TODO
-  var effectThreshold = 0;
+  const [effectSongId, setEffectSongId] = useState(null);
 
   /**
-   * Applies the given effect to the current song
-   * @param {*} effect
-   * @param {*} value
+   * Applies an effect instantly via the live audio chain.
+   * Speed is still applied via playbackRate; all other effects update live nodes.
    */
-  const runEffect = async (effect, value) => {
-    if (!effect) {
-      console.error(`No effect given: ${effect}`);
-      return;
-    }
-
-    // Speed works differently from all other effects
-    if (effect === 'speed') {
-      handleSpeedChange(value);
-      return;
-    }
-
-    // Get our new audio data
-    const audioBuffer = await getCurrentAudioBuffer(fileLocation);
-    const renderedBuffer = await renderAudioWithEffect(
-      audioBuffer,
-      effect,
-      value
-    );
-
-    // Save the new song
-    downloadAudio(renderedBuffer);
-  };
-
-  const addEffect = async (currentEffect, value, fL) => {
-    console.log('ADDING EFFECT: ' + currentEffect);
-
-    if (!currentSongId) {
-      console.log('No song selected, returning');
-      effects[currentEffect] = value;
-      setEffects(effects);
-      return;
-    }
-
-    /* Make effects unclickable while the current song is being edited */
-    startLoading(currentEffect);
-
-    // Save the new speed. RN only used for the video player
+  const addEffect = (currentEffect, value) => {
     if (currentEffect === 'speed') {
       setCurrentSpeed(value);
-    }
-
-    // Add our effects to the list
-    // Check if the effect was turned off
-    // TODO: Get the actual defaults, kinda fcking up with reverb wetness rn
-    if (value === 1 || value === false) {
-      delete effects[currentEffect];
-      fileLocation = visibleSongs[currentSongId].file;
-
-      // TODO ! Have to add all other effects back now
-      const otherEffect = Object.keys(effects);
-      console.log(otherEffect);
-      if (otherEffect[0] === undefined) {
-        // play original song
-        console.log('PLAYING ORIGINAL SONG');
-
-        // TODO I THINK THESE HAPPEN A FEW TIMES, MAKE IN OWN FUNCTION?
-        /* Start playing the new song */
-        currentSong.src = fileLocation;
-        initCurrentSong();
-        // setCurrentSong(currentSong);
-
-        /* Make the effects clickable again */
-        finishLoading();
-      } else {
-        // loop through all other effects
-        runEffect(otherEffect[0], effects[otherEffect[0]]);
-      }
-
+      currentSong.playbackRate = value;
+      currentSong.defaultPlaybackRate = value;
       return;
-    } else {
-      effects[currentEffect] = value;
     }
 
-    setEffects(effects);
-
-    /* Annoying check, this will run if we aren't coming from applySavedEffects. IE: just editing one at a time and not using saved effects OR using a speed preset */
-    if (fL === undefined) {
-      // Check if there are multiple effects
-      const hasMultipleEffects = Object.keys(effects).length > 1;
-
-      if (hasMultipleEffects) {
-        // If multiple effects, modify the temp file location
-        fileLocation = currentSong.src;
-      } else {
-        // If only one effect, modify the default file location
-        fileLocation = visibleSongs[currentSongId].file;
-      }
+    // Turning an effect off
+    if (value === false) {
+      const { [currentEffect]: _, ...remainingEffects } = effects;
+      setEffects(remainingEffects);
+      updateLiveEffect(currentEffect, false);
+      return;
     }
 
-    console.log('Running effect: ', currentEffect, value);
-    await runEffect(currentEffect, value);
-    await getTempSong();
+    setEffects((prev) => ({ ...prev, [currentEffect]: value }));
+    updateLiveEffect(currentEffect, value);
   };
 
   const toggleSavedEffectOff = () => {
-    console.log('Toggling saved effect off');
-    resetCurrentSong();
-    finishLoading();
+    clearEffects();
   };
 
-  const applySavedEffects = async (comboName) => {
-    // Toggling off
-    console.error(fileLocation, visibleSongs[currentSongId]);
-    if (currentEffectCombo === comboName) {
+  /**
+   * Applies a saved effect combo instantly via the live audio chain.
+   */
+  const applySavedEffects = (comboName) => {
+    const isSameCombo = currentEffectCombo === comboName;
+    const isSameSong = effectSongId === currentSongId;
+    if (isSameCombo && isSameSong) {
       toggleSavedEffectOff();
       return;
     }
 
-    // The first effect will be applied to the original file
-    if (currentSongId) fileLocation = visibleSongs[currentSongId].file;
+    // Reset all live nodes and state before applying the new combo
+    resetAllLiveEffects();
+    setEffects({});
+    setCurrentSpeed(1);
+    currentSong.playbackRate = 1;
+    currentSong.defaultPlaybackRate = 1;
 
     if (savedEffects[comboName]) {
       setEffectsEnabled(true);
-      setCurrentEffectCombo(comboName); // TODO ALSO REDUNDANT
-
-      // Disable any other effects
+      setCurrentEffectCombo(comboName);
+      setEffectSongId(currentSongId);
       setSpeedupIsEnabled(false);
       setSlowDownIsEnabled(false);
 
-      // Start loading the all effects
-      // startLoading(savedEffects[comboName]);
-
-      for (const effect in savedEffects[comboName]) {
-        effectThreshold++;
-
-        const effectValue = savedEffects[comboName][effect];
-        // console.error(effect, effectValue);
-        // console.error(fileLocation);
-        // runEffect(effect, effectValue);
-        await addEffect(effect, effectValue, fileLocation); // TODO I dont like this, kinda sloppy
-        fileLocation = currentSong.src; // All subsequent effects will be applied to the temp file
-
-        // Finish loading the effect
-        finishLoading(effect);
+      const newEffects = {};
+      for (const [effect, value] of Object.entries(savedEffects[comboName])) {
+        if (effect === 'speed') {
+          setCurrentSpeed(value);
+          currentSong.playbackRate = value;
+          currentSong.defaultPlaybackRate = value;
+        } else {
+          updateLiveEffect(effect, value);
+          newEffects[effect] = value;
+        }
       }
-    } else {
-      // NOT A COMBO
+      setEffects(newEffects);
     }
   };
 
@@ -181,30 +90,13 @@ export const AudioEffects = (
    * Toggles whether the current and all future songs will be sped up
    */
   const toggleSpeedup = () => {
-    if (currentSong) {
-      // TODO: maybe make this its own function? gets used quite a bit
-      currentSong.removeEventListener('ended', onSongEnded);
-    }
+    const newSpeed = speedupIsEnabled ? 1 : DEFAULT_SPEEDUP;
+    setSpeedupIsEnabled(!speedupIsEnabled);
+    setSlowDownIsEnabled(false);
 
-    // They can't both be active
-    if (slowDownIsEnabled) {
-      setSlowDownIsEnabled(false);
-    }
+    addEffect('speed', newSpeed);
 
-    // If there is a current playing, set the global file location to the unedited song
-    // TODO: I think this is useless? Check toggleSlowdown as well
-    // if (currentSongId !== null) fileLocation = visibleSongs[currentSongId].file; // TODO: Make this a function, set default fileLocation -- setSongFileDefaultLocation
-
-    if (speedupIsEnabled) {
-      setSpeedupIsEnabled(false);
-      // handleSpeedChange(1);
-      addEffect('speed', 1);
-    } else {
-      setSpeedupIsEnabled(true);
-      // handleSpeedChange(DEFAULT_SPEEDUP);
-      addEffect('speed', DEFAULT_SPEEDUP);
-
-      // Disable all other current effects
+    if (!speedupIsEnabled) {
       setEffectsEnabled(false);
       setCurrentEffectCombo('');
     }
@@ -214,48 +106,16 @@ export const AudioEffects = (
    * Toggles whether the current and all future songs will be slowed down
    */
   const toggleSlowDown = () => {
-    if (currentSong) {
-      // TODO: maybe make this its own function? gets used quite a bit
-      currentSong.removeEventListener('ended', onSongEnded);
+    const newSpeed = slowDownIsEnabled ? 1 : DEFAULT_SLOWDOWN;
+    setSlowDownIsEnabled(!slowDownIsEnabled);
+    setSpeedupIsEnabled(false);
+
+    addEffect('speed', newSpeed);
+
+    if (!slowDownIsEnabled) {
+      setEffectsEnabled(false);
+      setCurrentEffectCombo('');
     }
-
-    if (speedupIsEnabled) {
-      setSpeedupIsEnabled(false);
-    }
-
-    // fileLocation = visibleSongs[currentSongId].file;
-
-    if (slowDownIsEnabled) {
-      setSlowDownIsEnabled(false);
-      // handleSpeedChange(1);
-      addEffect('speed', 1);
-    } else {
-      setSlowDownIsEnabled(true);
-      // handleSpeedChange(DEFAULT_SLOWDOWN);
-      addEffect('speed', DEFAULT_SLOWDOWN);
-    }
-    // return;
-    // setSlowDownIsEnabled(!slowDownIsEnabled);
-    // handleSpeedChange(1.2);
-  };
-
-  /**
-   * Gets the updated temporary song
-   */
-  const getTempSong = async () => {
-    return new Promise((resolve) => {
-      window.electron.ipcRenderer.once(
-        'TEMP_SONG_SAVED',
-        async (outputPath) => {
-          await handleTempSongSaved(
-            outputPath,
-            Object.keys(effects).length,
-            effectThreshold
-          );
-          resolve();
-        }
-      );
-    });
   };
 
   /**
@@ -266,81 +126,68 @@ export const AudioEffects = (
   });
 
   const saveEffects = (comboName) => {
-    // Save the effectCombo permanently
+    const effectsToSave =
+      currentSpeed !== 1 ? { ...effects, speed: currentSpeed } : effects;
+
     window.electron.ipcRenderer.sendMessage(
       'SAVE_EFFECT_COMBO',
       comboName,
-      effects
+      effectsToSave,
     );
+  };
+
+  const handleEffectComboAdded = (newEffectCombos) => {
+    setSavedEffects(newEffectCombos);
   };
 
   useEffect(() => {
-    const handleEffectComboAdded = (newEffectCombos) => {
-      setSavedEffects(newEffectCombos);
-    };
-
     window.electron.ipcRenderer.once(
       'SAVE_EFFECT_COMBO',
-      handleEffectComboAdded
+      handleEffectComboAdded,
     );
-  }, [savedEffects]); // TODO: Cant I just make this a function? No need for a useEffect
-
-  /* SPEEDUP EFFECT */
-  /**
-   * Changes the current song's speed and saves the new, edited song so it can be played
-   * Speed has to be rendered differently than the other effects because 'duration' must be changed
-   * @param {*} newSpeed
-   * @param {*} index
-   */
-  const handleSpeedChange = async (newSpeed, index) => {
-    // Load the current song's audio buffer
-    const audioBuffer = await getCurrentAudioBuffer(fileLocation);
-
-    const renderedBuffer = await renderAudioWithSpeedChange(
-      audioBuffer,
-      newSpeed
-    );
-
-    downloadAudio(renderedBuffer);
-    // getTempSong(); // ? Need an await here?
-  };
+  }, [savedEffects]);
 
   /**
-   * Resets the current song's effects to the default and restarts it
+   * Resets the current song's effects to defaults and restarts it
    */
-  const resetCurrentSong = () => {
-    // Reset the songs effects
+  const clearEffects = () => {
+    const wasPaused = currentSong.paused;
+    resetAllLiveEffects();
+    setEffects({});
+    setEffectSongId(null);
     setCurrentEffectCombo('');
     setEffectsEnabled(false);
     setSpeedupIsEnabled(false);
     setSlowDownIsEnabled(false);
+    setCurrentSpeed(1);
+    currentSong.playbackRate = 1;
+    currentSong.defaultPlaybackRate = 1;
+    if (wasPaused) currentSong.pause();
+  };
+
+  const resetCurrentSong = () => {
+    clearEffects();
 
     if (!currentSongId) return;
 
-    // Change to the original file location
+    console.error('Resetting current song to:', visibleSongs, currentSongId);
     currentSong.src = visibleSongs[currentSongId].file;
-
-    // Start playing the song from the beginning
     restartCurrentSong();
   };
 
   const restartCurrentSong = () => {
-    // currentSong.pause();
     currentSong.currentTime = 0;
     currentSong.play();
   };
 
   return {
-    runEffect,
     addEffect,
     applySavedEffects,
     toggleSpeedup,
     toggleSlowDown,
-    // renderAudioWithEffect,
-    handleSpeedChange,
     saveEffects,
+    clearEffects,
     resetCurrentSong,
-    fileLocation,
     effects,
     setEffects,
     savedEffects,

@@ -1,11 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 var prevVolume = 1;
 export const AudioControls = (currentSong) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState(1); // Initial volume is 100%
-  // const [prevVolume, setPrevVolume] = useState(1); // Keeps track of the volume. So when muting, it will go back to its original state. TODO: Instead of this, can I just grab from the file?
+  const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
+
+  // Load saved volume from settings on startup
+  useEffect(() => {
+    const removeListener = window.electron.ipcRenderer.on('RETURN_VOLUME', (savedVolume) => {
+      const vol = savedVolume / 100;
+      currentSong.volume = vol;
+      setVolume(vol);
+      prevVolume = vol;
+      removeListener?.();
+    });
+    window.electron.ipcRenderer.sendMessage('GET_VOLUME');
+    return () => removeListener?.();
+  }, []);
 
   const playAudio = () => {
     // Duration is probably not the best way to check but it's easy
@@ -26,7 +38,10 @@ export const AudioControls = (currentSong) => {
     currentSong.volume = newVolume;
     setVolume(newVolume);
 
-    if (newVolume !== 0) prevVolume = newVolume;
+    if (newVolume !== 0) {
+      prevVolume = newVolume;
+      window.electron.ipcRenderer.sendMessage('SAVE_SETTINGS', { volume: Math.round(newVolume * 100) });
+    }
   };
 
   /**

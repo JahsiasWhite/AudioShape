@@ -23,7 +23,7 @@ const SpotifyPlaylists = ({ playlists }) => {
             <div
               className="playlist-card"
               key={idx}
-              onDoubleClick={() => loadSpotifyPlaylist(playlist.id)}
+              onClick={() => loadSpotifyPlaylist(playlist.id)}
             >
               {playlist.images.length > 0 && (
                 <img

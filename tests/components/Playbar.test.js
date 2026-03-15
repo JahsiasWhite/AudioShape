@@ -51,6 +51,10 @@ window.electron = {
 };
 
 describe('<Playbar />', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('renders playbar correctly', () => {
     const { container } = render(
       <AudioProvider>
@@ -72,5 +76,39 @@ describe('<Playbar />', () => {
 
     // Make sure the function 'scrollToCurrentSong' doesn't crash
     expect(AudioProvider).toBeDefined();
+  });
+
+  it('displays loading spinner and correct effect count when loading', () => {
+    // TODO: I think there is a cleaner way to do this
+    const {
+      useAudioPlayer,
+    } = require('../../src/AudioController/AudioContext');
+    useAudioPlayer.mockReturnValueOnce({
+      visibleSongs: loadedSongs,
+      loadedSongs: loadedSongs.reduce((acc, s, idx) => {
+        acc[idx] = s;
+        return acc;
+      }, {}),
+      currentSongId: 0,
+      loadingQueue: ['effect1'], // 1 left to load
+      effects: { 1: {} }, // 1 total expected
+      toggleShuffle: jest.fn(),
+      shuffleIsEnabled: false,
+      setVisibleSongs: jest.fn(),
+      setCurrentScreen: jest.fn(),
+    });
+
+    const { getByText, getByTestId, container } = render(
+      <AudioProvider>
+        <Playbar toggleSection={jest.fn()} />
+      </AudioProvider>
+    );
+
+    // Check for spinner
+    const spinner = container.querySelector('.loading-spinner');
+    expect(spinner).not.toBeNull();
+
+    // Check for correct effect count display
+    expect(getByText('0/1 effects')).not.toBeNull();
   });
 });

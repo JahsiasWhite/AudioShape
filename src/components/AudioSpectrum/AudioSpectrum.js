@@ -4,24 +4,16 @@ import './AudioSpectrum.css';
 
 /**
  * SHOUTOUT https://codepen.io/nfj525/pen/rVBaab
- */
-var context, src, analyser;
-
-/**
  *
- * @returns
+ * Uses the AnalyserNode that is tapped off the live effects chain in LiveEffectsChain.js.
+ * We cannot create a second MediaElementAudioSourceNode from the same <audio> element
+ * (the browser throws InvalidStateError), so we share the one created in the live chain.
  */
 const AudioSpectrum = ({ song, loading }) => {
   useEffect(() => {
-    // Create an audio context. Only have to do this once
-    if (context === undefined) {
-      context = new AudioContext();
-      src = context.createMediaElementSource(song);
-      analyser = context.createAnalyser();
-      src.connect(analyser);
-      analyser.connect(context.destination);
-      analyser.fftSize = 256;
-    }
+    // The live effects chain stores a shared AnalyserNode on window after the first song plays.
+    const analyser = window.__toneEffectsState?.analyser;
+    if (!analyser) return; // chain not set up yet (no song played) — bail silently
 
     const bufferLength = analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
@@ -37,14 +29,20 @@ const AudioSpectrum = ({ song, loading }) => {
     const barWidth = (canvas.width / bufferLength) * 1;
     let x = 0;
 
+    const computedStyle = getComputedStyle(document.documentElement);
+    const colorMain = computedStyle.getPropertyValue('--color-main').trim();
+    const colorText = computedStyle.getPropertyValue('--color-text').trim();
+
+    let frameId;
     function renderFrame() {
-      requestAnimationFrame(renderFrame);
+      frameId = requestAnimationFrame(renderFrame);
 
       x = 0;
 
       analyser.getByteFrequencyData(dataArray);
 
-      ctx.fillStyle = 'rgb(13 14 18)'; // Background color
+      // Create background
+      ctx.fillStyle = colorMain;
       ctx.fillRect(0, 0, canvas.width, canvas.height); // (x, y, width, height)
 
       let lastBarHeights = [];
@@ -59,9 +57,6 @@ const AudioSpectrum = ({ song, loading }) => {
           lastBarHeights[i] = 0;
         }
 
-        // TODO: Is this really smoothing anything? It still looks a little choppy
-        // Apply smoothing to the current bar height
-        // const smoothedBarHeight = (barHeight + lastBarHeights[i]) * 0.5;
         const smoothedBarHeight =
           lastBarHeights[i] * (1 - smoothnessFactor) +
           barHeight * smoothnessFactor;
@@ -69,13 +64,7 @@ const AudioSpectrum = ({ song, loading }) => {
         // Store the smoothed height as the previous height for the next frame
         lastBarHeights[i] = smoothedBarHeight;
 
-        // TODO: Add option for colors?
-        const r = barHeight / 2 + 25 * (i / bufferLength);
-        const g = 250 * (i / bufferLength);
-        const b = 50;
-
-        // ctx.fillStyle = 'rgb(' + r + ',' + g + ',' + b + ')';
-        ctx.fillStyle = '#FFFFFF';
+        ctx.fillStyle = colorText;
 
         ctx.fillRect(
           x,
@@ -95,27 +84,13 @@ const AudioSpectrum = ({ song, loading }) => {
     container.appendChild(canvas);
 
     return () => {
-      // Cleanup audio nodes and context
-      // if (context) {
-      //   analyser.disconnect();
-      //   context.close().catch((e) => {
-      //     console.error('Error closing AudioContext:', e);
-      //   });
-      // }
-      // // Remove canvas
-      // if (canvas) {
-      //   canvas.remove();
-      // }
+      cancelAnimationFrame(frameId);
+      canvas.remove();
     };
   }, [song]);
 
   return (
     <div className={`${loading ? 'hidden' : ''}`} id="canvas-container">
-      {/* <div id="content">
-        <input type="file" id="thefile" accept="audio/*" />
-        <canvas id="canvas"></canvas>
-        <audio id="audio" controls></audio>
-      </div> */}
     </div>
   );
 };

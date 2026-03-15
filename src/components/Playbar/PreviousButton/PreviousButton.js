@@ -1,7 +1,7 @@
 import React from 'react';
 import './PreviousButton.css';
 
-import PreviousButtonSVG from './PreviousButton.svg';
+import { ReactComponent as PreviousButtonSVG } from './PreviousButton.svg';
 
 import { useAudioPlayer } from '../../../AudioController/AudioContext';
 
@@ -9,9 +9,8 @@ function PreviousButton() {
   const { playPreviousSong } = useAudioPlayer();
 
   return (
-    <img
+    <PreviousButtonSVG
       className="previous-button"
-      src={PreviousButtonSVG}
       onClick={playPreviousSong}
     />
   );

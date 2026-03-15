@@ -13,6 +13,20 @@ const defaultColors = {
   textInverse: 'black',
 };
 
+// Reusable canvas for color conversion — created once, never recreated
+const _colorCanvas = document.createElement('canvas');
+_colorCanvas.width = _colorCanvas.height = 1;
+const _colorCtx = _colorCanvas.getContext('2d');
+
+const rgbToHex = (color) => {
+  if (!color || !color.trim()) return '#000000';
+  _colorCtx.clearRect(0, 0, 1, 1);
+  _colorCtx.fillStyle = color;
+  _colorCtx.fillRect(0, 0, 1, 1);
+  const [r, g, b] = _colorCtx.getImageData(0, 0, 1, 1).data;
+  return '#' + [r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('');
+};
+
 const ColorSettings = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [colors, setColors] = useState({
@@ -22,27 +36,6 @@ const ColorSettings = () => {
     // text: '#ffffff',
     // buttonSecondary: '#316baa',
   });
-
-  // Convert RGB string to hex
-  const rgbToHex = (rgb) => {
-    // Check if already hex
-    if (rgb.startsWith('#')) return rgb;
-
-    // Parse RGB values
-    const matches = rgb.match(/\d+/g);
-    if (!matches) return '#000000';
-
-    const [r, g, b] = matches.map(Number);
-    return (
-      '#' +
-      [r, g, b]
-        .map((x) => {
-          const hex = x.toString(16);
-          return hex.length === 1 ? '0' + hex : hex;
-        })
-        .join('')
-    );
-  };
 
   // Convert hex to RGB string
   const hexToRgb = (hex) => {
@@ -61,6 +54,7 @@ const ColorSettings = () => {
     const root = document.documentElement;
     const computedStyle = getComputedStyle(root);
 
+    console.log('Initializing colors from CSS variables:');
     setColors({
       main: computedStyle.getPropertyValue('--color-main').trim(),
       secondary: computedStyle.getPropertyValue('--color-secondary').trim(),
@@ -96,7 +90,7 @@ const ColorSettings = () => {
     } else {
       root.style.setProperty(
         `--color-${colorKey.replace(/([A-Z])/g, '-$1').toLowerCase()}`,
-        value
+        value,
       );
     }
 
@@ -127,7 +121,7 @@ const ColorSettings = () => {
     // Save default colors to electron settings
     window.electron.ipcRenderer.sendMessage(
       'SAVE_COLOR_SETTINGS',
-      defaultColors
+      defaultColors,
     );
   };
 

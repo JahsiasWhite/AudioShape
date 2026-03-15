@@ -6,16 +6,16 @@
 .artist-image {
   max-width: 100%;
   height: 90%;
-  border-radius: 5px;
+  border-radius: 8px;
   overflow: auto;
 }
 
 .artist-name {
   margin-top: 10px;
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .artist {
-  color: lightgrey;
+  color: var(--color-text-secondary);
   font-size: 12px;
 }
