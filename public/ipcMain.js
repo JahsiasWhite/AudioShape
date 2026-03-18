@@ -419,8 +419,9 @@ const SETUP_SONG_DOWNLOADS = (mainW) => {
 const processSongMetadata = (file, imageMap) => {
   return new Promise((resolve, reject) => {
     try {
+      const hasDirectoryImage = !!imageMap[path.dirname(file)]?.length;
       metadata
-        .parseFile(file)
+        .parseFile(file, { skipCovers: hasDirectoryImage })
         .then((data) => {
           let title = data.common.title;
           let artist = data.common.artist;
@@ -469,6 +470,7 @@ const processSongMetadata = (file, imageMap) => {
           /* Gets image for the song/album */
           // Prioritizes the image with the same name as the song file
           // If none match, it will use an image found in the song directory
+          // If no directory image is found, falls back to embedded album art
           // If no image is found, the frontend will check if the song is an .mp4 file
           // If it is, it will use a frame from the video as the album image
           const albumDir = path.dirname(file);
@@ -485,6 +487,16 @@ const processSongMetadata = (file, imageMap) => {
               savedImage = imageFile;
             }
           });
+
+          // Fall back to embedded album art if no directory image was found
+          if (
+            !savedImage &&
+            data.common.picture &&
+            data.common.picture.length > 0
+          ) {
+            const pic = data.common.picture[0];
+            savedImage = `data:${pic.format};base64,${Buffer.from(pic.data).toString('base64')}`;
+          }
 
           const songData = {
             id: key,
@@ -504,6 +516,7 @@ const processSongMetadata = (file, imageMap) => {
         });
     } catch (err) {
       console.error('ERROR', err);
+      resolve(null);
     }
   });
 };
@@ -537,8 +550,8 @@ const SETUP_GET_SONGS = (mainW) => {
     }
 
     // Get all songs in the given directory as well as all subdirectories
-    const audioTypes = 'mp3,wav,ogg,mp4,flac,m4a';
-    const audios = await glob(correctedPath + '/**/*.{' + audioTypes + '}');
+    const songTypes = 'mp3,wav,ogg,mp4,flac,m4a,mkv';
+    const audios = await glob(correctedPath + '/**/*.{' + songTypes + '}');
 
     // Get and set a map of image files for easier access
     const imageFiles = await glob(correctedPath + '/**/*.{jpg,jpeg,png}');
@@ -560,29 +573,43 @@ const SETUP_GET_SONGS = (mainW) => {
     }
 
     /* Get all songs */
-    let count = 0; // This is so we know when we ran out of files to parse and can return
     songs = {}; // ? Reset songs here?
 
-    console.log('Grabbing song data...');
-    audios.forEach(async (file) => {
-      try {
-        const songData = await processSongMetadata(file, imageMap);
-        songs[songData.id] = songData;
-      } catch (error) {
-        console.error('ERROR AT', count, '\nFile: ', file, '\nError: ', error);
+    const total = audios.length;
+    Logger.info(`Loading ${total} songs from ${correctedPath}`);
+    console.log(`[Songs] Found ${total} songs — loading metadata...`);
+
+    const BATCH_SIZE = 20;
+    const songPromises = audios.map((file) =>
+      processSongMetadata(file, imageMap).catch((error) => {
+        console.error('ERROR\nFile: ', file, '\nError: ', error);
         Logger.error('Error processing song metadata for file:', file, error);
-        // mainWindow.webContents.send('ERROR_MESSAGE', {
-        //   title: 'Error',
-        //   description: error.message,
-        // });
-      } finally {
-        count++;
-        if (count === audios.length) {
-          mainWindow.webContents.send('GRAB_SONGS', songs);
+        return null;
+      }),
+    );
+
+    let resolved = 0;
+    songPromises.forEach((promise) => {
+      promise.then((songData) => {
+        if (songData) songs[songData.id] = songData;
+        resolved++;
+
+        const isComplete = resolved === audios.length;
+
+        // Log progress every BATCH_SIZE songs and at completion
+        if (resolved % BATCH_SIZE === 0 || isComplete) {
+          const pct = Math.round((resolved / total) * 100);
+          console.log(
+            `[Songs] ${resolved}/${total} (${pct}%)${isComplete ? ' — done!' : ''}`,
+          );
+          mainWindow.webContents.send('GRAB_SONGS', {
+            songs,
+            isComplete,
+            progress: { resolved, total },
+          });
         }
-      }
+      });
     });
-    console.error('Finished grabbing song data...');
   });
 
   /**

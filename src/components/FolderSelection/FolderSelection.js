@@ -24,9 +24,9 @@ function FolderSelection({ onSettingsUpdate, onLoadingStart }) {
 
     window.electron.ipcRenderer.sendMessage('GET_SONGS', selectedFolderPath);
 
-    // Notify the parent component about the folder selection
-    // This is only necessary/used on the settings.js page
-    if (onSettingsUpdate) onSettingsUpdate();
+    // Notify the parent component about the folder selection, passing the new path
+    // so it can update the displayed directory immediately without an IPC round-trip
+    if (onSettingsUpdate) onSettingsUpdate(selectedFolderPath);
   };
 
   return (

@@ -3,10 +3,11 @@ import React, { useEffect, useState } from 'react';
 import FolderSelection from '../FolderSelection/FolderSelection';
 import './Settings.css';
 import ColorSettings from './ColorSettings';
+import LoadingSpinner from '../LoadingSpinner/LoadingSpinner';
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 function Settings() {
-  const { startSongsLoading } = useAudioPlayer();
+  const { startSongsLoading, initSongsLoading } = useAudioPlayer();
 
   const [settings, setSettings] = useState({
     songDirectory: '',
@@ -43,7 +44,14 @@ function Settings() {
   };
 
   // Handle settings update when the user interacts with FolderSelection
-  const handleSettingsUpdate = () => {
+  // newPath is passed immediately so the display updates without waiting for the IPC round-trip
+  const handleSettingsUpdate = (newPath) => {
+    if (newPath) {
+      setSettings((prev) => ({
+        ...prev,
+        libraryDirectory: newPath.replace(/\\/g, '/'),
+      }));
+    }
     fetchSettings();
   };
 
@@ -80,10 +88,25 @@ function Settings() {
           <strong style={{ marginRight: 1 + '%' }}>
             Current Song Directory:
           </strong>
-          {settings.libraryDirectory}
-          {/* Choose Song Directory */}
+          {initSongsLoading ? (
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              {settings.libraryDirectory}
+              <LoadingSpinner className="loading-spinner-sm" />
+            </span>
+          ) : (
+            settings.libraryDirectory
+          )}
         </div>
-        <FolderSelection onSettingsUpdate={handleSettingsUpdate} onLoadingStart={startSongsLoading} />
+        <FolderSelection
+          onSettingsUpdate={handleSettingsUpdate}
+          onLoadingStart={startSongsLoading}
+        />
 
         <div className="setting-item">
           <strong>Settings Directory:</strong> {settings.dataDirectory}
