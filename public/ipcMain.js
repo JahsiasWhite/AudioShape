@@ -50,6 +50,9 @@ function getYoutubeDl() {
 }
 
 const path = require('path');
+const os = require('os');
+const https = require('https');
+const http = require('http');
 
 /* Where the files are saved for the auto playing  */
 let temporaryFilePath = null;
@@ -653,31 +656,62 @@ const SETUP_GET_SONGS = (mainW) => {
  */
 
 /**
- * Embeds title/artist/album metadata into an audio file via ffmpeg.
+ * Downloads an image from a URL to a local file path.
+ * @param {string} url
+ * @param {string} destPath
+ * @returns {Promise<void>}
+ */
+function downloadImage(url, destPath) {
+  return new Promise((resolve, reject) => {
+    const protocol = url.startsWith('https') ? https : http;
+    const file = fs.createWriteStream(destPath);
+    protocol.get(url, (response) => {
+      response.pipe(file);
+      file.on('finish', () => file.close(resolve));
+    }).on('error', (err) => {
+      fs.unlink(destPath, () => {});
+      reject(err);
+    });
+  });
+}
+
+/**
+ * Embeds title/artist/album metadata (and optional cover art) into an audio file via ffmpeg.
  * Reads from inputFilePath, writes to outputFilePath, then deletes inputFilePath.
  * @param {string} inputFilePath
  * @param {string} outputFilePath
- * @param {object} metadata - { name, artist, album }
+ * @param {object} metadata - { name, artist, album, imageUrl? }
  * @returns {Promise<void>}
  */
 function embedMetadata(inputFilePath, outputFilePath, metadata) {
   return new Promise(async (resolve, reject) => {
+    let tempImagePath = null;
     try {
-      console.log('--------------------------------');
-      console.log('METADATA');
-      console.log(metadata);
-      console.log('--------------------------------');
-      await ffmpeg(inputFilePath)
+      if (metadata.imageUrl) {
+        tempImagePath = path.join(os.tmpdir(), `cover-${Date.now()}.jpg`);
+        await downloadImage(metadata.imageUrl, tempImagePath);
+      }
+
+      let cmd = ffmpeg(inputFilePath)
         .outputOption('-metadata', `title=${metadata.name}`)
         .outputOption('-metadata', `artist=${metadata.artist}`)
-        .outputOption('-metadata', `album=${metadata.album}`)
-        // Add more metadata options as needed
+        .outputOption('-metadata', `album=${metadata.album}`);
+
+      if (tempImagePath) {
+        cmd = cmd
+          .addInput(tempImagePath)
+          .outputOption('-map', '0:0')
+          .outputOption('-map', '1:0')
+          .outputOption('-c:a', 'copy')
+          .outputOption('-c:v', 'copy')
+          .outputOption('-id3v2_version', '3')
+          .outputOption('-metadata:s:v', 'title=Album cover')
+          .outputOption('-metadata:s:v', 'comment=Cover (front)');
+      }
+
+      cmd
         .output(outputFilePath)
         .on('progress', (progress) => {
-          console.log(
-            `FFmpeg Progress: ${progress.percent}% done, ${progress.timemark}`,
-          );
-          console.log('DATA : ', metadata.name, progress);
           mainWindow.webContents.send(
             'ffmpeg-progress',
             `FFmpeg Progress: ${progress.percent}% done, ${progress.timemark}`,
@@ -686,22 +720,25 @@ function embedMetadata(inputFilePath, outputFilePath, metadata) {
           );
         })
         .on('end', async () => {
-          console.log('Metadata edited successfully');
-
-          // Delete the original file (inputFilePath)
-          // I have to do this because ffmpeg doesnt let you edit files you read. So you need two different files...
-          // await fs.unlink(inputFilePath);
+          if (tempImagePath) {
+            try { await fsPromises.unlink(tempImagePath); } catch {}
+          }
           await fsPromises.unlink(inputFilePath);
-
           resolve();
         })
-        .on('error', (err) => {
-          console.error('Error editing metadata:', err);
+        .on('error', async (err) => {
+          Logger.error('Error embedding metadata:', err);
+          if (tempImagePath) {
+            try { await fsPromises.unlink(tempImagePath); } catch {}
+          }
           reject(err);
         })
         .run();
     } catch (error) {
-      console.error('Error editing metadata:', error);
+      Logger.error('Error embedding metadata:', error);
+      if (tempImagePath) {
+        try { await fsPromises.unlink(tempImagePath); } catch {}
+      }
       reject(error);
     }
   });

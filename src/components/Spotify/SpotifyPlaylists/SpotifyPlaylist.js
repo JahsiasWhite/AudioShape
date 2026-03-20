@@ -203,6 +203,7 @@ const SpotifyPlaylist = ({ playlistId, unloadPlaylist }) => {
       name: song.track.name,
       artist: song.track.artists[0].name,
       album: song.track.album.name,
+      imageUrl: song.track.album.images[0]?.url,
     };
 
     pendingDownloads.current[idx] = song.track.name;
