@@ -140,7 +140,10 @@ function App() {
         )}
 
         {isFullscreen && (
-          <FullscreenView toggleFullscreen={disableFullscreen} />
+          <div className="fullscreen-with-titlebar">
+            <TitleBar />
+            <FullscreenView toggleFullscreen={disableFullscreen} />
+          </div>
         )}
 
         <ErrorMessages />

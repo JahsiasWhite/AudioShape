@@ -1,10 +1,7 @@
 .fullscreen-view {
-  /* position: fixed;
-  width: 100vw;
-  height: 100vh; */
-
   display: flex;
   flex-direction: column;
+  flex: 1;
   overflow: hidden;
   background-color: var(--color-main);
 }
