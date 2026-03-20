@@ -9,9 +9,9 @@ import VideoPlayer from './VideoPlayer/VideoPlayer.js';
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 const FullscreenView = ({ toggleFullscreen }) => {
-  const { visibleSongs, currentSongId, currentSong, loadingQueue } =
+  const { loadedSongs, currentSongId, currentSong, loadingQueue } =
     useAudioPlayer(); // TODO: Do I have to import currentSong
-  const song = visibleSongs[currentSongId];
+  const song = loadedSongs[currentSongId];
 
   // TODO: Changing volume rerenders this component...
   console.log(song, currentSong);
