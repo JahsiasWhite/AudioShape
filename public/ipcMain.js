@@ -546,9 +546,9 @@ const SETUP_GET_SONGS = (mainW) => {
       updateLibraryDirectory(correctedPath);
     }
 
-    // The user has not selected a directory, so we should return an empty array
+    // The user has not selected a directory, so we should return an empty object
     if (correctedPath === '') {
-      event.reply('GRAB_SONGS', []);
+      event.reply('GRAB_SONGS', { songs: {}, isComplete: true });
       return;
     }
 
@@ -571,7 +571,7 @@ const SETUP_GET_SONGS = (mainW) => {
     // Make sure we have at least one song in the directory
     if (audios.length === 0) {
       // ! OUTPUT ERROR HERE?
-      event.reply('GRAB_SONGS', []);
+      event.reply('GRAB_SONGS', { songs: {}, isComplete: true });
       return;
     }
 

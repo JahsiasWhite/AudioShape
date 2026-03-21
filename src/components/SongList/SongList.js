@@ -43,7 +43,7 @@ function SongList({ handleSongEdit }) {
       setIsLoading(false);
     }
 
-    setFilteredSongs(visibleSongs);
+    setFilteredSongs(visibleSongs || {});
   }, [visibleSongs]);
 
   const [playlistMenuIndex, setPlaylistMenuOpen] = useState(-1);
@@ -111,7 +111,7 @@ function SongList({ handleSongEdit }) {
 
   // Use the first song to set the image
   // TODO: Make this better
-  let firstKey = Object.keys(filteredSongs)[0];
+  let firstKey = filteredSongs ? Object.keys(filteredSongs)[0] : undefined;
 
   console.error('TEST: ', filteredSongs);
 
@@ -130,12 +130,12 @@ function SongList({ handleSongEdit }) {
         {currentScreen}
       </div>
       <Searchbar setFilteredSongs={setFilteredSongs} />
-      {isLoading && Object.keys(visibleSongs).length === 0 ? (
+      {isLoading && Object.keys(visibleSongs || {}).length === 0 ? (
         <div className="num-songs">
           Loading...{' '}
           {isLoading && <LoadingSpinner className="loading-spinner-sm" />}
         </div>
-      ) : !isLoading && Object.keys(visibleSongs).length === 0 ? (
+      ) : !isLoading && Object.keys(visibleSongs || {}).length === 0 ? (
         <div className="empty-message">
           <p>No songs found! Make sure the file path is correct, or reset it</p>
           <FolderSelection onLoadingStart={startSongsLoading} />
