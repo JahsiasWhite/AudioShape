@@ -422,6 +422,20 @@ const SETUP_SONG_DOWNLOADS = (mainW) => {
 const processSongMetadata = (file, imageMap) => {
   return new Promise((resolve, reject) => {
     try {
+      if (path.extname(file).toLowerCase() === '.mkv') {
+        resolve({
+          id: file,
+          file: file,
+          title: path.basename(file).split('.').slice(0, -1).join('.'),
+          artist: 'Unknown Artist',
+          album: 'Unknown Album',
+          duration: undefined,
+          albumImage: undefined,
+          isVideo: false,
+        });
+        return;
+      }
+
       const hasDirectoryImage = !!imageMap[path.dirname(file)]?.length;
       metadata
         .parseFile(file, { skipCovers: hasDirectoryImage })
@@ -590,7 +604,11 @@ const SETUP_GET_SONGS = (mainW) => {
         batch.map((file) =>
           processSongMetadata(file, imageMap).catch((error) => {
             console.error('ERROR\nFile: ', file, '\nError: ', error);
-            Logger.error('Error processing song metadata for file:', file, error);
+            Logger.error(
+              'Error processing song metadata for file:',
+              file,
+              error,
+            );
             return null;
           }),
         ),
@@ -664,13 +682,15 @@ function downloadImage(url, destPath) {
   return new Promise((resolve, reject) => {
     const protocol = url.startsWith('https') ? https : http;
     const file = fs.createWriteStream(destPath);
-    protocol.get(url, (response) => {
-      response.pipe(file);
-      file.on('finish', () => file.close(resolve));
-    }).on('error', (err) => {
-      fs.unlink(destPath, () => {});
-      reject(err);
-    });
+    protocol
+      .get(url, (response) => {
+        response.pipe(file);
+        file.on('finish', () => file.close(resolve));
+      })
+      .on('error', (err) => {
+        fs.unlink(destPath, () => {});
+        reject(err);
+      });
   });
 }
 
@@ -720,7 +740,9 @@ function embedMetadata(inputFilePath, outputFilePath, metadata) {
         })
         .on('end', async () => {
           if (tempImagePath) {
-            try { await fsPromises.unlink(tempImagePath); } catch {}
+            try {
+              await fsPromises.unlink(tempImagePath);
+            } catch {}
           }
           await fsPromises.unlink(inputFilePath);
           resolve();
@@ -728,7 +750,9 @@ function embedMetadata(inputFilePath, outputFilePath, metadata) {
         .on('error', async (err) => {
           Logger.error('Error embedding metadata:', err);
           if (tempImagePath) {
-            try { await fsPromises.unlink(tempImagePath); } catch {}
+            try {
+              await fsPromises.unlink(tempImagePath);
+            } catch {}
           }
           reject(err);
         })
@@ -736,7 +760,9 @@ function embedMetadata(inputFilePath, outputFilePath, metadata) {
     } catch (error) {
       Logger.error('Error embedding metadata:', error);
       if (tempImagePath) {
-        try { await fsPromises.unlink(tempImagePath); } catch {}
+        try {
+          await fsPromises.unlink(tempImagePath);
+        } catch {}
       }
       reject(error);
     }
