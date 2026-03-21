@@ -46,7 +46,11 @@ function VideoPlayer({ songFile, song }) {
         return;
       }
 
-      videoRef.current.play();
+      // Catch and ignore the error here
+      // This is needed because we have to mute the video to prevent audio feedback.
+      // But chromium has a power-saving feature that auto pauses muted videos when
+      // they're in the background that causes an unnecessary error when tabbing back in
+      videoRef.current.play().catch(() => {});
     } else {
       videoRef.current.pause();
     }
