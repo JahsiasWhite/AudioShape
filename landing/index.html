@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      AudioShape — Free Music &amp; Video Player with Live EQ, Effects &amp;
+      Downloader for Windows
+    </title>
+    <meta
+      name="description"
+      content="AudioShape is a free, open-source Windows music and video player with live EQ, reverb, speed control, and persistent per-track settings. Includes a built-in YouTube and Spotify downloader and fullscreen video playback."
+    />
+    <meta
+      name="keywords"
+      content="music player windows, video player windows, music player with equalizer, slow reverb music player, music player with effects, youtube music downloader windows, spotify downloader, free music player, audio effects player, media player windows"
+    />
+
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/favicon.ico" />
+    <link rel="canonical" href="https://audioshape.app/" />
+
+    <!-- Open Graph (controls previews on Reddit, Discord, Twitter, iMessage) -->
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:title"
+      content="AudioShape — Free Music &amp; Video Player with Live EQ &amp; Effects"
+    />
+    <meta
+      property="og:description"
+      content="Live EQ, reverb, speed control, and fullscreen video playback. Edits are persistent per-track — no re-applying. Includes a built-in YouTube &amp; Spotify downloader. Free for Windows."
+    />
+    <meta property="og:url" content="https://audioshape.app/" />
+    <meta
+      property="og:image"
+      content="https://audioshape.app/images/edit-screen.png"
+    />
+    <meta property="og:image:width" content="1280" />
+    <meta property="og:image:height" content="800" />
+    <meta property="og:site_name" content="AudioShape" />
+
+    <!-- Twitter / X Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="AudioShape — Free Music &amp; Video Player with Live EQ &amp; Effects"
+    />
+    <meta
+      name="twitter:description"
+      content="Live EQ, reverb, speed control, fullscreen video playback. Persistent per-track edits. Built-in YouTube &amp; Spotify downloader. Free for Windows."
+    />
+    <meta
+      name="twitter:image"
+      content="https://audioshape.app/images/edit-screen.png"
+    />
+
+    <!-- JSON-LD: tells Google this is a software app (shows "Free · Windows" in results) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "AudioShape",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "Windows",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "description": "A free, open-source Windows music and video player with live EQ, reverb, speed control, and persistent per-track settings. Includes a built-in YouTube and Spotify downloader and fullscreen video playback.",
+        "url": "https://audioshape.app/",
+        "downloadUrl": "https://github.com/JahsiasWhite/AudioShape/releases/latest",
+        "screenshot": "https://audioshape.app/images/edit-screen.png",
+        "softwareVersion": "0.3.0",
+        "license": "https://github.com/JahsiasWhite/AudioShape/blob/master/LICENSE",
+        "author": {
+          "@type": "Person",
+          "name": "JahsiasWhite",
+          "url": "https://github.com/JahsiasWhite"
+        },
+        "featureList": [
+          "Live EQ and audio effects",
+          "Persistent per-track effect settings",
+          "Export tracks with effects",
+          "Built-in YouTube downloader",
+          "Built-in Spotify downloader",
+          "Fullscreen video playback",
+          "Custom color themes"
+        ]
+      }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body>
+    <!-- NAV -->
+    <nav>
+      <a href="#" class="logo">Audio<span>Shape</span></a>
+      <div class="nav-right">
+        <a href="#features">Features</a>
+        <a
+          href="https://github.com/JahsiasWhite/AudioShape"
+          target="_blank"
+          rel="noopener"
+          >GitHub</a
+        >
+        <a
+          href="https://github.com/JahsiasWhite/AudioShape/releases/latest"
+          class="nav-download"
+          target="_blank"
+          rel="noopener"
+          >Download ↓</a
+        >
+      </div>
+    </nav>
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-top">
+        <h1 class="hero-heading">Audio<em>Shape</em></h1>
+        <div class="hero-right">
+          <div class="waveform" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <p>
+            Music player with live audio effect editing such as EQ and speed
+            control. Also includes a built-in YouTube/Spotify downloader.
+          </p>
+          <div class="hero-cta">
+            <a
+              href="https://github.com/JahsiasWhite/AudioShape/releases/latest"
+              class="btn-dl"
+              target="_blank"
+              rel="noopener"
+              >Download for Windows</a
+            >
+            <a
+              href="https://slowandreverbify.com"
+              class="btn-web"
+              target="_blank"
+              rel="noopener"
+              >Try in browser →</a
+            >
+          </div>
+        </div>
+      </div>
+      <img src="edit-screen.png" alt="AudioShape interface" class="hero-img" />
+    </div>
+
+    <!-- FEATURES -->
+    <section class="features" id="features">
+      <div class="features-header">
+        <h2>Features</h2>
+      </div>
+
+      <div class="feature-row">
+        <span class="feature-num">01</span>
+        <span class="feature-name">Live Audio Editing</span>
+        <span class="feature-desc"
+          >Adjust EQ, reverb, speed, and other effects in real time while music
+          plays. Hear changes instantly without stopping playback.</span
+        >
+      </div>
+      <div class="feature-row">
+        <span class="feature-num">02</span>
+        <span class="feature-name">Persistent Per-Track Settings</span>
+        <span class="feature-desc"
+          >Effects are saved to each track. Switch songs and your settings come
+          back automatically — no reapplying every time.</span
+        >
+      </div>
+      <div class="feature-row">
+        <span class="feature-num">03</span>
+        <span class="feature-name">Export &amp; Presets</span>
+        <span class="feature-desc"
+          >Bake your effects into an exported file, or save effect chains as
+          named presets to reuse across your library.</span
+        >
+      </div>
+      <div class="feature-row">
+        <span class="feature-num">04</span>
+        <span class="feature-name">YouTube &amp; Spotify Downloader</span>
+        <span class="feature-desc"
+          >Download audio from YouTube or Spotify directly inside the app. No
+          separate tools, no command line.</span
+        >
+      </div>
+      <div class="feature-row">
+        <span class="feature-num">05</span>
+        <span class="feature-name">Fullscreen Video Mode</span>
+        <span class="feature-desc"
+          >Supports video formats with a dedicated fullscreen playback view —
+          doubles as a lightweight media player.</span
+        >
+      </div>
+      <div class="feature-row">
+        <span class="feature-num">06</span>
+        <span class="feature-name">Custom Themes</span>
+        <span class="feature-desc"
+          >Swap color schemes to match your setup. The interface adapts without
+          restarting the app.</span
+        >
+      </div>
+    </section>
+
+    <!-- DOWNLOAD -->
+    <div class="download" id="download">
+      <h2>Your music,<br /><span>shaped your way.</span></h2>
+      <div class="download-right">
+        <a
+          href="https://github.com/JahsiasWhite/AudioShape/releases/latest"
+          class="btn-dl-lg"
+          target="_blank"
+          rel="noopener"
+          >Download for Windows</a
+        >
+        <p class="download-note">
+          Free forever · Open source ·
+          <a href="https://slowandreverbify.com" target="_blank" rel="noopener"
+            >Try the web app</a
+          >
+        </p>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+      <span>AudioShape — Free &amp; open source</span>
+      <div class="footer-links">
+        <a
+          href="https://github.com/JahsiasWhite/AudioShape"
+          target="_blank"
+          rel="noopener"
+          >GitHub</a
+        >
+        <a
+          href="https://github.com/JahsiasWhite/AudioShape/issues"
+          target="_blank"
+          rel="noopener"
+          >Report a bug</a
+        >
+        <a href="https://slowandreverbify.com" target="_blank" rel="noopener"
+          >Web app</a
+        >
+      </div>
+    </footer>
+  </body>
+</html>
