@@ -294,10 +294,10 @@ export const AudioProvider = ({ children }) => {
   }, []);
 
   /* When the songs first load, we want all songs to be shown */
-  const initialSongLoad = (songs) => {
+  const initialSongLoad = (songs, isComplete = true) => {
     setLoadedSongs(songs);
     setVisibleSongs(songs);
-    setInitSongsLoading(false);
+    if (isComplete) setInitSongsLoading(false);
   };
 
   /* Called when a new directory is selected — clears old songs and shows loading */
@@ -307,9 +307,9 @@ export const AudioProvider = ({ children }) => {
     setLoadedSongs({});
   };
 
-  window.electron.ipcRenderer.on('GRAB_SONGS', (retrievedSongs) => {
-    console.error('GOT SONGS: ', retrievedSongs);
-    initialSongLoad(retrievedSongs);
+  window.electron.ipcRenderer.on('GRAB_SONGS', ({ songs, isComplete }) => {
+    console.error('GOT SONGS: ', songs);
+    initialSongLoad(songs, isComplete);
   });
 
   /**

@@ -118,6 +118,66 @@ describe('Song List', () => {
     expect(songListAfter).toEqual(['Song A', 'Song B', 'Song C']);
   });
 
+  it('shows loading indicator when directory is empty and still loading', () => {
+    const { useAudioPlayer } = require('../../../src/AudioController/AudioContext');
+    useAudioPlayer.mockReturnValue({
+      visibleSongs: {},
+      currentScreen: 'All Songs',
+      setCurrentScreen: jest.fn(),
+      initSongsLoading: true,
+      startSongsLoading: jest.fn(),
+      loadingQueue: [],
+    });
+
+    const { container } = render(
+      <AudioProvider>
+        <SongList handleSongEdit={jest.fn()} />
+      </AudioProvider>
+    );
+
+    expect(container.querySelector('.num-songs')).not.toBeNull();
+  });
+
+  it('shows empty-directory message when directory has no songs', () => {
+    const { useAudioPlayer } = require('../../../src/AudioController/AudioContext');
+    useAudioPlayer.mockReturnValue({
+      visibleSongs: {},
+      currentScreen: 'All Songs',
+      setCurrentScreen: jest.fn(),
+      initSongsLoading: false,
+      startSongsLoading: jest.fn(),
+      loadingQueue: [],
+    });
+
+    const { container } = render(
+      <AudioProvider>
+        <SongList handleSongEdit={jest.fn()} />
+      </AudioProvider>
+    );
+
+    expect(container.querySelector('.empty-message')).not.toBeNull();
+  });
+
+  it('does not crash when visibleSongs is null (e.g. malformed GRAB_SONGS payload)', () => {
+    const { useAudioPlayer } = require('../../../src/AudioController/AudioContext');
+    useAudioPlayer.mockReturnValue({
+      visibleSongs: null,
+      currentScreen: 'All Songs',
+      setCurrentScreen: jest.fn(),
+      initSongsLoading: false,
+      startSongsLoading: jest.fn(),
+      loadingQueue: [],
+    });
+
+    const { container } = render(
+      <AudioProvider>
+        <SongList handleSongEdit={jest.fn()} />
+      </AudioProvider>
+    );
+
+    expect(container).toBeDefined();
+  });
+
   it('handles import songs correctly', () => {
     // Mock the AudioContext values
     const mockAudioContext = {

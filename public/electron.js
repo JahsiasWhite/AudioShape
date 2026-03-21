@@ -62,6 +62,7 @@ const {
 } = initializeAppConstants();
 
 logger.init(dataDirectory);
+logger.info(`AudioShape v${app.getVersion()} starting`);
 ipcMain.on('LOG', (_event, { ts, level, msg }) => {
   logger[level === 'ERROR' ? 'error' : 'warn'](`[renderer] ${msg}`);
 });

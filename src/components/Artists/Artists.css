@@ -13,6 +13,10 @@
 .artist-name {
   margin-top: 10px;
   font-size: 18px;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  text-align: center;
+  width: 100%;
 }
 
 .artist {

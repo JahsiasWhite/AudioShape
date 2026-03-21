@@ -50,6 +50,9 @@ function getYoutubeDl() {
 }
 
 const path = require('path');
+const os = require('os');
+const https = require('https');
+const http = require('http');
 
 /* Where the files are saved for the auto playing  */
 let temporaryFilePath = null;
@@ -419,8 +422,23 @@ const SETUP_SONG_DOWNLOADS = (mainW) => {
 const processSongMetadata = (file, imageMap) => {
   return new Promise((resolve, reject) => {
     try {
+      if (path.extname(file).toLowerCase() === '.mkv') {
+        resolve({
+          id: file,
+          file: file,
+          title: path.basename(file).split('.').slice(0, -1).join('.'),
+          artist: 'Unknown Artist',
+          album: 'Unknown Album',
+          duration: undefined,
+          albumImage: undefined,
+          isVideo: false,
+        });
+        return;
+      }
+
+      const hasDirectoryImage = !!imageMap[path.dirname(file)]?.length;
       metadata
-        .parseFile(file)
+        .parseFile(file, { skipCovers: hasDirectoryImage })
         .then((data) => {
           let title = data.common.title;
           let artist = data.common.artist;
@@ -469,6 +487,7 @@ const processSongMetadata = (file, imageMap) => {
           /* Gets image for the song/album */
           // Prioritizes the image with the same name as the song file
           // If none match, it will use an image found in the song directory
+          // If no directory image is found, falls back to embedded album art
           // If no image is found, the frontend will check if the song is an .mp4 file
           // If it is, it will use a frame from the video as the album image
           const albumDir = path.dirname(file);
@@ -485,6 +504,16 @@ const processSongMetadata = (file, imageMap) => {
               savedImage = imageFile;
             }
           });
+
+          // Fall back to embedded album art if no directory image was found
+          if (
+            !savedImage &&
+            data.common.picture &&
+            data.common.picture.length > 0
+          ) {
+            const pic = data.common.picture[0];
+            savedImage = `data:${pic.format};base64,${Buffer.from(pic.data).toString('base64')}`;
+          }
 
           const songData = {
             id: key,
@@ -504,6 +533,7 @@ const processSongMetadata = (file, imageMap) => {
         });
     } catch (err) {
       console.error('ERROR', err);
+      resolve(null);
     }
   });
 };
@@ -530,15 +560,15 @@ const SETUP_GET_SONGS = (mainW) => {
       updateLibraryDirectory(correctedPath);
     }
 
-    // The user has not selected a directory, so we should return an empty array
+    // The user has not selected a directory, so we should return an empty object
     if (correctedPath === '') {
-      event.reply('GRAB_SONGS', []);
+      event.reply('GRAB_SONGS', { songs: {}, isComplete: true });
       return;
     }
 
     // Get all songs in the given directory as well as all subdirectories
-    const audioTypes = 'mp3,wav,ogg,mp4,flac,m4a';
-    const audios = await glob(correctedPath + '/**/*.{' + audioTypes + '}');
+    const songTypes = 'mp3,wav,ogg,mp4,flac,m4a,mkv';
+    const audios = await glob(correctedPath + '/**/*.{' + songTypes + '}');
 
     // Get and set a map of image files for easier access
     const imageFiles = await glob(correctedPath + '/**/*.{jpg,jpeg,png}');
@@ -555,34 +585,51 @@ const SETUP_GET_SONGS = (mainW) => {
     // Make sure we have at least one song in the directory
     if (audios.length === 0) {
       // ! OUTPUT ERROR HERE?
-      event.reply('GRAB_SONGS', []);
+      event.reply('GRAB_SONGS', { songs: {}, isComplete: true });
       return;
     }
 
     /* Get all songs */
-    let count = 0; // This is so we know when we ran out of files to parse and can return
     songs = {}; // ? Reset songs here?
 
-    console.log('Grabbing song data...');
-    audios.forEach(async (file) => {
-      try {
-        const songData = await processSongMetadata(file, imageMap);
-        songs[songData.id] = songData;
-      } catch (error) {
-        console.error('ERROR AT', count, '\nFile: ', file, '\nError: ', error);
-        Logger.error('Error processing song metadata for file:', file, error);
-        // mainWindow.webContents.send('ERROR_MESSAGE', {
-        //   title: 'Error',
-        //   description: error.message,
-        // });
-      } finally {
-        count++;
-        if (count === audios.length) {
-          mainWindow.webContents.send('GRAB_SONGS', songs);
-        }
-      }
-    });
-    console.error('Finished grabbing song data...');
+    const total = audios.length;
+    Logger.info(`Loading ${total} songs from ${correctedPath}`);
+    console.log(`[Songs] Found ${total} songs — loading metadata...`);
+
+    const BATCH_SIZE = 20;
+
+    for (let i = 0; i < audios.length; i += BATCH_SIZE) {
+      const batch = audios.slice(i, i + BATCH_SIZE);
+      const batchResults = await Promise.all(
+        batch.map((file) =>
+          processSongMetadata(file, imageMap).catch((error) => {
+            console.error('ERROR\nFile: ', file, '\nError: ', error);
+            Logger.error(
+              'Error processing song metadata for file:',
+              file,
+              error,
+            );
+            return null;
+          }),
+        ),
+      );
+
+      batchResults.forEach((songData) => {
+        if (songData) songs[songData.id] = songData;
+      });
+
+      const resolved = i + batch.length;
+      const isComplete = resolved >= total;
+      const pct = Math.round((resolved / total) * 100);
+      console.log(
+        `[Songs] ${resolved}/${total} (${pct}%)${isComplete ? ' — done!' : ''}`,
+      );
+      mainWindow.webContents.send('GRAB_SONGS', {
+        songs,
+        isComplete,
+        progress: { resolved, total },
+      });
+    }
   });
 
   /**
@@ -626,31 +673,64 @@ const SETUP_GET_SONGS = (mainW) => {
  */
 
 /**
- * Embeds title/artist/album metadata into an audio file via ffmpeg.
+ * Downloads an image from a URL to a local file path.
+ * @param {string} url
+ * @param {string} destPath
+ * @returns {Promise<void>}
+ */
+function downloadImage(url, destPath) {
+  return new Promise((resolve, reject) => {
+    const protocol = url.startsWith('https') ? https : http;
+    const file = fs.createWriteStream(destPath);
+    protocol
+      .get(url, (response) => {
+        response.pipe(file);
+        file.on('finish', () => file.close(resolve));
+      })
+      .on('error', (err) => {
+        fs.unlink(destPath, () => {});
+        reject(err);
+      });
+  });
+}
+
+/**
+ * Embeds title/artist/album metadata (and optional cover art) into an audio file via ffmpeg.
  * Reads from inputFilePath, writes to outputFilePath, then deletes inputFilePath.
  * @param {string} inputFilePath
  * @param {string} outputFilePath
- * @param {object} metadata - { name, artist, album }
+ * @param {object} metadata - { name, artist, album, imageUrl? }
  * @returns {Promise<void>}
  */
 function embedMetadata(inputFilePath, outputFilePath, metadata) {
   return new Promise(async (resolve, reject) => {
+    let tempImagePath = null;
     try {
-      console.log('--------------------------------');
-      console.log('METADATA');
-      console.log(metadata);
-      console.log('--------------------------------');
-      await ffmpeg(inputFilePath)
+      if (metadata.imageUrl) {
+        tempImagePath = path.join(os.tmpdir(), `cover-${Date.now()}.jpg`);
+        await downloadImage(metadata.imageUrl, tempImagePath);
+      }
+
+      let cmd = ffmpeg(inputFilePath)
         .outputOption('-metadata', `title=${metadata.name}`)
         .outputOption('-metadata', `artist=${metadata.artist}`)
-        .outputOption('-metadata', `album=${metadata.album}`)
-        // Add more metadata options as needed
+        .outputOption('-metadata', `album=${metadata.album}`);
+
+      if (tempImagePath) {
+        cmd = cmd
+          .addInput(tempImagePath)
+          .outputOption('-map', '0:0')
+          .outputOption('-map', '1:0')
+          .outputOption('-c:a', 'copy')
+          .outputOption('-c:v', 'copy')
+          .outputOption('-id3v2_version', '3')
+          .outputOption('-metadata:s:v', 'title=Album cover')
+          .outputOption('-metadata:s:v', 'comment=Cover (front)');
+      }
+
+      cmd
         .output(outputFilePath)
         .on('progress', (progress) => {
-          console.log(
-            `FFmpeg Progress: ${progress.percent}% done, ${progress.timemark}`,
-          );
-          console.log('DATA : ', metadata.name, progress);
           mainWindow.webContents.send(
             'ffmpeg-progress',
             `FFmpeg Progress: ${progress.percent}% done, ${progress.timemark}`,
@@ -659,22 +739,31 @@ function embedMetadata(inputFilePath, outputFilePath, metadata) {
           );
         })
         .on('end', async () => {
-          console.log('Metadata edited successfully');
-
-          // Delete the original file (inputFilePath)
-          // I have to do this because ffmpeg doesnt let you edit files you read. So you need two different files...
-          // await fs.unlink(inputFilePath);
+          if (tempImagePath) {
+            try {
+              await fsPromises.unlink(tempImagePath);
+            } catch {}
+          }
           await fsPromises.unlink(inputFilePath);
-
           resolve();
         })
-        .on('error', (err) => {
-          console.error('Error editing metadata:', err);
+        .on('error', async (err) => {
+          Logger.error('Error embedding metadata:', err);
+          if (tempImagePath) {
+            try {
+              await fsPromises.unlink(tempImagePath);
+            } catch {}
+          }
           reject(err);
         })
         .run();
     } catch (error) {
-      console.error('Error editing metadata:', error);
+      Logger.error('Error embedding metadata:', error);
+      if (tempImagePath) {
+        try {
+          await fsPromises.unlink(tempImagePath);
+        } catch {}
+      }
       reject(error);
     }
   });

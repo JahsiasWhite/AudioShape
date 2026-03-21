@@ -1,8 +1,8 @@
 import React from 'react';
 import './LoadingSpinner.css';
 
-function LoadingSpinner() {
-  return <div className="loading-spinner"></div>;
+function LoadingSpinner({ className = '' }) {
+  return <div className={`loading-spinner ${className}`}></div>;
 }
 
 export default LoadingSpinner;

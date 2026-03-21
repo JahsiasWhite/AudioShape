@@ -15,3 +15,12 @@
     transform: rotate(360deg);
   }
 }
+
+.loading-spinner-sm {
+  width: 14px;
+  height: 14px;
+  border-width: 2px;
+  display: inline-block;
+  margin-left: 8px;
+  vertical-align: middle;
+}
