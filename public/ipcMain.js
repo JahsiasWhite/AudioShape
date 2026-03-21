@@ -583,36 +583,35 @@ const SETUP_GET_SONGS = (mainW) => {
     console.log(`[Songs] Found ${total} songs — loading metadata...`);
 
     const BATCH_SIZE = 20;
-    const songPromises = audios.map((file) =>
-      processSongMetadata(file, imageMap).catch((error) => {
-        console.error('ERROR\nFile: ', file, '\nError: ', error);
-        Logger.error('Error processing song metadata for file:', file, error);
-        return null;
-      }),
-    );
 
-    let resolved = 0;
-    songPromises.forEach((promise) => {
-      promise.then((songData) => {
+    for (let i = 0; i < audios.length; i += BATCH_SIZE) {
+      const batch = audios.slice(i, i + BATCH_SIZE);
+      const batchResults = await Promise.all(
+        batch.map((file) =>
+          processSongMetadata(file, imageMap).catch((error) => {
+            console.error('ERROR\nFile: ', file, '\nError: ', error);
+            Logger.error('Error processing song metadata for file:', file, error);
+            return null;
+          }),
+        ),
+      );
+
+      batchResults.forEach((songData) => {
         if (songData) songs[songData.id] = songData;
-        resolved++;
-
-        const isComplete = resolved === audios.length;
-
-        // Log progress every BATCH_SIZE songs and at completion
-        if (resolved % BATCH_SIZE === 0 || isComplete) {
-          const pct = Math.round((resolved / total) * 100);
-          console.log(
-            `[Songs] ${resolved}/${total} (${pct}%)${isComplete ? ' — done!' : ''}`,
-          );
-          mainWindow.webContents.send('GRAB_SONGS', {
-            songs,
-            isComplete,
-            progress: { resolved, total },
-          });
-        }
       });
-    });
+
+      const resolved = i + batch.length;
+      const isComplete = resolved >= total;
+      const pct = Math.round((resolved / total) * 100);
+      console.log(
+        `[Songs] ${resolved}/${total} (${pct}%)${isComplete ? ' — done!' : ''}`,
+      );
+      mainWindow.webContents.send('GRAB_SONGS', {
+        songs,
+        isComplete,
+        progress: { resolved, total },
+      });
+    }
   });
 
   /**
