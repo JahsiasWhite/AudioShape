@@ -596,7 +596,7 @@ const SETUP_GET_SONGS = (mainW) => {
     Logger.info(`Loading ${total} songs from ${correctedPath}`);
     console.log(`[Songs] Found ${total} songs — loading metadata...`);
 
-    const BATCH_SIZE = 20;
+    const BATCH_SIZE = 200;
 
     for (let i = 0; i < audios.length; i += BATCH_SIZE) {
       const batch = audios.slice(i, i + BATCH_SIZE);

@@ -4,7 +4,7 @@ import { useAudioPlayer } from '../../../AudioController/AudioContext';
 
 function VideoPlayer({ songFile, song }) {
   const firstTime = useRef(true);
-  const { videoTime, currentSpeed, isPlaying, loadingQueue } = useAudioPlayer();
+  const { videoTime, currentSpeed, isPlaying, loadingQueue, currentSong } = useAudioPlayer();
 
   const videoRef = useRef(null);
 
@@ -34,6 +34,19 @@ function VideoPlayer({ songFile, song }) {
   useEffect(() => {
     videoRef.current.playbackRate = currentSpeed;
   }, [currentSpeed]);
+
+  // Resync video to audio when tabbing back in (Chromium pauses muted background videos)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && isPlaying) {
+        videoRef.current.currentTime = currentSong.currentTime;
+        videoRef.current.play().catch(() => {});
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [isPlaying, currentSong]);
 
   // ? Will the current time slowly lose sync? If we update currentTime everytime though, there is a visual stutter
   useEffect(() => {
