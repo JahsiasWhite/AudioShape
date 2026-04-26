@@ -99,8 +99,7 @@ const AudioPlugin = () => {
       updates.reverbWetness = Math.round(combo.reverbWetness * 99 + 1);
     }
     if (combo.delay !== undefined) {
-      // Reverse-map from 0-5 audio range back to 1-100 knob range
-      updates.delay = Math.round((combo.delay * 99) / 5 + 1);
+      updates.delay = Math.round(combo.delay * 100);
     }
     if (combo.bitCrusher !== undefined) updates.bitCrusher = combo.bitCrusher;
     if (combo.pitchShift !== undefined) updates.pitchShift = combo.pitchShift;
@@ -133,7 +132,7 @@ const AudioPlugin = () => {
     color: true,
     size: 75,
     numTicks: 6,
-    min: 1,
+    min: 0,
     max: 100,
     value: knobs.delay,
   };
@@ -208,8 +207,7 @@ const AudioPlugin = () => {
   };
 
   const mapValueToDelay = (newValue) => {
-    // Our desired range
-    const delayRange = [0, 5];
+    const delayRange = [0, 1];
 
     const mappedValue = interpolateValue(delayRange, newValue, delayKnobStyles);
 
@@ -370,7 +368,7 @@ const AudioPlugin = () => {
               knobValue={knobs.delay}
               onChange={mapValueToDelay}
             />
-            <p>DELAY: {knobs.delay}s</p>
+            <p>DELAY: {(knobs.delay / 100).toFixed(2)}s</p>
           </div>
         </div>
         <div className="module-container">
