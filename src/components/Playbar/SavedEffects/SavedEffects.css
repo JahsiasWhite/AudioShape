@@ -86,3 +86,62 @@
 .effect-tooltip ul {
   margin: 0;
 }
+
+.saved-effect-item {
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.saved-effect-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.saved-effect-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.saved-effect-item:hover .saved-effect-actions {
+  opacity: 1;
+}
+
+.effect-action-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px 5px;
+  border-radius: 3px;
+  line-height: 1;
+  transition: color 0.15s, background 0.15s;
+}
+
+.effect-action-btn:hover {
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.effect-action-delete:hover {
+  color: #e05555;
+  background: rgba(224, 85, 85, 0.12);
+}
+
+.rename-form {
+  flex: 1;
+}
+
+.rename-input {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--color-accent);
+  border-radius: 3px;
+  color: var(--color-text);
+  font-size: 13px;
+  padding: 2px 6px;
+  width: 100%;
+  outline: none;
+}

@@ -86,6 +86,30 @@ const AudioPlugin = () => {
     setMultiplier(currentSpeed);
   }, [currentSpeed, savedEffects]);
 
+  // Sync knob visuals when a saved effect combo is applied
+  useEffect(() => {
+    if (!currentEffectCombo || !savedEffects[currentEffectCombo]) return;
+
+    const combo = savedEffects[currentEffectCombo];
+    const updates = {};
+
+    if (combo.reverbIsActive !== undefined) updates.reverbIsActive = combo.reverbIsActive;
+    if (combo.reverbWetness !== undefined) {
+      // Reverse-map from 0-1 audio range back to 1-100 knob range
+      updates.reverbWetness = Math.round(combo.reverbWetness * 99 + 1);
+    }
+    if (combo.delay !== undefined) {
+      // Reverse-map from 0-5 audio range back to 1-100 knob range
+      updates.delay = Math.round((combo.delay * 99) / 5 + 1);
+    }
+    if (combo.bitCrusher !== undefined) updates.bitCrusher = combo.bitCrusher;
+    if (combo.pitchShift !== undefined) updates.pitchShift = combo.pitchShift;
+
+    if (Object.keys(updates).length > 0) {
+      setKnobs((prev) => ({ ...prev, ...updates }));
+    }
+  }, [currentEffectCombo]);
+
   /* Styles for the different knobs */
   const speedKnobStyles = {
     degrees: 260,
@@ -202,7 +226,11 @@ const AudioPlugin = () => {
   };
 
   const saveSettings = () => {
-    setShowSavePopup(true);
+    if (currentEffectCombo) {
+      saveEffects(currentEffectCombo);
+    } else {
+      setShowSavePopup(true);
+    }
   };
 
   const closeNamePopup = () => {
@@ -237,6 +265,27 @@ const AudioPlugin = () => {
       className={`audio-plugin ${loadingQueue.length > 0 ? 'unclickable' : ''}`}
     >
       <div className="plugin-settings-container">
+        <div className={`effect-combo-badge ${currentEffectCombo ? '' : 'effect-combo-hidden'}`}>
+          <span className="effect-combo-name">{currentEffectCombo}</span>
+        </div>
+        <div className="plugin-button-container">
+          Reset
+          <div
+            className="synth-button"
+            onClick={() => {
+              resetSong();
+            }}
+          ></div>
+        </div>
+        <div className="plugin-button-container">
+          Save
+          <div
+            className="synth-button"
+            onClick={() => {
+              saveSettings();
+            }}
+          ></div>
+        </div>
         <div className="plugin-button-container">
           Export
           <div
@@ -263,24 +312,6 @@ const AudioPlugin = () => {
           {exportStatus === 'error' && (
             <span style={{ fontSize: '10px', color: '#f44336' }}>Failed</span>
           )}
-        </div>
-        <div className="plugin-button-container">
-          Save
-          <div
-            className="synth-button"
-            onClick={() => {
-              saveSettings();
-            }}
-          ></div>
-        </div>
-        <div className="plugin-button-container">
-          Reset
-          <div
-            className="synth-button"
-            onClick={() => {
-              resetSong();
-            }}
-          ></div>
         </div>
       </div>
 

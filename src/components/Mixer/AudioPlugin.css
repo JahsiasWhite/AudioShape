@@ -104,7 +104,7 @@ p {
 
 .plugin-settings-container {
   display: flex;
-  flex-direction: row-reverse;
+  flex-direction: row;
   justify-content: flex-start;
   align-items: center;
   padding: 4px 2px 8px;

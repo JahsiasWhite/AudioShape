@@ -386,6 +386,36 @@ const SETUP_EFFECTS = (mainWindow, directory) => {
     // Send the new effects back to the client
     mainWindow.webContents.send('SAVE_EFFECT_COMBO', effectCombos);
   });
+
+  /**
+   * Deletes a saved effect combo from the local filesystem
+   */
+  ipcMain.on('DELETE_EFFECT_COMBO', (event, effectName) => {
+    let effectCombos = getEffectCombos(effectCombosFile);
+    delete effectCombos[effectName];
+    try {
+      fs.writeFileSync(effectCombosFile, JSON.stringify(effectCombos, null, 2));
+    } catch (error) {
+      Logger.error('Error writing combos file:', error);
+    }
+    mainWindow.webContents.send('GRAB_EFFECT_COMBOS', effectCombos);
+  });
+
+  /**
+   * Renames a saved effect combo in the local filesystem
+   */
+  ipcMain.on('RENAME_EFFECT_COMBO', (event, oldName, newName) => {
+    let effectCombos = getEffectCombos(effectCombosFile);
+    if (!effectCombos[oldName] || !newName.trim()) return;
+    effectCombos[newName.trim()] = effectCombos[oldName];
+    delete effectCombos[oldName];
+    try {
+      fs.writeFileSync(effectCombosFile, JSON.stringify(effectCombos, null, 2));
+    } catch (error) {
+      Logger.error('Error writing combos file:', error);
+    }
+    mainWindow.webContents.send('GRAB_EFFECT_COMBOS', effectCombos);
+  });
 };
 
 const SETUP_SONG_DOWNLOADS = (mainW) => {

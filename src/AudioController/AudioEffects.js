@@ -136,6 +136,15 @@ export const AudioEffects = (
     );
   };
 
+  const deleteEffectCombo = (comboName) => {
+    if (currentEffectCombo === comboName) clearEffects();
+    window.electron.ipcRenderer.sendMessage('DELETE_EFFECT_COMBO', comboName);
+  };
+
+  const renameEffectCombo = (oldName, newName) => {
+    window.electron.ipcRenderer.sendMessage('RENAME_EFFECT_COMBO', oldName, newName);
+  };
+
   const handleEffectComboAdded = (newEffectCombos) => {
     setSavedEffects(newEffectCombos);
   };
@@ -186,6 +195,8 @@ export const AudioEffects = (
     toggleSpeedup,
     toggleSlowDown,
     saveEffects,
+    deleteEffectCombo,
+    renameEffectCombo,
     clearEffects,
     resetCurrentSong,
     effects,
