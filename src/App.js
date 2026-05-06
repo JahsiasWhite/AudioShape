@@ -3,6 +3,7 @@ import './App.css';
 
 import Playbar from './components/Playbar/Playbar';
 import SongList from './components/SongList/SongList';
+import History from './components/History/History';
 import Playlists from './components/Playlists/Playlists';
 import Artists from './components/Artists/Artists';
 import Settings from './components/Settings/Settings';
@@ -115,6 +116,8 @@ function App() {
               <div className="main-content">
                 {currentSection === 'allSongs' ? (
                   <SongList handleSongEdit={handleSongSelect} />
+                ) : currentSection === 'history' ? (
+                  <History handleSongEdit={handleSongSelect} />
                 ) : currentSection === 'playlists' ? (
                   <Playlists toggleSection={toggleSection} />
                 ) : currentSection === 'artists' ? (
@@ -122,7 +125,7 @@ function App() {
                 ) : currentSection === 'spotify' ? (
                   <Spotify />
                 ) : currentSection === 'settings' ? (
-                  <Settings />
+                  <Settings openHistory={() => setCurrentSection('history')} />
                 ) : currentSection === 'mixer' ? (
                   <Mixer
                     selectedIndex={selectedSongIndex}

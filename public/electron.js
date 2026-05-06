@@ -18,6 +18,7 @@ const {
   SETUP_SETINGS,
   SETUP_PLAYLISTS,
   SETUP_EFFECTS,
+  SETUP_HISTORY,
   SETUP_SONG_DOWNLOADS,
   SETUP_GET_SONGS,
 } = require('./ipcMain');
@@ -40,6 +41,7 @@ function initializeAppConstants() {
   const settingsFile = path.join(dataDirectory, 'settings.json');
   const playlistsFile = path.join(dataDirectory, 'playlists.json');
   const effectCombosFile = path.join(dataDirectory, 'effectCombos.json');
+  const historyFile = path.join(dataDirectory, 'history.json');
   const tempSongFolder = path.join(dataDirectory, 'temp-songs');
 
   return {
@@ -48,6 +50,7 @@ function initializeAppConstants() {
     settingsFile,
     playlistsFile,
     effectCombosFile,
+    historyFile,
     tempSongFolder,
   };
 }
@@ -58,6 +61,7 @@ const {
   settingsFile,
   playlistsFile,
   effectCombosFile,
+  historyFile,
   tempSongFolder,
 } = initializeAppConstants();
 
@@ -80,6 +84,9 @@ if (!fs.existsSync(playlistsFile)) {
 }
 if (!fs.existsSync(effectCombosFile)) {
   fs.writeFileSync(effectCombosFile, JSON.stringify({}));
+}
+if (!fs.existsSync(historyFile)) {
+  fs.writeFileSync(historyFile, JSON.stringify([]));
 }
 
 app.name = 'AudioShape';
@@ -173,6 +180,7 @@ app.on('ready', function () {
   SETUP_SETINGS(mainWindow, app.getPath('userData'));
   SETUP_PLAYLISTS(mainWindow, app.getPath('userData'));
   SETUP_EFFECTS(mainWindow, effectCombosFile);
+  SETUP_HISTORY(mainWindow, app.getPath('userData'));
   SETUP_SONG_DOWNLOADS(mainWindow);
 
   /* Window control handlers for the custom title bar */

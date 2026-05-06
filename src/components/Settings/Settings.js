@@ -6,7 +6,7 @@ import ColorSettings from './ColorSettings';
 import LoadingSpinner from '../LoadingSpinner/LoadingSpinner';
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
-function Settings() {
+function Settings({ openHistory }) {
   const { startSongsLoading, initSongsLoading } = useAudioPlayer();
 
   const [settings, setSettings] = useState({
@@ -168,6 +168,14 @@ function Settings() {
         </div>
 
         <ColorSettings />
+      </div>
+      <div className="settings-container">
+        <div className="song-title">History</div>
+        <div className="setting-item">
+          <button className="settings-link-button" onClick={openHistory}>
+            Open Listening History
+          </button>
+        </div>
       </div>
     </div>
   );

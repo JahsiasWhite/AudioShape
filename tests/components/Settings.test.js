@@ -86,4 +86,21 @@ describe('<Settings />', () => {
     const checkbox = getByRole('checkbox', { name: /Enable Spotify/i });
     expect(checkbox.checked).toBe(true);
   });
+
+  it('opens history from history section button', () => {
+    const openHistoryMock = jest.fn();
+    const { getByRole } = render(
+      <AudioProvider>
+        <Settings openHistory={openHistoryMock} />
+      </AudioProvider>
+    );
+
+    fireEvent.click(
+      getByRole('button', {
+        name: /Open Listening History/i,
+      }),
+    );
+
+    expect(openHistoryMock).toHaveBeenCalledTimes(1);
+  });
 });

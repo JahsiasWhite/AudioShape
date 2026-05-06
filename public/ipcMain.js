@@ -423,6 +423,23 @@ const SETUP_EFFECTS = (mainWindow, directory) => {
   });
 };
 
+const SETUP_HISTORY = (mainWindow, dataDirectory) => {
+  userDataPath = dataDirectory;
+
+  ipcMain.on('GET_HISTORY', () => {
+    mainWindow.webContents.send('RETURN_HISTORY', getHistory());
+  });
+
+  ipcMain.on('SAVE_HISTORY', (_event, history) => {
+    writeHistory(history);
+  });
+
+  ipcMain.on('CLEAR_HISTORY', () => {
+    writeHistory([]);
+    mainWindow.webContents.send('RETURN_HISTORY', []);
+  });
+};
+
 const SETUP_SONG_DOWNLOADS = (mainW) => {
   mainWindow = mainW;
   /**
@@ -1177,6 +1194,11 @@ function createSettingsPath() {
   return settingsPath;
 }
 
+function createHistoryPath() {
+  const historyPath = path.join(userDataPath, 'Data', 'history.json');
+  return historyPath;
+}
+
 function getSettings(settingsPath) {
   // Optional parameter
   if (settingsPath === undefined) {
@@ -1187,6 +1209,29 @@ function getSettings(settingsPath) {
   return JSON.parse(settingsData);
 }
 
+function getHistory() {
+  const historyPath = createHistoryPath();
+  try {
+    const historyData = fs.readFileSync(historyPath, 'utf-8');
+    if (!historyData) return [];
+    const parsed = JSON.parse(historyData);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.error('Error reading history file:', error);
+    return [];
+  }
+}
+
+function writeHistory(history) {
+  const historyPath = createHistoryPath();
+  try {
+    const safeHistory = Array.isArray(history) ? history : [];
+    fs.writeFileSync(historyPath, JSON.stringify(safeHistory, null, 2));
+  } catch (error) {
+    console.error('Error writing history file:', error);
+  }
+}
+
 module.exports = {
   SAVE_TEMP_SONG,
   DELETE_TEMP_SONG,
@@ -1194,6 +1239,7 @@ module.exports = {
   SETUP_SETINGS,
   SETUP_PLAYLISTS,
   SETUP_EFFECTS,
+  SETUP_HISTORY,
   SETUP_SONG_DOWNLOADS,
   SETUP_GET_SONGS,
 };

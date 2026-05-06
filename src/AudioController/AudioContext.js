@@ -21,10 +21,13 @@ const DEFAULT_SPEEDUP = 1.2;
 const DEFAULT_SLOWDOWN = 0.8;
 
 export const AudioProvider = ({ children }) => {
+  const MAX_HISTORY_ITEMS = 100;
+
   /* General songs */
   const [loadedSongs, setLoadedSongs] = useState({});
   const [visibleSongs, setVisibleSongs] = useState({}); // ! TODO, I think this would work better as an array
   const [initSongsLoading, setInitSongsLoading] = useState(true);
+  const [listeningHistory, setListeningHistory] = useState([]);
 
   /* General */
   const [loadingQueue, setLoadingQueue] = useState([]);
@@ -262,7 +265,43 @@ export const AudioProvider = ({ children }) => {
         artwork,
       });
     }
+
+    setListeningHistory((currentHistory) => {
+      const lastEntry = currentHistory[0];
+      if (lastEntry && lastEntry.songId === currentSongId) {
+        return currentHistory;
+      }
+
+      const song = loadedSongs[currentSongId];
+      const updatedHistory = [
+        {
+          songId: currentSongId,
+          playedAt: new Date().toISOString(),
+          title: song?.title ?? 'Unknown Title',
+          artist: song?.artist ?? 'Unknown Artist',
+          album: song?.album ?? 'Unknown Album',
+          albumImage: song?.albumImage ?? null,
+        },
+        ...currentHistory,
+      ].slice(0, MAX_HISTORY_ITEMS);
+
+      window.electron.ipcRenderer.sendMessage('SAVE_HISTORY', updatedHistory);
+      return updatedHistory;
+    });
   }, [currentSongId]);
+
+  useEffect(() => {
+    const unsubHistory = window.electron.ipcRenderer.on(
+      'RETURN_HISTORY',
+      (history) => {
+        setListeningHistory(Array.isArray(history) ? history : []);
+      },
+    );
+    window.electron.ipcRenderer.sendMessage('GET_HISTORY');
+    return () => {
+      unsubHistory?.();
+    };
+  }, []);
 
   /* Media key IPC + navigator.mediaSession action handlers */
   useEffect(() => {
@@ -324,6 +363,11 @@ export const AudioProvider = ({ children }) => {
     setVisibleSongs(updatedSongs);
   };
 
+  const clearListeningHistory = () => {
+    setListeningHistory([]);
+    window.electron.ipcRenderer.sendMessage('CLEAR_HISTORY');
+  };
+
   return (
     <AudioContext.Provider
       value={{
@@ -338,6 +382,7 @@ export const AudioProvider = ({ children }) => {
         setCurrentScreen,
         setVisibleSongs,
         initSongsLoading,
+        listeningHistory,
         currentSong,
         currentSongIndex,
         currentSongId,
@@ -397,6 +442,7 @@ export const AudioProvider = ({ children }) => {
         loopIsEnabled,
         togglePopup,
         setTogglePopup,
+        clearListeningHistory,
       }}
     >
       {children}

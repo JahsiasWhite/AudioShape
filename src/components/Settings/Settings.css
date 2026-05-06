@@ -47,3 +47,12 @@
   cursor: grabbing;
   box-shadow: 0 0 10px rgba(0, 200, 255, 0.7);
 }
+
+.settings-link-button {
+  border: 1px solid var(--color-accent);
+  background-color: var(--color-button);
+  color: var(--color-text);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
