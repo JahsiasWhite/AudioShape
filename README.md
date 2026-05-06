@@ -9,7 +9,7 @@
   </h4>
 
   <p>
-      <img src="https://img.shields.io/badge/version-0.3.1-green.svg" alt="version"/>
+      <img src="https://img.shields.io/badge/version-0.3.2-green.svg" alt="version"/>
       <img src="https://img.shields.io/badge/OS-windows-blue?style=flat&labelColor=363D44" alt="Operating systems"/>
       <a href="https://github.com/JahsiasWhite/AudioShape/actions/workflows/tests.yml" alt="tests"><img src="https://github.com/JahsiasWhite/AudioShape/actions/workflows/tests.yml/badge.svg" alt="tests"/></a>
   </p>
@@ -44,17 +44,18 @@ Go to [releases](https://github.com/JahsiasWhite/AudioShape/releases) and downlo
 `npm install --production`<br>
 `npm install webpack-cli`<br>
 
-#### Run webpack
+<!-- #### Run webpack
 
 `npm run watch` <br>
-This will create a new folder titled 'build'
+This will create a new folder titled 'build' -->
 
 #### Build App
 
 `npm run react-build`
+This will create a new folder titled 'build'
 
 `npm run electron-build`
-This will create a new folder titled 'dist'. Inside is where the installer.exe is
+This will create a new folder titled 'dist'. This is where the installer.exe is
 
 - If you can't build, make sure react-scripts is not installed
 

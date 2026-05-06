@@ -3,7 +3,7 @@
   "productName": "AudioShape",
   "author": "Jahsias",
   "license": "ISC",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Music player with extra customizations",
   "homepage": "./",
   "main": "./public/electron.js",
@@ -78,8 +78,10 @@
   },
   "build": {
     "appId": "com.jahsias.AudioShape",
+    "icon": "src/logo.png",
     "asarUnpack": [
-      "node_modules/youtube-dl-exec/bin/**"
+      "node_modules/youtube-dl-exec/bin/**",
+      "src/logo.png"
     ],
     "files": [
       "dist/**/*",
@@ -90,6 +92,7 @@
       "./public/index.html",
       "./public/index.css",
       "./public/mainLogger.js",
+      "./src/logo.png",
       "build/**/*"
     ]
   }

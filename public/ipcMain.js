@@ -736,7 +736,14 @@ function embedMetadata(inputFilePath, outputFilePath, metadata) {
   return new Promise(async (resolve, reject) => {
     let tempImagePath = null;
     try {
-      if (metadata.imageUrl) {
+      const ext = path.extname(inputFilePath).toLowerCase();
+      const isVideoContainer = ['.mp4', '.webm', '.mkv', '.mov', '.m4v'].includes(
+        ext,
+      );
+      // Album art as attached_pic is only wired for MP4; other containers get metadata only.
+      const embedCoverInVideo = ['.mp4', '.m4v'].includes(ext);
+
+      if (metadata.imageUrl && (!isVideoContainer || embedCoverInVideo)) {
         tempImagePath = path.join(os.tmpdir(), `cover-${Date.now()}.jpg`);
         await downloadImage(metadata.imageUrl, tempImagePath);
       }
@@ -747,15 +754,25 @@ function embedMetadata(inputFilePath, outputFilePath, metadata) {
         .outputOption('-metadata', `album=${metadata.album}`);
 
       if (tempImagePath) {
-        cmd = cmd
-          .addInput(tempImagePath)
-          .outputOption('-map', '0:0')
-          .outputOption('-map', '1:0')
-          .outputOption('-c:a', 'copy')
-          .outputOption('-c:v', 'copy')
-          .outputOption('-id3v2_version', '3')
-          .outputOption('-metadata:s:v', 'title=Album cover')
-          .outputOption('-metadata:s:v', 'comment=Cover (front)');
+        cmd = cmd.addInput(tempImagePath);
+        if (embedCoverInVideo) {
+          // MP4 has video at 0:v and audio at 0:a; mapping only 0:0 drops all audio.
+          cmd = cmd
+            .outputOption('-map', '0')
+            .outputOption('-map', '1:0')
+            .outputOption('-c', 'copy')
+            .outputOption('-c:v:1', 'mjpeg')
+            .outputOption('-disposition:v:1', 'attached_pic');
+        } else {
+          cmd = cmd
+            .outputOption('-map', '0:0')
+            .outputOption('-map', '1:0')
+            .outputOption('-c:a', 'copy')
+            .outputOption('-c:v', 'copy')
+            .outputOption('-id3v2_version', '3')
+            .outputOption('-metadata:s:v', 'title=Album cover')
+            .outputOption('-metadata:s:v', 'comment=Cover (front)');
+        }
       }
 
       cmd

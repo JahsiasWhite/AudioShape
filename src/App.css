@@ -76,7 +76,7 @@ input {
 }
 
 .main-content::-webkit-scrollbar {
-  width: 8px;
+  width: 11px;
 }
 
 .main-content::-webkit-scrollbar-track {

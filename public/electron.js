@@ -84,6 +84,25 @@ if (!fs.existsSync(effectCombosFile)) {
 
 app.name = 'AudioShape';
 
+function resolveWindowIconPath() {
+  const candidates = [
+    path.join(__dirname, 'logo.png'),
+    path.join(__dirname, '..', 'src', 'logo.png'),
+  ];
+  // Windows often cannot use icons that only exist inside app.asar; keep logo in asarUnpack.
+  if (app.isPackaged) {
+    candidates.unshift(
+      path.join(process.resourcesPath, 'app.asar.unpacked', 'src', 'logo.png'),
+    );
+  }
+  for (const p of candidates) {
+    if (fs.existsSync(p)) {
+      return p;
+    }
+  }
+  return undefined;
+}
+
 // Register the custom protocol handler
 protocol.registerSchemesAsPrivileged([
   {
@@ -97,6 +116,8 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 app.on('ready', function () {
+  const windowIcon = resolveWindowIconPath();
+
   // Create our app
   const mainWindow = new BrowserWindow({
     width: app.isPackaged ? 800 : 1100, // If we are debugging, we want to double the width for the debug window
@@ -107,6 +128,8 @@ app.on('ready', function () {
 
     // Remove the native title bar; we use a custom one in React
     frame: false,
+
+    ...(windowIcon ? { icon: windowIcon } : {}),
 
     webPreferences: {
       // Set the path of an additional "preload" script that can be used to

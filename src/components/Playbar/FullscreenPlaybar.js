@@ -8,7 +8,8 @@ import ExitFullscreenButtonSVG from './ExitFullscreenButtonSVG';
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 function FullscreenPlaybar({ toggleFullscreen }) {
-  const { currentSongId } = useAudioPlayer();
+  const { currentSongId, loadedSongs } = useAudioPlayer();
+  const song = loadedSongs[currentSongId];
 
   const [playbarVisible, setPlaybarVisible] = useState(true);
   const [timeoutId, setTimeoutId] = useState(null);
@@ -85,7 +86,16 @@ function FullscreenPlaybar({ toggleFullscreen }) {
         </div>
         <PlaybackTimer />
       </div> */}
-      <div />
+      <div className="fullscreen-playbar-track">
+        {song ? (
+          <>
+            <div className="fullscreen-playbar-title">{song.title}</div>
+            <div className="fullscreen-playbar-album">{song.album}</div>
+          </>
+        ) : (
+          <div className="fullscreen-playbar-title">No song playing</div>
+        )}
+      </div>
       <CenterPlaybar />
       <div className="fullscreen-right-controls">
         <VolumeControl />

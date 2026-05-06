@@ -8,6 +8,29 @@
   transform: translateY(100%);
 }
 
+.fullscreen-playbar-track {
+  padding-left: 16px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.fullscreen-playbar-title {
+  font-size: 14px;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fullscreen-playbar-album {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
 .fullscreen-right-controls {
   display: flex;
   align-items: center;
