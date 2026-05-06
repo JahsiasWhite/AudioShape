@@ -49,6 +49,11 @@ function getYoutubeDl() {
   return createYoutubeDl(binaryPath);
 }
 
+function trimForLog(value, max = 180) {
+  if (!value) return '';
+  return value.length > max ? `${value.slice(0, max)}...` : value;
+}
+
 const path = require('path');
 const os = require('os');
 const https = require('https');
@@ -424,6 +429,9 @@ const SETUP_SONG_DOWNLOADS = (mainW) => {
    * Downloads the youtube video from the specified url
    */
   ipcMain.on('DOWNLOAD_YOUTUBE_VID', async (event, videoUrl) => {
+    Logger.info('[download] Received direct YouTube download request', {
+      url: trimForLog(videoUrl),
+    });
     downloadYoutubeVideo(videoUrl);
   });
 
@@ -434,15 +442,26 @@ const SETUP_SONG_DOWNLOADS = (mainW) => {
     'DOWNLOAD_SONG_FROM_YOUTUBE_SEARCH',
     async (event, songDetails) => {
       const query = `${songDetails.name} ${songDetails.artist} audio`;
+      Logger.info('[download] Starting YouTube search for song request', {
+        song: trimForLog(songDetails?.name),
+        artist: trimForLog(songDetails?.artist),
+        query: trimForLog(query),
+      });
       const result = await youtubeSearch(query);
 
       if (result.all.length === 0) {
-        console.error('No results found for the search query');
+        Logger.warn('[download] No YouTube search results found', {
+          query: trimForLog(query),
+        });
         return;
       }
 
       // download the song from youtube
       const url = result.all[0].url;
+      Logger.info('[download] YouTube search resolved top result', {
+        query: trimForLog(query),
+        url: trimForLog(url),
+      });
       downloadYoutubeVideo(url, songDetails);
     },
   );
@@ -846,8 +865,19 @@ function writeMetadata(title, filePath) {
 async function downloadYoutubeVideo(url, songDetails) {
   const settings = getSettings();
   const songDirectory = settings.libraryDirectory;
+  const requestLabel = songDetails?.name || 'direct-youtube-request';
+  Logger.info('[download] Starting downloadYoutubeVideo', {
+    request: trimForLog(requestLabel),
+    url: trimForLog(url),
+    directoryConfigured: songDirectory !== '',
+    mp4Enabled: !!settings.mp4DownloadEnabled,
+    embedExtraMetadata: settings.attchingExtraDetails ?? true,
+  });
 
   if (songDirectory === '') {
+    Logger.warn('[download] Download aborted: missing song directory', {
+      request: trimForLog(requestLabel),
+    });
     mainWindow.webContents.send(
       'download-error',
       `No valid song directory found. Please choose a song directory from the settings page to download songs.`,
@@ -867,6 +897,11 @@ async function downloadYoutubeVideo(url, songDetails) {
     });
   } catch (err) {
     Logger.error('Failed to get video info:', err.stderr || err.message || err);
+    Logger.error('[download] Download aborted while fetching video info', {
+      request: trimForLog(requestLabel),
+      url: trimForLog(url),
+      error: trimForLog(err.stderr || err.message || String(err)),
+    });
     mainWindow.webContents.send(
       'download-error',
       `Failed to get video info: ${err.stderr || err.message}`,
@@ -887,6 +922,11 @@ async function downloadYoutubeVideo(url, songDetails) {
 
   // Downloading audio only (MP3)
   if (!settings.mp4DownloadEnabled) {
+    Logger.info('[download] Download mode selected', {
+      request: trimForLog(songDetails?.name),
+      mode: 'mp3',
+      outputName: trimForLog(videoTitle),
+    });
     const tempFilePath = path.join(songDirectory, `temp-${videoTitle}.mp3`);
     const finalFilePath = path.join(songDirectory, `${videoTitle}.mp3`);
 
@@ -916,6 +956,10 @@ async function downloadYoutubeVideo(url, songDetails) {
       subprocess.stderr.on('data', onMp3Progress);
 
       await subprocess;
+      Logger.info('[download] yt-dlp audio fetch complete', {
+        request: trimForLog(songDetails?.name),
+        tempPath: trimForLog(tempFilePath),
+      });
 
       let songData;
       if (embedExtraMetadata) {
@@ -930,11 +974,21 @@ async function downloadYoutubeVideo(url, songDetails) {
         'Download completed!',
         songData,
       );
+      Logger.info('[download] Download completed successfully', {
+        request: trimForLog(songDetails?.name),
+        mode: 'mp3',
+        outputPath: trimForLog(embedExtraMetadata ? finalFilePath : tempFilePath),
+      });
     } catch (err) {
       Logger.error(
         'Error downloading audio:',
         err.stderr || err.message || err,
       );
+      Logger.error('[download] Download failed', {
+        request: trimForLog(songDetails?.name),
+        mode: 'mp3',
+        error: trimForLog(err.stderr || err.message || String(err)),
+      });
       mainWindow.webContents.send(
         'download-error',
         songDetails.name,
@@ -945,6 +999,11 @@ async function downloadYoutubeVideo(url, songDetails) {
   }
 
   // Downloading video + audio (MP4)
+  Logger.info('[download] Download mode selected', {
+    request: trimForLog(songDetails?.name),
+    mode: 'mp4',
+    outputName: trimForLog(videoTitle),
+  });
   const tempFilePath = path.join(songDirectory, `temp-${videoTitle}.mp4`);
   const finalFilePath = path.join(songDirectory, `${videoTitle}.mp4`);
 
@@ -1004,6 +1063,10 @@ async function downloadYoutubeVideo(url, songDetails) {
     subprocess.stderr.on('data', onMp4Progress);
 
     await subprocess;
+    Logger.info('[download] yt-dlp video/audio fetch complete', {
+      request: trimForLog(songDetails?.name),
+      tempPath: trimForLog(tempFilePath),
+    });
 
     let songData;
     if (embedExtraMetadata) {
@@ -1018,8 +1081,18 @@ async function downloadYoutubeVideo(url, songDetails) {
       'Download completed!',
       songData,
     );
+    Logger.info('[download] Download completed successfully', {
+      request: trimForLog(songDetails?.name),
+      mode: 'mp4',
+      outputPath: trimForLog(embedExtraMetadata ? finalFilePath : tempFilePath),
+    });
   } catch (err) {
     Logger.error('Error downloading video:', err.stderr || err.message || err);
+    Logger.error('[download] Download failed', {
+      request: trimForLog(songDetails?.name),
+      mode: 'mp4',
+      error: trimForLog(err.stderr || err.message || String(err)),
+    });
     mainWindow.webContents.send(
       'download-error',
       songDetails.name,
