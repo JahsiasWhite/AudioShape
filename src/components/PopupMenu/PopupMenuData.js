@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 const EffectTooltip = ({ effects }) => {
+  if (!effects) return null;
   return (
     <div className="effect-tooltip">
       <ul>

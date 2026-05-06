@@ -3,6 +3,7 @@ import './FullscreenPlaybar.css';
 
 import VolumeControl from './VolumeControl/VolumeControl'; // ! I don't know if I like this name
 import CenterPlaybar from './CenterPlaybar';
+import ExitFullscreenButtonSVG from './ExitFullscreenButtonSVG';
 
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
@@ -84,16 +85,11 @@ function FullscreenPlaybar({ toggleFullscreen }) {
         </div>
         <PlaybackTimer />
       </div> */}
+      <div />
       <CenterPlaybar />
-
-      <VolumeControl />
-      <div
-        className="fullscreen-button"
-        onClick={() => {
-          exitFullscreen();
-        }}
-      >
-        +
+      <div className="fullscreen-right-controls">
+        <VolumeControl />
+        <ExitFullscreenButtonSVG onClick={exitFullscreen} />
       </div>
     </div>
   );
