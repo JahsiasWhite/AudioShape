@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import './Searchbar.css';
-
-import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 /**
  * File extensions recognized for extension-only search. Each can be queried as:
@@ -34,6 +32,11 @@ export function normalizeSearchTerm(rawTerm = '') {
 }
 
 export function doesSongMatchSearch(value, searchTerm) {
+  const songTitle = (value?.title ?? '').toString().toLowerCase();
+  const songArtist = (value?.artist ?? '').toString().toLowerCase();
+  const songAlbum = (value?.album ?? '').toString().toLowerCase();
+  const songFile = (value?.file ?? '').toString().toLowerCase();
+
   /*
    * How this search works (title, artist, and album are always checked):
    *
@@ -63,7 +66,7 @@ export function doesSongMatchSearch(value, searchTerm) {
     matchesExtensionOnlySearch(searchTerm, ext)
   );
   if (extensionMatch !== undefined) {
-    return value.file.toLowerCase().endsWith(extensionMatch);
+    return songFile.endsWith(extensionMatch);
   }
 
   // If the search is enclosed in quotations, make an exact search on the words
@@ -73,12 +76,12 @@ export function doesSongMatchSearch(value, searchTerm) {
 
     const comparisonValue = negate ? exactMatch.slice(1) : exactMatch; // Remove '!' if negated
     const matches = negate
-      ? value.title.toLowerCase().includes(comparisonValue) ||
-        value.artist.toLowerCase().includes(comparisonValue) ||
-        value.album.toLowerCase().includes(comparisonValue)
-      : value.title.toLowerCase() === comparisonValue ||
-        value.artist.toLowerCase() === comparisonValue ||
-        value.album.toLowerCase() === comparisonValue;
+      ? songTitle.includes(comparisonValue) ||
+        songArtist.includes(comparisonValue) ||
+        songAlbum.includes(comparisonValue)
+      : songTitle === comparisonValue ||
+        songArtist === comparisonValue ||
+        songAlbum === comparisonValue;
 
     return negate ? !matches : matches; // Negate the result if required
   }
@@ -90,7 +93,7 @@ export function doesSongMatchSearch(value, searchTerm) {
     try {
       const regex = new RegExp(regexPattern, 'i'); // Create case-insensitive regex
 
-      return regex.test(value.title) || regex.test(value.artist) || regex.test(value.album);
+      return regex.test(songTitle) || regex.test(songArtist) || regex.test(songAlbum);
     } catch (error) {
       console.error('Invalid regex pattern:', regexPattern, error);
       return false; // Gracefully handle invalid regex by returning false
@@ -98,26 +101,13 @@ export function doesSongMatchSearch(value, searchTerm) {
   }
 
   return (
-    value.title.toLowerCase().includes(searchTerm) ||
-    value.artist.toLowerCase().includes(searchTerm) ||
-    value.album.toLowerCase().includes(searchTerm)
+    songTitle.includes(searchTerm) ||
+    songArtist.includes(searchTerm) ||
+    songAlbum.includes(searchTerm)
   );
 }
 
-function SearchBar({ setFilteredSongs }) {
-  const { visibleSongs, currentSongId, currentSong } = useAudioPlayer();
-
-  const filterSongs = (e) => {
-    const searchTerm = normalizeSearchTerm(e.target.value);
-
-    let filteredSongs = Object.entries(visibleSongs).filter(([_, value]) =>
-      doesSongMatchSearch(value, searchTerm)
-    );
-
-    console.log('Filtered songs: ', filteredSongs);
-    return Object.fromEntries(filteredSongs);
-  };
-
+function SearchBar({ searchTerm, setSearchTerm }) {
   return (
     <div className="search-bar">
       <input
@@ -125,7 +115,8 @@ function SearchBar({ setFilteredSongs }) {
         variant="outlined"
         label="Search"
         placeholder="Search..."
-        onChange={(text) => setFilteredSongs(filterSongs(text))}
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
       />
     </div>
   );

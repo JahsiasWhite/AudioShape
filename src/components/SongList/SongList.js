@@ -4,17 +4,14 @@ import './songList.css';
 
 import FolderSelection from '../FolderSelection/FolderSelection';
 import PlaylistMenu from '../PlaylistMenu/PlaylistMenu';
-import Searchbar from './Searchbar';
+import Searchbar, { doesSongMatchSearch, normalizeSearchTerm } from './Searchbar';
 import SongListItems from './SongListItems';
 import RightClickMenu from './RightClickMenu';
 import LoadingSpinner from '../LoadingSpinner/LoadingSpinner';
 
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
-let sortToggle = false;
-
 const filters = ['Title', 'Duration'];
-var index = 0;
 
 function SongList({ handleSongEdit }) {
   const {
@@ -26,6 +23,19 @@ function SongList({ handleSongEdit }) {
   } = useAudioPlayer();
 
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredSongs, setFilteredSongs] = useState(visibleSongs);
+  const [sortFilterIndex, setSortFilterIndex] = useState(0);
+  const [sortAscending, setSortAscending] = useState(false);
+
+  const getFilteredSongs = (songs, rawSearchTerm) => {
+    const normalizedSearchTerm = normalizeSearchTerm(rawSearchTerm);
+    return Object.fromEntries(
+      Object.entries(songs || {}).filter(([_, value]) =>
+        doesSongMatchSearch(value, normalizedSearchTerm),
+      ),
+    );
+  };
 
   /**
    * Once songs are loaded in, we know we are done loading
@@ -43,8 +53,8 @@ function SongList({ handleSongEdit }) {
       setIsLoading(false);
     }
 
-    setFilteredSongs(visibleSongs || {});
-  }, [visibleSongs]);
+    setFilteredSongs(getFilteredSongs(visibleSongs, searchTerm));
+  }, [visibleSongs, initSongsLoading, searchTerm]);
 
   const [playlistMenuIndex, setPlaylistMenuOpen] = useState(-1);
 
@@ -56,36 +66,38 @@ function SongList({ handleSongEdit }) {
   // Changes what we are filtering by
   // 1. Title 2. Duration
   const changeFilter = () => {
-    index = (index + 1) % filters.length;
-    const filter = filters[index % filters.length];
+    const nextFilterIndex = (sortFilterIndex + 1) % filters.length;
+    setSortFilterIndex(nextFilterIndex);
+    const filter = filters[nextFilterIndex];
 
     console.error(filter);
     sortSongs(filter.toLowerCase());
   };
 
   // Toggles between showing songs from A-Z to Z-A, etc... depending on filter
-  function sortSongs() {
-    const sortBy = filters[index % filters.length].toLowerCase();
-
-    sortToggle = !sortToggle;
+  function sortSongs(overrideSortBy) {
+    const sortBy = (overrideSortBy ?? filters[sortFilterIndex]).toLowerCase();
+    const nextSortAscending = !sortAscending;
+    setSortAscending(nextSortAscending);
 
     // 1. Convert object to an array of key-value pairs
     const songEntries = Object.entries(filteredSongs);
 
     // 2. Sort the entries based on the song property
     if (sortBy === 'duration') {
-      console.error(sortToggle);
+      console.error(nextSortAscending);
       songEntries.sort((a, b) => {
-        const comparison = sortToggle
-          ? a[1]['duration'] > b[1]['duration']
-          : a[1]['duration'] < b[1]['duration'];
-
-        return comparison ? 1 : -1;
+        const aDuration = Number(a[1]['duration']) || 0;
+        const bDuration = Number(b[1]['duration']) || 0;
+        const comparison = aDuration - bDuration;
+        return nextSortAscending ? comparison : -comparison;
       });
     } else {
       songEntries.sort((a, b) => {
-        const comparison = a[1][sortBy].localeCompare(b[1][sortBy]);
-        return sortToggle ? comparison : -comparison;
+        const aValue = (a[1][sortBy] ?? '').toString();
+        const bValue = (b[1][sortBy] ?? '').toString();
+        const comparison = aValue.localeCompare(bValue);
+        return nextSortAscending ? comparison : -comparison;
       });
     }
     console.log('Filter: ', sortBy);
@@ -101,8 +113,6 @@ function SongList({ handleSongEdit }) {
 
     setFilteredSongs(sortedSongs);
   }
-
-  const [filteredSongs, setFilteredSongs] = useState(visibleSongs);
 
   const [clicked, setClicked] = useState({});
   function toggleRightClickMenu(clientX, clientY, songData) {
@@ -129,7 +139,7 @@ function SongList({ handleSongEdit }) {
           )}
         {currentScreen}
       </div>
-      <Searchbar setFilteredSongs={setFilteredSongs} />
+      <Searchbar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
       {isLoading && Object.keys(visibleSongs || {}).length === 0 ? (
         <div className="num-songs">
           Loading...{' '}
@@ -163,7 +173,7 @@ function SongList({ handleSongEdit }) {
                     changeFilter();
                   }}
                 >
-                  {filters[index]}
+                  {filters[sortFilterIndex]}
                 </div>
               </div>
               {/* <div className="filter">Filter</div> */}

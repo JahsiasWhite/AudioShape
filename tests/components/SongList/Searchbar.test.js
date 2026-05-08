@@ -26,20 +26,6 @@ const songs = {
   },
 };
 
-jest.mock('../../../src/AudioController/AudioContext', () => {
-  const useAudioPlayer = jest.fn();
-  useAudioPlayer.mockReturnValue({
-    visibleSongs: songs,
-    currentSongId: null,
-    currentSong: null,
-  });
-
-  return {
-    ...jest.requireActual('../../../src/AudioController/AudioContext'),
-    useAudioPlayer,
-  };
-});
-
 describe('Searchbar', () => {
   it('normalizes !"..."" syntax to quoted negation syntax', () => {
     expect(normalizeSearchTerm('!"kanye west"')).toBe('"!kanye west"');
@@ -63,39 +49,35 @@ describe('Searchbar', () => {
   });
 
   it('supports negated quoted exact search with "!" syntax first', () => {
-    const setFilteredSongs = jest.fn();
+    const setSearchTerm = jest.fn();
     const { getByPlaceholderText } = render(
-      <Searchbar setFilteredSongs={setFilteredSongs} />
+      <Searchbar searchTerm="" setSearchTerm={setSearchTerm} />
     );
 
     fireEvent.change(getByPlaceholderText('Search...'), {
       target: { value: '!"kanye west"' },
     });
 
-    const filtered = setFilteredSongs.mock.calls[0][0];
-    expect(Object.values(filtered)).toHaveLength(1);
-    expect(Object.values(filtered)[0].artist).toBe('Kendrick Lamar');
+    expect(setSearchTerm).toHaveBeenCalledWith('!"kanye west"');
   });
 
   it('supports negated quoted exact search with "!" inside quotes', () => {
-    const setFilteredSongs = jest.fn();
+    const setSearchTerm = jest.fn();
     const { getByPlaceholderText } = render(
-      <Searchbar setFilteredSongs={setFilteredSongs} />
+      <Searchbar searchTerm="" setSearchTerm={setSearchTerm} />
     );
 
     fireEvent.change(getByPlaceholderText('Search...'), {
       target: { value: '"!kanye west"' },
     });
 
-    const filtered = setFilteredSongs.mock.calls[0][0];
-    expect(Object.values(filtered)).toHaveLength(1);
-    expect(Object.values(filtered)[0].artist).toBe('Kendrick Lamar');
+    expect(setSearchTerm).toHaveBeenCalledWith('"!kanye west"');
   });
 
   it('applies negation after intermediate typing events', () => {
-    const setFilteredSongs = jest.fn();
+    const setSearchTerm = jest.fn();
     const { getByPlaceholderText } = render(
-      <Searchbar setFilteredSongs={setFilteredSongs} />
+      <Searchbar searchTerm="" setSearchTerm={setSearchTerm} />
     );
 
     const input = getByPlaceholderText('Search...');
@@ -104,9 +86,8 @@ describe('Searchbar', () => {
     fireEvent.change(input, { target: { value: '!"' } });
     fireEvent.change(input, { target: { value: '!"kanye west"' } });
 
-    const lastCall = setFilteredSongs.mock.calls[setFilteredSongs.mock.calls.length - 1][0];
-    expect(Object.values(lastCall)).toHaveLength(1);
-    expect(Object.values(lastCall)[0].artist).toBe('Kendrick Lamar');
+    const lastCall = setSearchTerm.mock.calls[setSearchTerm.mock.calls.length - 1][0];
+    expect(lastCall).toBe('!"kanye west"');
   });
 
   it('filters by file extension (.ext, *.ext, ext, or *ext)', () => {
@@ -130,27 +111,40 @@ describe('Searchbar', () => {
   });
 
   it('does not treat !term as negation without quotes', () => {
-    const setFilteredSongs = jest.fn();
-    const { getByPlaceholderText } = render(<Searchbar setFilteredSongs={setFilteredSongs} />);
+    const setSearchTerm = jest.fn();
+    const { getByPlaceholderText } = render(
+      <Searchbar searchTerm="" setSearchTerm={setSearchTerm} />
+    );
 
     fireEvent.change(getByPlaceholderText('Search...'), {
       target: { value: '!kanye' },
     });
 
-    const filtered = setFilteredSongs.mock.calls[0][0];
-    expect(Object.values(filtered)).toHaveLength(0);
+    expect(setSearchTerm).toHaveBeenCalledWith('!kanye');
   });
 
   it('filters with quoted negation when using partial term', () => {
-    const setFilteredSongs = jest.fn();
-    const { getByPlaceholderText } = render(<Searchbar setFilteredSongs={setFilteredSongs} />);
+    const setSearchTerm = jest.fn();
+    const { getByPlaceholderText } = render(
+      <Searchbar searchTerm="" setSearchTerm={setSearchTerm} />
+    );
 
     fireEvent.change(getByPlaceholderText('Search...'), {
       target: { value: '"!kanye"' },
     });
 
-    const filtered = setFilteredSongs.mock.calls[0][0];
-    expect(Object.values(filtered)).toHaveLength(1);
-    expect(Object.values(filtered)[0].artist).toBe('Kendrick Lamar');
+    expect(setSearchTerm).toHaveBeenCalledWith('"!kanye"');
+  });
+
+  it('does not throw when metadata fields are missing', () => {
+    const malformedSong = {
+      title: null,
+      artist: undefined,
+      album: undefined,
+      file: null,
+    };
+
+    expect(() => doesSongMatchSearch(malformedSong, 'kanye')).not.toThrow();
+    expect(() => doesSongMatchSearch(malformedSong, 'mp3')).not.toThrow();
   });
 });

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
+import { useAudioPlayer } from '../../AudioController/AudioContext';
+
 import './SongInfoDialog.css';
 
 function formatDurationSeconds(sec) {
@@ -121,6 +123,7 @@ function EditableTagRow({
 }
 
 export default function SongInfoDialog({ song, onClose }) {
+  const { currentSongId } = useAudioPlayer();
   const [title, setTitle] = useState('');
   const [artist, setArtist] = useState('');
   const [album, setAlbum] = useState('');
@@ -131,6 +134,9 @@ export default function SongInfoDialog({ song, onClose }) {
     artist: false,
     album: false,
   });
+
+  const isCurrentlyPlayingSong =
+    !!song && song.id != null && song.id === currentSongId;
 
   useEffect(() => {
     const onKey = (e) => {
@@ -161,6 +167,14 @@ export default function SongInfoDialog({ song, onClose }) {
 
   const saveTags = () => {
     if (!song?.file || !dirty || saving) return;
+
+    if (isCurrentlyPlayingSong) {
+      setFormError(
+        'Cannot save tags for the song currently loaded. Play a different song first.',
+      );
+      return;
+    }
+
     setSaving(true);
     setFormError('');
 
@@ -265,6 +279,11 @@ export default function SongInfoDialog({ song, onClose }) {
 
           {isEditingAnyField ? (
             <div className="song-info-actions">
+              {formError ? (
+                <p className="song-info-error" role="alert">
+                  {formError}
+                </p>
+              ) : null}
               <button
                 type="button"
                 className="song-info-save"
@@ -275,7 +294,11 @@ export default function SongInfoDialog({ song, onClose }) {
               </button>
             </div>
           ) : null}
-          {formError ? <p className="song-info-error">{formError}</p> : null}
+          {!isEditingAnyField && formError ? (
+            <p className="song-info-error song-info-error-block" role="alert">
+              {formError}
+            </p>
+          ) : null}
 
           <Row label="Duration" value={formatDurationSeconds(song.duration)} />
           <Row label="File path" value={song.file} />
