@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 
 import ContextMenu from './ContextMenu/ContextMenu';
+import SongInfoDialog from './SongInfoDialog';
 
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 export default function RightClickMenu({ clickData, handleSongEditClick }) {
-  const { setCurrentScreen, handleSongSelect } = useAudioPlayer();
+  const { handleSongSelect, loadedSongs, visibleSongs } = useAudioPlayer();
 
   useEffect(() => {
     // No data or toggled off
@@ -25,9 +26,15 @@ export default function RightClickMenu({ clickData, handleSongEditClick }) {
     y: 0,
   });
   const [contextMenuSongData, setContextMenuSongData] = useState(null);
+  const [songInfoSongId, setSongInfoSongId] = useState(null);
 
   const hideContextMenu = () => {
     setIsContextMenuActive(false);
+  };
+
+  const openSongInfo = (songId) => {
+    setSongInfoSongId(songId);
+    hideContextMenu();
   };
 
   function handleSongEdit(id) {
@@ -35,6 +42,10 @@ export default function RightClickMenu({ clickData, handleSongEditClick }) {
     handleSongSelect(id);
     // setCurrentScreen('mixer'); // TODO Is there a way to get this working in handleSongEdit since this is in multiple spots? Its for updating the tab highlight
   }
+
+  const songForInfo =
+    songInfoSongId &&
+    (loadedSongs[songInfoSongId] || visibleSongs[songInfoSongId]);
 
   return (
     <>
@@ -48,6 +59,13 @@ export default function RightClickMenu({ clickData, handleSongEditClick }) {
           songData={contextMenuSongData}
           hideContextMenu={hideContextMenu}
           handleSongEditClick={handleSongEdit}
+          onSongInfoClick={openSongInfo}
+        />
+      )}
+      {songForInfo && (
+        <SongInfoDialog
+          song={songForInfo}
+          onClose={() => setSongInfoSongId(null)}
         />
       )}
     </>

@@ -11,6 +11,7 @@ function ContextMenu({
   songData,
   hideContextMenu,
   handleSongEditClick,
+  onSongInfoClick,
 }) {
   const { addToQueue, visibleSongs } = useAudioPlayer();
 
@@ -33,6 +34,10 @@ function ContextMenu({
     handleSongEditClick(songData.id);
   };
 
+  const openSongInfo = () => {
+    onSongInfoClick(songData.id);
+  };
+
   return (
     <>
       {showPlaylistMenu ? (
@@ -51,6 +56,7 @@ function ContextMenu({
             <li onClick={addToPlaylist}>Add to playlist</li>
             <li onClick={editSong}>Edit</li>
             <li onClick={addSongToQueue}>Add to queue</li>
+            <li onClick={openSongInfo}>Info</li>
           </ul>
         </div>
       )}

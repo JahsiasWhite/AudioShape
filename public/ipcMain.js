@@ -8,6 +8,10 @@ const ffmpeg = require('fluent-ffmpeg');
 
 // Logging
 const Logger = require('./mainLogger');
+const {
+  safeStatSize,
+  technicalFieldsFromFormat,
+} = require('./songMetadataHelpers');
 
 // Annoying way to import this tbh
 let metadata;
@@ -489,6 +493,7 @@ const processSongMetadata = (file, imageMap) => {
   return new Promise((resolve, reject) => {
     try {
       if (path.extname(file).toLowerCase() === '.mkv') {
+        const fileSizeBytes = safeStatSize(file);
         resolve({
           id: file,
           file: file,
@@ -498,6 +503,7 @@ const processSongMetadata = (file, imageMap) => {
           duration: undefined,
           albumImage: undefined,
           isVideo: false,
+          fileSizeBytes,
         });
         return;
       }
@@ -590,6 +596,7 @@ const processSongMetadata = (file, imageMap) => {
             duration: duration,
             albumImage: savedImage,
             isVideo: path.extname(file).toLowerCase() === '.mp4',
+            ...technicalFieldsFromFormat(data.format, file),
           };
 
           resolve(songData);

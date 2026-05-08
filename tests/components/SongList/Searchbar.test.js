@@ -109,6 +109,26 @@ describe('Searchbar', () => {
     expect(Object.values(lastCall)[0].artist).toBe('Kendrick Lamar');
   });
 
+  it('filters by file extension (.ext, *.ext, ext, or *ext)', () => {
+    expect(doesSongMatchSearch(songs[1], '.mp3')).toBe(true);
+    expect(doesSongMatchSearch(songs[1], '*.mp3')).toBe(true);
+    expect(doesSongMatchSearch(songs[1], 'mp3')).toBe(true);
+    expect(doesSongMatchSearch(songs[1], '*mp3')).toBe(true);
+    expect(doesSongMatchSearch(songs[3], 'mp3')).toBe(false); // heartless.mp4
+    expect(doesSongMatchSearch(songs[1], '.mp4')).toBe(false);
+  });
+
+  it('uses fuzzy match for multi-token queries instead of treating them as extensions', () => {
+    const wavButTitleMp3 = {
+      title: 'Best mp3 ever',
+      artist: 'Someone',
+      album: 'album',
+      file: 'song.wav',
+    };
+    expect(doesSongMatchSearch(wavButTitleMp3, 'mp3')).toBe(false); // extension mode: .wav
+    expect(doesSongMatchSearch(wavButTitleMp3, 'best mp3')).toBe(true); // fuzzy on title
+  });
+
   it('does not treat !term as negation without quotes', () => {
     const setFilteredSongs = jest.fn();
     const { getByPlaceholderText } = render(<Searchbar setFilteredSongs={setFilteredSongs} />);

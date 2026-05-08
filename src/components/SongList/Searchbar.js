@@ -3,6 +3,25 @@ import './Searchbar.css';
 
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
+/**
+ * File extensions recognized for extension-only search. Each can be queried as:
+ * `.mp3`, `*.mp3`, `mp3`, or `*mp3` (after normalizeSearchTerm lowercase trim).
+ *
+ * Matching is on the entire search box value only, so a regular query ending with a file extension still uses fuzzy
+ * title/artist/album logic instead of this. 
+ */
+const EXTENSION_FILTER_EXTS = ['.mp4', '.mp3', '.flac', '.wav', '.ogg', '.m4a', '.m4b'];
+
+function matchesExtensionOnlySearch(searchTerm, extWithDot) {
+  const noDot = extWithDot.slice(1);
+  return (
+    searchTerm === extWithDot ||
+    searchTerm === `*${extWithDot}` ||
+    searchTerm === noDot ||
+    searchTerm === `*${noDot}`
+  );
+}
+
 export function normalizeSearchTerm(rawTerm = '') {
   let searchTerm = rawTerm.toLowerCase().trim();
 
@@ -40,11 +59,11 @@ export function doesSongMatchSearch(value, searchTerm) {
     return true; // Include all entries if no input
   }
 
-  if (searchTerm === '.mp4' || searchTerm === '*.mp4') {
-    return value.file.endsWith('.mp4');
-  }
-  if (searchTerm === '.mp3' || searchTerm === '*.mp3') {
-    return value.file.endsWith('.mp3');
+  const extensionMatch = EXTENSION_FILTER_EXTS.find((ext) =>
+    matchesExtensionOnlySearch(searchTerm, ext)
+  );
+  if (extensionMatch !== undefined) {
+    return value.file.toLowerCase().endsWith(extensionMatch);
   }
 
   // If the search is enclosed in quotations, make an exact search on the words

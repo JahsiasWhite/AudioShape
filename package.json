@@ -88,6 +88,7 @@
       "package.json",
       "./public/electron.js",
       "./public/ipcMain.js",
+      "./public/songMetadataHelpers.js",
       "./public/preload.js",
       "./public/index.html",
       "./public/index.css",
