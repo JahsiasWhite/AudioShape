@@ -45,6 +45,10 @@ const {
   safeStatSize,
   technicalFieldsFromFormat,
 } = require('./songMetadataHelpers');
+const {
+  safeReply,
+  isSongLoadRequestStale,
+} = require('./ipcSafety');
 
 /**
  * Stable folder key for imageMap lookups: avoids missing directory art when paths differ by
@@ -228,6 +232,7 @@ let effectCombosFile = null;
 
 /* Hmmmm */
 let mainWindow = undefined;
+let activeSongLoadRequestId = 0;
 
 /* When auto playing with edits on, we have to save the song to have full editing control */
 // TODO: Is there a way to not have to save file? Can't we just use in-memory buffers?
@@ -844,7 +849,10 @@ async function replaceOriginalWithTempFile(originalAbsPath, tempPath) {
 
 const SETUP_GET_SONGS = (mainW) => {
   mainWindow = mainW;
-  ipcMain.on('GET_SONGS', async (event, folderPath) => {
+  ipcMain.on('GET_SONGS', async (event, payload) => {
+    const folderPath =
+      typeof payload === 'string' ? payload : payload?.folderPath ?? '';
+    const requestId = ++activeSongLoadRequestId;
     console.error('FOLDER PATH: ', folderPath);
     // folderPath = getParentDirectory(folderPath);
     // console.error('FOLDER PATH2: ', folderPath);
@@ -866,7 +874,16 @@ const SETUP_GET_SONGS = (mainW) => {
 
     // The user has not selected a directory, so we should return an empty object
     if (correctedPath === '') {
-      event.reply('GRAB_SONGS', { songs: {}, isComplete: true });
+      safeReply(
+        event,
+        'GRAB_SONGS',
+        {
+          songsDelta: {},
+          isComplete: true,
+          requestId,
+        },
+        Logger,
+      );
       return;
     }
 
@@ -888,13 +905,18 @@ const SETUP_GET_SONGS = (mainW) => {
 
     // Make sure we have at least one song in the directory
     if (audios.length === 0) {
-      // ! OUTPUT ERROR HERE?
-      event.reply('GRAB_SONGS', { songs: {}, isComplete: true });
+      safeReply(
+        event,
+        'GRAB_SONGS',
+        {
+          songsDelta: {},
+          isComplete: true,
+          requestId,
+        },
+        Logger,
+      );
       return;
     }
-
-    /* Get all songs */
-    songs = {}; // ? Reset songs here?
 
     const total = audios.length;
     Logger.info(`Loading ${total} songs from ${correctedPath}`);
@@ -903,6 +925,11 @@ const SETUP_GET_SONGS = (mainW) => {
     const BATCH_SIZE = 200;
 
     for (let i = 0; i < audios.length; i += BATCH_SIZE) {
+      if (isSongLoadRequestStale(requestId, activeSongLoadRequestId)) {
+        Logger.info(`[Songs] Cancelled stale load request ${requestId}`);
+        return;
+      }
+
       const batch = audios.slice(i, i + BATCH_SIZE);
       const batchResults = await Promise.all(
         batch.map((file) =>
@@ -918,8 +945,9 @@ const SETUP_GET_SONGS = (mainW) => {
         ),
       );
 
+      const songsDelta = {};
       batchResults.forEach((songData) => {
-        if (songData) songs[songData.id] = songData;
+        if (songData) songsDelta[songData.id] = songData;
       });
 
       const resolved = i + batch.length;
@@ -928,11 +956,27 @@ const SETUP_GET_SONGS = (mainW) => {
       console.log(
         `[Songs] ${resolved}/${total} (${pct}%)${isComplete ? ' — done!' : ''}`,
       );
-      mainWindow.webContents.send('GRAB_SONGS', {
-        songs,
-        isComplete,
-        progress: { resolved, total },
-      });
+      if (isSongLoadRequestStale(requestId, activeSongLoadRequestId)) {
+        Logger.info(`[Songs] Cancelled stale load request ${requestId}`);
+        return;
+      }
+      const sent = safeReply(
+        event,
+        'GRAB_SONGS',
+        {
+          songsDelta,
+          isComplete,
+          progress: { resolved, total },
+          requestId,
+        },
+        Logger,
+      );
+      if (!sent) {
+        Logger.info(
+          `[Songs] Stopping load ${requestId}: renderer frame unavailable`,
+        );
+        return;
+      }
     }
   });
 

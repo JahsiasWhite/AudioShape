@@ -177,6 +177,49 @@ function Settings({ openHistory }) {
           </button>
         </div>
       </div>
+      <div className="settings-container settings-tips">
+        <div className="song-title">Tips</div>
+        <details className="setting-item settings-tips-details">
+          <summary className="settings-tips-summary">How search works</summary>
+          <div className="settings-tips-body">
+            <p>
+              Search matches against each song&apos;s title, artist, and album
+              (file path only for extension filters below).
+            </p>
+            <ul>
+              <li>
+                <strong>Plain text</strong> — substring match, case-insensitive.
+                Example: <code>kanye</code>
+              </li>
+              <li>
+                <strong>Exact field</strong> — wrap in double quotes. The whole
+                title, artist, or album must match that phrase exactly.
+                Example: <code>&quot;kanye west&quot;</code>
+              </li>
+              <li>
+                <strong>Exclude</strong> — double quotes with a leading{' '}
+                <code>!</code> inside the quotes. Hides rows where title, artist,
+                or album contains the phrase. Example:{' '}
+                <code>&quot;!kanye&quot;</code> (or <code>!&quot;kanye&quot;</code>
+                before normalization).
+              </li>
+              <li>
+                <strong>Regex (advanced)</strong> — wrap the pattern in single
+                quotes. Uses JavaScript <code>RegExp</code> with the{' '}
+                <code>i</code> flag on title, artist, and album. Negation is not
+                supported in this mode; use double-quote exclude instead. Invalid
+                patterns match nothing. Example: <code>&apos;kanye.*west&apos;</code>
+              </li>
+              <li>
+                <strong>By file type</strong> — if the entire box is only an
+                extension like <code>.mp3</code>, <code>mp3</code>, or{' '}
+                <code>*.mp3</code>, songs are filtered by that extension on the
+                file path.
+              </li>
+            </ul>
+          </div>
+        </details>
+      </div>
     </div>
   );
 }

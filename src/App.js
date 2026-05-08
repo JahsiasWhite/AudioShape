@@ -44,7 +44,7 @@ function App() {
    */
   useEffect(() => {
     // Fetch initial songs when the component mounts
-    window.electron.ipcRenderer.sendMessage('GET_SONGS', '');
+    window.electron.ipcRenderer.sendMessage('GET_SONGS', { folderPath: '' });
 
     // Fetch color settings
     // This will create a duplicate of each style

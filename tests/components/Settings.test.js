@@ -77,10 +77,13 @@ describe('<Settings />', () => {
       mp4DownloadEnabled: false,
       spotifyEnabled: true,
     };
+    const getSettingsHandler = window.electron.ipcRenderer.on.mock.calls.find(
+      (call) => call[0] === 'GET_SETTINGS',
+    )?.[1];
+    expect(getSettingsHandler).toBeDefined();
+
     act(() => {
-      // Assuming 'GET_SETTINGS' is the 3rd registered 'on' callback
-      //   window.electron.ipcRenderer.on.mock.calls[2][1](updatedSettings);
-      window.electron.ipcRenderer.on.mock.calls[2][1](updatedSettings);
+      getSettingsHandler(updatedSettings);
     });
 
     const checkbox = getByRole('checkbox', { name: /Enable Spotify/i });

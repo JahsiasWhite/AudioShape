@@ -1,4 +1,8 @@
 .folderInputLabel {
   cursor: pointer;
   color: var(--color-button-secondary);
+  background: transparent;
+  border: none;
+  padding: 0;
+  font: inherit;
 }

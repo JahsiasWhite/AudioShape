@@ -4,6 +4,7 @@ const {
   ipcMain,
   protocol,
   globalShortcut,
+  dialog,
 } = require('electron');
 
 const path = require('path');
@@ -182,6 +183,19 @@ app.on('ready', function () {
   SETUP_EFFECTS(mainWindow, effectCombosFile);
   SETUP_HISTORY(mainWindow, app.getPath('userData'));
   SETUP_SONG_DOWNLOADS(mainWindow);
+
+  // Native folder picker: avoids renderer webkitdirectory crawl on huge trees.
+  ipcMain.handle('SELECT_LIBRARY_DIRECTORY', async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openDirectory'],
+    });
+
+    if (result.canceled || !result.filePaths?.length) {
+      return null;
+    }
+
+    return result.filePaths[0];
+  });
 
   /* Window control handlers for the custom title bar */
   ipcMain.on('WINDOW_MINIMIZE', () => mainWindow.minimize());

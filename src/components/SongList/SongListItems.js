@@ -204,26 +204,29 @@ export default function SongListItems({
   // ? TODO I had <div> here instead of <>... I can't remember if it fixed a small glitch...
   return (
     <>
-      {Object.keys(filteredSongs).map((key) => (
+      {Object.keys(filteredSongs).map((key) => {
+        const song = visibleSongs[key] || filteredSongs[key];
+        if (!song) return null;
+        return (
         <div
           className={`song ${loadingQueue.length > 0 ? 'unclickable' : ''}`}
           key={key}
-          id={visibleSongs[key].id}
+          id={song.id}
         >
           <li
             key={key} // TODO Fix this to be more appropriate/an actual unique key, when the page changes to artists for example, the indices are all messed up
             onDoubleClick={() => {
               // handleSongSelect(visibleSongs[key].id);
-              clickSong(visibleSongs[key].id);
+              clickSong(song.id);
             }}
             onClick={() => {
               toggleRightClickMenu(false); // Hide the 'right-click' menu when we left-click
             }}
             onContextMenu={
-              (event) => handleContextMenu(event, visibleSongs[key]) // Pass the song data when right-clicking
+              (event) => handleContextMenu(event, song) // Pass the song data when right-clicking
             }
             className={`list-item ${
-              currentSongId === visibleSongs[key].id ? 'highlighted' : ''
+              currentSongId === song.id ? 'highlighted' : ''
             }`}
           >
             {!filteredSongs[key].albumImage ? (
@@ -249,45 +252,45 @@ export default function SongListItems({
             <div className="song-details">
               <div
                 className={`song-title ${
-                  currentSongId === visibleSongs[key].id ? '' : 'header-color'
+                  currentSongId === song.id ? '' : 'header-color'
                 }`}
               >
-                {visibleSongs[key].title}
+                {song.title}
               </div>
               <div>
                 <span onClick={() => goToArtistScreen(key)}>
-                  {visibleSongs[key].artist}
+                  {song.artist}
                 </span>
               </div>
               <div>
                 <span onClick={() => goToAlbumScreen(key)}>
-                  {visibleSongs[key].album}
+                  {song.album}
                 </span>
               </div>
             </div>
             <div className="song-duration">
-              {formatDuration(visibleSongs[key].duration / 60)}
+              {formatDuration(song.duration / 60)}
             </div>
             <div className="right-side">
               <img
                 className="plus-sign"
                 data-testid="plus-sign"
                 src={PlusButtonSVG}
-                onClick={() => handlePlaylistEdit(visibleSongs[key].id)}
+                onClick={() => handlePlaylistEdit(song.id)}
               ></img>
               <img
                 className="dropdown-button"
                 data-testid="dropdown-button"
                 src={MixerSVG}
                 onClick={() => {
-                  handleSongEditClick(visibleSongs[key].id);
+                  handleSongEditClick(song.id);
                   setCurrentScreen('mixer');
                 }}
               ></img>
             </div>
           </li>
         </div>
-      ))}
+      )})}
     </>
   );
 }

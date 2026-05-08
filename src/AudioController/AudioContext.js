@@ -22,6 +22,7 @@ const DEFAULT_SLOWDOWN = 0.8;
 
 export const AudioProvider = ({ children }) => {
   const MAX_HISTORY_ITEMS = 100;
+  const latestSongsRequestIdRef = useRef(0);
 
   const buildMediaArtwork = (imageValue) => {
     if (!imageValue || typeof imageValue !== 'string') return [];
@@ -408,10 +409,44 @@ export const AudioProvider = ({ children }) => {
     setLoadedSongs({});
   };
 
-  window.electron.ipcRenderer.on('GRAB_SONGS', ({ songs, isComplete }) => {
-    console.error('GOT SONGS: ', songs);
-    initialSongLoad(songs, isComplete);
-  });
+  useEffect(() => {
+    const unsubSongs = window.electron.ipcRenderer.on(
+      'GRAB_SONGS',
+      ({ songs, songsDelta, isComplete, requestId }) => {
+        if (
+          typeof requestId === 'number' &&
+          requestId < latestSongsRequestIdRef.current
+        ) {
+          return;
+        }
+        if (typeof requestId === 'number') {
+          latestSongsRequestIdRef.current = requestId;
+        }
+
+        const hasDelta =
+          songsDelta != null &&
+          typeof songsDelta === 'object' &&
+          !Array.isArray(songsDelta);
+        const hasFull =
+          songs != null &&
+          typeof songs === 'object' &&
+          !Array.isArray(songs);
+
+        if (hasDelta) {
+          setLoadedSongs((prev) => ({ ...prev, ...songsDelta }));
+          setVisibleSongs((prev) => ({ ...prev, ...songsDelta }));
+          if (isComplete) setInitSongsLoading(false);
+          return;
+        }
+
+        initialSongLoad(hasFull ? songs : {}, isComplete);
+      },
+    );
+
+    return () => {
+      unsubSongs?.();
+    };
+  }, []);
 
   /**
    * Adds a new song to the list of songs

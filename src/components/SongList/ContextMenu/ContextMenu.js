@@ -53,9 +53,9 @@ function ContextMenu({
           onContextMenu={handleContextMenu}
         >
           <ul className="context-menu">
+          <li onClick={editSong}>Edit</li>
+          <li onClick={addSongToQueue}>Add to queue</li>
             <li onClick={addToPlaylist}>Add to playlist</li>
-            <li onClick={editSong}>Edit</li>
-            <li onClick={addSongToQueue}>Add to queue</li>
             <li onClick={openSongInfo}>Info</li>
           </ul>
         </div>

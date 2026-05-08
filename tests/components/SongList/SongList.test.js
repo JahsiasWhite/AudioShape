@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, renderHook, fireEvent } from '@testing-library/react';
+import { render, renderHook, fireEvent, waitFor } from '@testing-library/react';
 import SongList from '../../../src/components/SongList/SongList.js';
 import AudioContext, {
   AudioProvider,
@@ -43,6 +43,7 @@ window.electron = {
     on: jest.fn(),
     once: jest.fn(),
     sendMessage: jest.fn(),
+    invoke: jest.fn(),
   },
 };
 
@@ -308,7 +309,7 @@ describe('Song List', () => {
     expect(container).toBeDefined();
   });
 
-  it('handles import songs correctly', () => {
+  it('handles import songs correctly', async () => {
     // Mock the AudioContext values
     const mockAudioContext = {
       visibleSongs: [],
@@ -332,27 +333,20 @@ describe('Song List', () => {
       </AudioProvider>
     );
 
+    window.electron.ipcRenderer.invoke.mockResolvedValueOnce(
+      'C:\\Users\\test\\Music\\MyMusic'
+    );
+
     // Click FolderSelection button
     fireEvent.click(getByText('Choose Song Directory'));
 
-    // Simulate folder input change
-    const mockFile = {
-      path: 'C:\\Users\\test\\Music\\MyMusic',
-      webkitRelativePath: 'MyMusic/song.mp3',
-      name: 'song.mp3',
-    };
-    const input = getByTestId('folder-input');
-    fireEvent.change(input, {
-      target: {
-        files: [mockFile],
-      },
-    });
-
     // Verify nothing broke
     expect(SongList).toBeDefined();
-    expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith(
-      'GET_SONGS',
-      'C:\\Users\\test\\Music\\MyMusic'
-    );
+    await waitFor(() => {
+      expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith(
+        'GET_SONGS',
+        { folderPath: 'C:\\Users\\test\\Music\\MyMusic' }
+      );
+    });
   });
 });
