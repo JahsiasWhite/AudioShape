@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
 
 import { AudioObject } from './AudioObject';
 import { AudioControls } from './AudioControls';
@@ -22,6 +22,32 @@ const DEFAULT_SLOWDOWN = 0.8;
 
 export const AudioProvider = ({ children }) => {
   const MAX_HISTORY_ITEMS = 100;
+
+  const buildMediaArtwork = (imageValue) => {
+    if (!imageValue || typeof imageValue !== 'string') return [];
+
+    if (imageValue.startsWith('data:')) {
+      const mimeMatch = imageValue.match(/^data:([^;]+);/i);
+      const mimeType = mimeMatch?.[1] || 'image/jpeg';
+      return [{ src: imageValue, type: mimeType }];
+    }
+
+    const normalized = imageValue.toLowerCase();
+    const mimeType = normalized.endsWith('.png')
+      ? 'image/png'
+      : normalized.endsWith('.webp')
+        ? 'image/webp'
+        : normalized.endsWith('.gif')
+          ? 'image/gif'
+          : 'image/jpeg';
+
+    return [
+      {
+        src: `file:///${imageValue.replace(/\\/g, '/')}`,
+        type: mimeType,
+      },
+    ];
+  };
 
   /* General songs */
   const [loadedSongs, setLoadedSongs] = useState({});
@@ -223,6 +249,9 @@ export const AudioProvider = ({ children }) => {
     setVideoTime(newVideoTime);
   };
 
+  const currentSongIdRef = useRef(null);
+  currentSongIdRef.current = currentSongId;
+
   // Current song changed — just point the audio element at the new file.
   // The live effects chain stays wired and automatically applies to whatever is playing.
   useEffect(() => {
@@ -255,9 +284,7 @@ export const AudioProvider = ({ children }) => {
 
     if ('mediaSession' in navigator) {
       const song = loadedSongs[currentSongId];
-      const artwork = song?.albumImage
-        ? [{ src: `file:///${song.albumImage.replace(/\\/g, '/')}`, type: 'image/jpeg' }]
-        : [];
+      const artwork = buildMediaArtwork(song?.albumImage);
       navigator.mediaSession.metadata = new MediaMetadata({
         title: song?.title ?? '',
         artist: song?.artist ?? '',
@@ -301,6 +328,39 @@ export const AudioProvider = ({ children }) => {
     return () => {
       unsubHistory?.();
     };
+  }, []);
+
+  useEffect(() => {
+    const unsub = window.electron.ipcRenderer.on(
+      'UPDATE_SONG_TAGS_RESULT',
+      (payload) => {
+        if (!payload?.success || !payload.song) return;
+        const updated = payload.song;
+        const id = updated.id;
+
+        setLoadedSongs((prev) => ({ ...prev, [id]: updated }));
+
+        setVisibleSongs((prev) => {
+          if (!Object.prototype.hasOwnProperty.call(prev, id)) {
+            return prev;
+          }
+          return { ...prev, [id]: updated };
+        });
+
+        if (id === currentSongIdRef.current && 'mediaSession' in navigator) {
+          const artwork = buildMediaArtwork(updated?.albumImage);
+          try {
+            navigator.mediaSession.metadata = new MediaMetadata({
+              title: updated?.title ?? '',
+              artist: updated?.artist ?? '',
+              album: updated?.album ?? '',
+              artwork,
+            });
+          } catch (_) {}
+        }
+      },
+    );
+    return () => unsub?.();
   }, []);
 
   /* Media key IPC + navigator.mediaSession action handlers */

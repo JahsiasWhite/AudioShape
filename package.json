@@ -81,6 +81,7 @@
     "icon": "src/logo.png",
     "asarUnpack": [
       "node_modules/youtube-dl-exec/bin/**",
+      "node_modules/ffmpeg-static/**",
       "src/logo.png"
     ],
     "files": [
