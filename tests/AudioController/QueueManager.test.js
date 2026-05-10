@@ -298,7 +298,7 @@ describe('QueueManager', () => {
 
     // Assertions
     expect(result.current.songQueue).toEqual([]);
-    expect(result.current.currentSongId).toBe('song1');
+    expect(result.current.currentSongId).toBe(1);
     expect(result.current.currentSongIndex).toBe(0);
   });
 
@@ -346,9 +346,9 @@ describe('QueueManager', () => {
     };
 
     const mockVisibleSongs = {
-      111: { title: 'Song 1' },
-      222: { title: 'Song 2' },
-      333: { title: 'Song 3' },
+      111: { id: 111, title: 'Song 1' },
+      222: { id: 222, title: 'Song 2' },
+      333: { id: 333, title: 'Song 3' },
     };
 
     const { result } = renderHook(() =>
@@ -357,7 +357,7 @@ describe('QueueManager', () => {
 
     // Set initial state
     act(() => {
-      result.current.handleSongSelect('song3');
+      result.current.handleSongSelect(333);
     });
 
     // Simulate the ended event by triggering onSongEnded
@@ -366,7 +366,111 @@ describe('QueueManager', () => {
     });
 
     // Assertions
-    expect(result.current.currentSongId).toBe('111');
+    expect(result.current.currentSongId).toBe(111);
     expect(result.current.currentSongIndex).toBe(0);
+  });
+
+  it('syncPlaybackOrder updates the Next list when the list is re-sorted', () => {
+    const mockCurrentSong = {
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      loop: false,
+    };
+
+    const mockVisibleSongs = {
+      a: { id: 'a', title: 'A' },
+      b: { id: 'b', title: 'B' },
+      c: { id: 'c', title: 'C' },
+    };
+
+    const { result } = renderHook(() =>
+      QueueManager(mockCurrentSong, mockVisibleSongs, mockVisibleSongs),
+    );
+
+    act(() => {
+      result.current.handleSongSelect('c');
+    });
+    expect(result.current.nextSongs).toEqual([]);
+
+    act(() => {
+      result.current.syncPlaybackOrder(['c', 'a', 'b']);
+    });
+    expect(result.current.nextSongs).toEqual(['a', 'b']);
+  });
+
+  it('removes filtered-out songs from shuffle next songs after search changes', () => {
+    const mockCurrentSong = {
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      loop: false,
+    };
+
+    const allSongs = {
+      kanye1: { id: 'kanye1', title: 'Kanye 1', artist: 'Kanye West' },
+      drake1: { id: 'drake1', title: 'Drake 1', artist: 'Drake' },
+      kanye2: { id: 'kanye2', title: 'Kanye 2', artist: 'Kanye West' },
+    };
+
+    const filteredSongs = {
+      drake1: { id: 'drake1', title: 'Drake 1', artist: 'Drake' },
+    };
+
+    const { result, rerender } = renderHook(
+      ({ songs }) => QueueManager(mockCurrentSong, songs, songs),
+      { initialProps: { songs: allSongs } },
+    );
+
+    act(() => {
+      result.current.handleSongSelect('drake1');
+      result.current.toggleShuffle();
+    });
+    expect(result.current.nextSongs).toEqual(
+      expect.arrayContaining(['kanye1', 'kanye2']),
+    );
+
+    rerender({ songs: filteredSongs });
+    act(() => {
+      result.current.syncPlaybackOrder(['drake1']);
+    });
+
+    expect(result.current.nextSongs).toEqual([]);
+  });
+
+  it('restarts from full list when temporary artist playback order runs out', () => {
+    const mockCurrentSong = {
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      loop: false,
+    };
+
+    const allSongs = {
+      a1: { id: 'a1', title: 'All 1' },
+      a2: { id: 'a2', title: 'All 2' },
+      b1: { id: 'b1', title: 'Artist Song' },
+    };
+
+    const { result } = renderHook(() =>
+      QueueManager(mockCurrentSong, allSongs, allSongs),
+    );
+
+    act(() => {
+      result.current.syncPlaybackOrder(['a1', 'a2', 'b1']);
+      result.current.handleSongSelect('a2');
+    });
+    expect(result.current.currentSongId).toBe('a2');
+
+    act(() => {
+      result.current.syncPlaybackOrder(['b1']);
+    });
+
+    act(() => {
+      result.current.playNextSong();
+    });
+    expect(result.current.currentSongId).toBe('b1');
+
+    act(() => {
+      result.current.playNextSong();
+    });
+    expect(result.current.currentSongId).toBe('a1');
   });
 });

@@ -113,7 +113,12 @@ function App() {
                 currentSection={currentSection}
                 setCurrentSection={setCurrentSection}
               />
-              <div className="main-content">
+              <div
+                className={
+                  'main-content' +
+                  (currentSection === 'allSongs' ? ' main-content--songlist' : '')
+                }
+              >
                 {currentSection === 'allSongs' ? (
                   <SongList handleSongEdit={handleSongSelect} />
                 ) : currentSection === 'history' ? (

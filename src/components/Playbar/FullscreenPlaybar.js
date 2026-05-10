@@ -8,7 +8,8 @@ import ExitFullscreenButtonSVG from './ExitFullscreenButtonSVG';
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
 function FullscreenPlaybar({ toggleFullscreen }) {
-  const { currentSongId, loadedSongs } = useAudioPlayer();
+  const { currentSongId, loadedSongs, requestScrollSongListToCurrentSong } =
+    useAudioPlayer();
   const song = loadedSongs[currentSongId];
 
   const [playbarVisible, setPlaybarVisible] = useState(true);
@@ -34,9 +35,7 @@ function FullscreenPlaybar({ toggleFullscreen }) {
 
     // Scrolls to the current song // TODO: I dont like this here. SHould probably make all of these a function as well
     setTimeout(() => {
-      const songDiv = document.getElementById(currentSongId);
-      if (songDiv)
-        songDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      requestScrollSongListToCurrentSong?.();
     }, 100);
   };
 

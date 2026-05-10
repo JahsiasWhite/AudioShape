@@ -1,4 +1,11 @@
-import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
+import React, {
+  createContext,
+  useState,
+  useEffect,
+  useContext,
+  useRef,
+  useCallback,
+} from 'react';
 
 import { AudioObject } from './AudioObject';
 import { AudioControls } from './AudioControls';
@@ -23,6 +30,8 @@ const DEFAULT_SLOWDOWN = 0.8;
 export const AudioProvider = ({ children }) => {
   const MAX_HISTORY_ITEMS = 100;
   const latestSongsRequestIdRef = useRef(0);
+  /** Bumped from playbar / finishLoading so SongListItems can scroll the virtual list. */
+  const requestScrollSongListToCurrentSongRef = useRef(() => {});
 
   const buildMediaArtwork = (imageValue) => {
     if (!imageValue || typeof imageValue !== 'string') return [];
@@ -137,11 +146,8 @@ export const AudioProvider = ({ children }) => {
     console.log('Finished loading... Effect: ', effect, ' Queue: ', queue);
     setLoadingQueue(queue);
 
-    // Keep the song centered
     setTimeout(() => {
-      const songDiv = document.getElementById(currentSongId);
-      if (songDiv)
-        songDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      requestScrollSongListToCurrentSongRef.current();
     }, 100);
   };
 
@@ -177,6 +183,19 @@ export const AudioProvider = ({ children }) => {
       getCurrentAudioBuffer,
     );
 
+  /** Survives SongList unmount (e.g. fullscreen) so sort/search preferences restore when returning. */
+  const [songListSortFilterIndex, setSongListSortFilterIndex] = useState(0);
+  const [songListSortAscending, setSongListSortAscending] = useState(false);
+  const [songListHasCustomSort, setSongListHasCustomSort] = useState(false);
+
+  const [songListScrollToCurrentToken, setSongListScrollToCurrentToken] =
+    useState(0);
+  const requestScrollSongListToCurrentSong = useCallback(() => {
+    setSongListScrollToCurrentToken((t) => t + 1);
+  }, []);
+  requestScrollSongListToCurrentSongRef.current =
+    requestScrollSongListToCurrentSong;
+
   // Handles the overall functionality of playing and switching songs
   const {
     handleSongSelect,
@@ -193,6 +212,7 @@ export const AudioProvider = ({ children }) => {
     toggleShuffle,
     shuffleIsEnabled,
     loopIsEnabled,
+    syncPlaybackOrder,
   } = QueueManager(currentSong, visibleSongs, loadedSongs);
 
   // Handles all audio effects
@@ -538,6 +558,15 @@ export const AudioProvider = ({ children }) => {
         togglePopup,
         setTogglePopup,
         clearListeningHistory,
+        songListSortFilterIndex,
+        setSongListSortFilterIndex,
+        songListSortAscending,
+        setSongListSortAscending,
+        songListHasCustomSort,
+        setSongListHasCustomSort,
+        syncPlaybackOrder,
+        songListScrollToCurrentToken,
+        requestScrollSongListToCurrentSong,
       }}
     >
       {children}

@@ -189,34 +189,55 @@ function Settings({ openHistory }) {
             <ul>
               <li>
                 <strong>Plain text</strong> — substring match, case-insensitive.
-                Example: <code>kanye</code>
               </li>
               <li>
                 <strong>Exact field</strong> — wrap in double quotes. The whole
                 title, artist, or album must match that phrase exactly.
-                Example: <code>&quot;kanye west&quot;</code>
               </li>
               <li>
                 <strong>Exclude</strong> — double quotes with a leading{' '}
                 <code>!</code> inside the quotes. Hides rows where title, artist,
-                or album contains the phrase. Example:{' '}
-                <code>&quot;!kanye&quot;</code> (or <code>!&quot;kanye&quot;</code>
-                before normalization).
+                or album contains the phrase.
               </li>
               <li>
                 <strong>Regex (advanced)</strong> — wrap the pattern in single
                 quotes. Uses JavaScript <code>RegExp</code> with the{' '}
                 <code>i</code> flag on title, artist, and album. Negation is not
                 supported in this mode; use double-quote exclude instead. Invalid
-                patterns match nothing. Example: <code>&apos;kanye.*west&apos;</code>
+                patterns match nothing.
               </li>
               <li>
-                <strong>By file type</strong> — if the entire box is only an
+                <strong>By file type</strong> — if the search term is only an
                 extension like <code>.mp3</code>, <code>mp3</code>, or{' '}
                 <code>*.mp3</code>, songs are filtered by that extension on the
                 file path.
               </li>
             </ul>
+          </div>
+        </details>
+        <details className="setting-item settings-tips-details">
+          <summary className="settings-tips-summary">
+            How to edit song metadata
+          </summary>
+          <div className="settings-tips-body">
+            <p>
+              Right-click a song, click info, then select the pencil icon to change title,
+              artist, and album.
+            </p>
+          </div>
+        </details>
+        <details className="setting-item settings-tips-details">
+          <summary className="settings-tips-summary">Song images</summary>
+          <div className="settings-tips-body">
+            <p>
+              Song images are picked in this order: an image file in the{' '}
+              <strong>same folder as the song</strong> (see below). If there is no image, then it will useembedded
+              artwork from the file&apos;s tags. If the song is a video file, then the app will use the first frame of the video.
+            </p>
+            <p>
+              Folder images must use <code>.jpg</code>, <code>.jpeg</code>, or{' '}
+              <code>.png</code>. If there are multiple images, the app will choose one image for all songs at random.
+            </p>
           </div>
         </details>
       </div>

@@ -651,6 +651,29 @@ const SETUP_SONG_DOWNLOADS = (mainW) => {
   );
 };
 
+function coerceFiniteDuration(value) {
+  if (value == null) return undefined;
+  const n = typeof value === 'string' ? parseFloat(value) : Number(value);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+/** When music-metadata omits duration (common for some .ogg), ffprobe still reports stream length. */
+function probeDurationSecondsWithFfmpeg(filePath) {
+  return new Promise((resolve) => {
+    ffmpeg.ffprobe(filePath, (err, metadata) => {
+      if (err) {
+        Logger.warn('[metadata] ffprobe duration fallback failed', {
+          file: trimForLog(filePath),
+          message: trimForLog(err?.message ?? String(err)),
+        });
+        resolve(undefined);
+        return;
+      }
+      resolve(coerceFiniteDuration(metadata?.format?.duration));
+    });
+  });
+}
+
 // Function to process song metadata
 const processSongMetadata = (file, imageMap) => {
   return new Promise((resolve, reject) => {
@@ -675,11 +698,14 @@ const processSongMetadata = (file, imageMap) => {
       const hasDirectoryImage = dirImages.length > 0;
       metadata
         .parseFile(file, { skipCovers: hasDirectoryImage })
-        .then((data) => {
+        .then(async (data) => {
           let title = data.common.title;
           let artist = data.common.artist;
           let album = data.common.album;
-          let duration = data.format.duration;
+          let duration = coerceFiniteDuration(data.format?.duration);
+          if (duration === undefined) {
+            duration = await probeDurationSecondsWithFfmpeg(file);
+          }
 
           let key = file;
 

@@ -37,6 +37,8 @@ input {
 .non-fullscreen {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 0;
   background-color: var(--color-main);
 }
 
@@ -71,24 +73,37 @@ input {
 
 .main-content {
   flex-grow: 1;
+  min-height: 0;
   background-color: var(--color-secondary);
   overflow: overlay;
 }
 
-.main-content::-webkit-scrollbar {
+/* Song list scrolls inside its own viewport (virtual list); avoid nested page scroll. */
+.main-content.main-content--songlist {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Song list virtual scroller (and main content on other tabs) */
+.main-content::-webkit-scrollbar,
+.song-list-scrollbar::-webkit-scrollbar {
   width: 11px;
 }
 
-.main-content::-webkit-scrollbar-track {
+.main-content::-webkit-scrollbar-track,
+.song-list-scrollbar::-webkit-scrollbar-track {
   background: var(--color-main);
 }
 
-.main-content::-webkit-scrollbar-thumb {
+.main-content::-webkit-scrollbar-thumb,
+.song-list-scrollbar::-webkit-scrollbar-thumb {
   background-color: #2a2a3a;
   border-radius: 10px;
 }
 
-.main-content::-webkit-scrollbar-thumb:hover {
+.main-content::-webkit-scrollbar-thumb:hover,
+.song-list-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: var(--color-accent);
 }
 
