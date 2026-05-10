@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 
 import Playbar from './components/Playbar/Playbar';
@@ -9,6 +9,7 @@ import Artists from './components/Artists/Artists';
 import Settings from './components/Settings/Settings';
 import Spotify from './components/Spotify/Spotify';
 import Youtube from './components/Youtube/Youtube';
+import FileConverter from './components/FileConverter/FileConverter';
 import LayoutBar from './components/LayoutBar/LayoutBar';
 import TitleBar from './components/TitleBar/TitleBar';
 import Mixer from './components/Mixer/Mixer';
@@ -136,6 +137,8 @@ function App() {
                     selectedIndex={selectedSongIndex}
                     setSelectedIndex={setSelectedSongIndex}
                   />
+                ) : currentSection === 'fileConverter' ? (
+                  <FileConverter />
                 ) : currentSection === 'youtube' ? (
                   <Youtube />
                 ) : (

@@ -1,5 +1,15 @@
 .layout-bar {
   padding-top: 5px;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  overscroll-behavior: contain;
+}
+
+.layout-bar::-webkit-scrollbar {
+  display: none;
 }
 
 .centered-content {

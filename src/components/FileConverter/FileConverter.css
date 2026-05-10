@@ -1,0 +1,101 @@
+.file-converter {
+  color: var(--color-text);
+}
+
+.file-converter-container {
+  max-width: 520px;
+  margin: 20px auto 0;
+  padding: 20px;
+  background-color: var(--color-main);
+  border: 1px solid #2a2a38;
+  border-radius: 8px;
+}
+
+.file-converter-title {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 24px;
+}
+
+.file-converter-description {
+  margin-top: 0;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.file-converter-field {
+  margin-top: 18px;
+}
+
+.file-converter-field label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.file-converter-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.file-converter-source,
+.file-converter-select {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #44445a;
+  border-radius: 5px;
+  background-color: var(--color-secondary);
+  color: var(--color-text);
+  font-size: 16px;
+}
+
+.file-converter-source {
+  flex: 1;
+}
+
+.file-converter-select {
+  width: 160px;
+}
+
+.file-converter-source::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.file-converter-button {
+  padding: 10px 20px;
+  background-color: var(--color-button-secondary);
+  color: var(--color-text);
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.file-converter-button:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.file-converter-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.file-converter-convert {
+  margin-top: 22px;
+}
+
+.file-converter-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+  color: var(--color-text);
+}
+
+.file-converter-output {
+  margin-top: 16px;
+  overflow-wrap: anywhere;
+  color: var(--color-text-secondary);
+}

@@ -7,6 +7,7 @@ import PlaylistButton from './PlaylistButton/PlaylistButton';
 import ArtistButton from './ArtistButton/ArtistButton';
 import SpotifyButton from './SpotifyButton/SpotifyButton';
 import YoutubeButton from './YoutubeButton/YoutubeButton';
+import FileConverterButton from './FileConverterButton/FileConverterButton';
 import SettingsButton from './SettingsButton/SettingsButton';
 
 import { useAudioPlayer } from '../../AudioController/AudioContext';
@@ -21,6 +22,7 @@ function LayoutBar({ toggleSection, currentSection, setCurrentSection }) {
     'playlists',
     'artists',
     'youtube',
+    'fileConverter',
     'settings',
   ]);
 
@@ -92,6 +94,7 @@ function LayoutBar({ toggleSection, currentSection, setCurrentSection }) {
             {section === 'artists' && <ArtistButton />}
             {section === 'youtube' && <YoutubeButton />}
             {section === 'spotify' && <SpotifyButton />}
+            {section === 'fileConverter' && <FileConverterButton />}
             {section === 'settings' && <SettingsButton />}
           </div>
         ))}

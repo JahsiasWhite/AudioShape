@@ -16,6 +16,7 @@ const {
   SAVE_TEMP_SONG,
   DELETE_TEMP_SONG,
   SAVE_SONG,
+  SETUP_FILE_CONVERTER,
   SETUP_SETINGS,
   SETUP_PLAYLISTS,
   SETUP_EFFECTS,
@@ -178,6 +179,7 @@ app.on('ready', function () {
   SAVE_TEMP_SONG(tempSongFolder, mainWindow);
   DELETE_TEMP_SONG();
   SAVE_SONG(dataDirectory);
+  SETUP_FILE_CONVERTER(mainWindow);
   SETUP_SETINGS(mainWindow, app.getPath('userData'));
   SETUP_PLAYLISTS(mainWindow, app.getPath('userData'));
   SETUP_EFFECTS(mainWindow, effectCombosFile);

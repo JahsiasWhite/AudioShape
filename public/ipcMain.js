@@ -1,4 +1,4 @@
-const { app, ipcMain } = require('electron');
+const { app, dialog, ipcMain } = require('electron');
 
 const fs = require('fs');
 const fsPromises = require('fs').promises; // For deleting files
@@ -42,6 +42,8 @@ function configureFfmpegBinary() {
 const Logger = require('./mainLogger');
 configureFfmpegBinary();
 const {
+  addDirectoryImagesForAudioFiles,
+  listImageFilesInAlbumDir,
   safeStatSize,
   technicalFieldsFromFormat,
 } = require('./songMetadataHelpers');
@@ -76,26 +78,6 @@ function getDirectoryImagesForFile(imageMap, audioFilePath) {
     }
   }
   return [];
-}
-
-/** Folder art discovery without glob (glob single-folder brace patterns can return [] on Windows). */
-async function listImageFilesInAlbumDir(albumDir) {
-  let entries;
-  try {
-    entries = await fsPromises.readdir(albumDir, { withFileTypes: true });
-  } catch {
-    return [];
-  }
-  const allowed = new Set(['.jpg', '.jpeg', '.png']);
-  const out = [];
-  for (const ent of entries) {
-    if (!ent.isFile()) continue;
-    const ext = path.extname(ent.name).toLowerCase();
-    if (allowed.has(ext)) {
-      out.push(path.join(albumDir, ent.name));
-    }
-  }
-  return out;
 }
 
 function normalizeOptionalFilePath(maybePath) {
@@ -359,6 +341,134 @@ const SAVE_SONG = (dataDirectory) => {
     } catch (err) {
       console.error('Error saving song:', err);
       event.reply('SAVE_SONG_RESULT', { success: false, error: err.message });
+    }
+  });
+};
+
+const CONVERTER_INPUT_EXTENSIONS = [
+  'mp3',
+  'wav',
+  'ogg',
+  'mp4',
+  'flac',
+  'm4a',
+  'mkv',
+  'aac',
+];
+const CONVERTER_OUTPUT_FORMATS = new Set([
+  'mp3',
+  'wav',
+  'flac',
+  'ogg',
+  'm4a',
+  'aac',
+]);
+
+function createUniqueConvertedPath(inputPath, outputFormat) {
+  const parsed = path.parse(inputPath);
+  let candidate = path.join(
+    parsed.dir,
+    `${parsed.name}-converted.${outputFormat}`,
+  );
+  let index = 1;
+
+  while (fs.existsSync(candidate)) {
+    candidate = path.join(
+      parsed.dir,
+      `${parsed.name}-converted-${index}.${outputFormat}`,
+    );
+    index += 1;
+  }
+
+  return candidate;
+}
+
+function convertSongFile(inputPath, outputPath, outputFormat) {
+  return new Promise((resolve, reject) => {
+    const cmd = ffmpeg(inputPath)
+      .noVideo()
+      .format(outputFormat === 'm4a' ? 'ipod' : outputFormat)
+      .output(outputPath)
+      .on('end', resolve)
+      .on('error', reject);
+
+    attachFfmpegTracking(cmd);
+    cmd.run();
+  });
+}
+
+async function processConvertedSongMetadata(inputPath, outputPath) {
+  const inputDir = path.dirname(inputPath);
+  const outputDir = path.dirname(outputPath);
+  const imageMap = {
+    [outputDir]: await listImageFilesInAlbumDir(outputDir),
+  };
+
+  const [sourceSong, convertedSong] = await Promise.all([
+    processSongMetadata(inputPath, {
+      [inputDir]: imageMap[outputDir],
+    }),
+    processSongMetadata(outputPath, imageMap),
+  ]);
+
+  if (
+    convertedSong &&
+    !convertedSong.albumImage &&
+    sourceSong?.albumImage
+  ) {
+    convertedSong.albumImage = sourceSong.albumImage;
+  }
+
+  return convertedSong;
+}
+
+const SETUP_FILE_CONVERTER = (mainWindow) => {
+  ipcMain.handle('SELECT_CONVERTER_INPUT', async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openFile'],
+      filters: [
+        {
+          name: 'Song files',
+          extensions: CONVERTER_INPUT_EXTENSIONS,
+        },
+      ],
+    });
+
+    if (result.canceled || !result.filePaths?.length) {
+      return null;
+    }
+
+    return result.filePaths[0];
+  });
+
+  ipcMain.handle('CONVERT_SONG_FILE', async (_event, payload) => {
+    try {
+      const inputPath = normalizeOptionalFilePath(payload?.inputPath);
+      const outputFormat = String(payload?.outputFormat || '').toLowerCase();
+
+      if (!inputPath) {
+        throw new Error('Choose a source file first.');
+      }
+      if (!CONVERTER_OUTPUT_FORMATS.has(outputFormat)) {
+        throw new Error('Choose a supported output format.');
+      }
+      if (!fs.existsSync(inputPath)) {
+        throw new Error('The selected source file could not be found.');
+      }
+
+      const outputPath = createUniqueConvertedPath(inputPath, outputFormat);
+      await convertSongFile(inputPath, outputPath, outputFormat);
+      const song = await processConvertedSongMetadata(inputPath, outputPath);
+
+      return { success: true, outputPath, song };
+    } catch (err) {
+      Logger.error('[converter] Failed to convert song file', {
+        message: trimForLog(err?.message ?? String(err)),
+      });
+      return {
+        success: false,
+        error: err?.message || 'Conversion failed.',
+      };
     }
   });
 };
@@ -917,18 +1027,6 @@ const SETUP_GET_SONGS = (mainW) => {
     const songTypes = 'mp3,wav,ogg,mp4,flac,m4a,mkv';
     const audios = await glob(correctedPath + '/**/*.{' + songTypes + '}');
 
-    // Get and set a map of image files for easier access
-    const imageFiles = await glob(correctedPath + '/**/*.{jpg,jpeg,png}');
-    const imageMap = {};
-    imageFiles.forEach((imageFile) => {
-      const imageDir = path.dirname(imageFile);
-      if (!imageMap[imageDir]) {
-        imageMap[imageDir] = [];
-      }
-      imageMap[imageDir].push(imageFile);
-    });
-    console.error('Image Map: ', imageMap);
-
     // Make sure we have at least one song in the directory
     if (audios.length === 0) {
       safeReply(
@@ -949,6 +1047,7 @@ const SETUP_GET_SONGS = (mainW) => {
     console.log(`[Songs] Found ${total} songs — loading metadata...`);
 
     const BATCH_SIZE = 200;
+    const imageMap = {};
 
     for (let i = 0; i < audios.length; i += BATCH_SIZE) {
       if (isSongLoadRequestStale(requestId, activeSongLoadRequestId)) {
@@ -957,6 +1056,7 @@ const SETUP_GET_SONGS = (mainW) => {
       }
 
       const batch = audios.slice(i, i + BATCH_SIZE);
+      await addDirectoryImagesForAudioFiles(batch, imageMap);
       const batchResults = await Promise.all(
         batch.map((file) =>
           processSongMetadata(file, imageMap).catch((error) => {
@@ -1630,6 +1730,7 @@ module.exports = {
   SAVE_TEMP_SONG,
   DELETE_TEMP_SONG,
   SAVE_SONG,
+  SETUP_FILE_CONVERTER,
   SETUP_SETINGS,
   SETUP_PLAYLISTS,
   SETUP_EFFECTS,

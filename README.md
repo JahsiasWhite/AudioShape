@@ -27,6 +27,8 @@
 - 💾 Save/Export custom tracks and presets
 - 🎥 Built in downloader for YouTube and Spotify
 - 🎬 Full-screen mode that supports video formats
+- ⚙️ File converter tool
+- 🏷️ Song metadata tag editor
 - 🎨 Customizable themes
 
 You can try a simplified version on the web [here](https://slowandreverbify.com)
