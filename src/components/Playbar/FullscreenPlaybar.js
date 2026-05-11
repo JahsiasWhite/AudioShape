@@ -7,9 +7,8 @@ import ExitFullscreenButtonSVG from './ExitFullscreenButtonSVG';
 
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
-function FullscreenPlaybar({ toggleFullscreen }) {
-  const { currentSongId, loadedSongs, requestScrollSongListToCurrentSong } =
-    useAudioPlayer();
+function FullscreenPlaybar({ onExitFullscreen }) {
+  const { currentSongId, loadedSongs } = useAudioPlayer();
   const song = loadedSongs[currentSongId];
 
   const [playbarVisible, setPlaybarVisible] = useState(true);
@@ -28,15 +27,6 @@ function FullscreenPlaybar({ toggleFullscreen }) {
   const showPlaybar = () => {
     clearTimeout(timeoutId);
     setPlaybarVisible(true);
-  };
-
-  const exitFullscreen = () => {
-    toggleFullscreen();
-
-    // Scrolls to the current song // TODO: I dont like this here. SHould probably make all of these a function as well
-    setTimeout(() => {
-      requestScrollSongListToCurrentSong?.();
-    }, 100);
   };
 
   // Add mousemove event listener to detect mouse position
@@ -98,7 +88,7 @@ function FullscreenPlaybar({ toggleFullscreen }) {
       <CenterPlaybar />
       <div className="fullscreen-right-controls">
         <VolumeControl />
-        <ExitFullscreenButtonSVG onClick={exitFullscreen} />
+        <ExitFullscreenButtonSVG onClick={onExitFullscreen} />
       </div>
     </div>
   );

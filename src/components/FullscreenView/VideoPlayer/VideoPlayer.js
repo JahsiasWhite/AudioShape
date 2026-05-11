@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 
 import { useAudioPlayer } from '../../../AudioController/AudioContext';
 
-function VideoPlayer({ songFile, song }) {
+function VideoPlayer({ songFile, song, onExitFullscreen }) {
   const firstTime = useRef(true);
   const { videoTime, currentSpeed, isPlaying, loadingQueue, currentSong } = useAudioPlayer();
 
@@ -76,6 +76,7 @@ function VideoPlayer({ songFile, song }) {
       controls={false}
       muted={true} // Mute the video
       ref={videoRef}
+      onDoubleClick={onExitFullscreen}
     >
       <source src={songFile} type="video/mp4" />
       Your device doesn't support video streaming

@@ -99,3 +99,116 @@
   overflow-wrap: anywhere;
   color: var(--color-text-secondary);
 }
+
+.file-converter-file-list {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  max-height: 160px;
+  overflow-y: auto;
+  border: 1px solid #2a2a38;
+  border-radius: 5px;
+  background-color: var(--color-secondary);
+}
+
+.file-converter-file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #2a2a38;
+  font-size: 14px;
+}
+
+.file-converter-file-item:last-child {
+  border-bottom: none;
+}
+
+.file-converter-file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  color: var(--color-text-secondary);
+}
+
+.file-converter-remove {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  font-size: 13px;
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  border: 1px solid #44445a;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.file-converter-remove:hover:not(:disabled) {
+  color: var(--color-text);
+  border-color: var(--color-text-secondary);
+}
+
+.file-converter-remove:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.file-converter-notice {
+  margin-top: 18px;
+  padding: 12px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.file-converter-notice--warning {
+  border: 1px solid #8a6d3b;
+  background-color: rgba(138, 109, 59, 0.18);
+  color: var(--color-text);
+}
+
+.file-converter-notice strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.file-converter-progress {
+  margin: 12px 0 0;
+  font-size: 15px;
+  color: var(--color-text-secondary);
+}
+
+.file-converter-output-block {
+  margin-top: 16px;
+}
+
+.file-converter-output-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--color-text);
+}
+
+.file-converter-output-list {
+  margin: 0;
+  padding-left: 1.2em;
+  overflow-wrap: anywhere;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.file-converter-output-path {
+  margin-bottom: 6px;
+}
+
+.file-converter-error-list {
+  margin: 14px 0 0;
+  padding-left: 1.2em;
+  color: #e57373;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.file-converter-error-file {
+  font-weight: 600;
+}

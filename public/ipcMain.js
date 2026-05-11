@@ -425,7 +425,7 @@ async function processConvertedSongMetadata(inputPath, outputPath) {
 const SETUP_FILE_CONVERTER = (mainWindow) => {
   ipcMain.handle('SELECT_CONVERTER_INPUT', async () => {
     const result = await dialog.showOpenDialog(mainWindow, {
-      properties: ['openFile'],
+      properties: ['openFile', 'multiSelections'],
       filters: [
         {
           name: 'Song files',
@@ -438,7 +438,7 @@ const SETUP_FILE_CONVERTER = (mainWindow) => {
       return null;
     }
 
-    return result.filePaths[0];
+    return result.filePaths;
   });
 
   ipcMain.handle('CONVERT_SONG_FILE', async (_event, payload) => {

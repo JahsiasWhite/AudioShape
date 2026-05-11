@@ -18,7 +18,7 @@ describe('<FileConverter />', () => {
       ipcRenderer: {
         invoke: jest.fn((channel) => {
           if (channel === 'SELECT_CONVERTER_INPUT') {
-            return Promise.resolve('C:\\Music\\source.wav');
+            return Promise.resolve(['C:\\Music\\source.wav']);
           }
 
           if (channel === 'CONVERT_SONG_FILE') {
