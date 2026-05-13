@@ -50,6 +50,7 @@ function ContextMenu({
         <div
           className="context-menu-container"
           style={style}
+          onClick={(e) => e.stopPropagation()}
           onContextMenu={handleContextMenu}
         >
           <ul className="context-menu">

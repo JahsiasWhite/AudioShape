@@ -1,11 +1,16 @@
 .fullscreen-playbar {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2.5fr) minmax(0, 1fr);
   align-items: center;
   padding-top: 10px;
   padding-bottom: 10px;
   transition: transform 0.5s ease-in-out;
   transform: translateY(100%);
+}
+
+.fullscreen-playbar > .playbar-controls {
+  width: 100%;
+  min-width: 0;
 }
 
 .fullscreen-playbar-track {

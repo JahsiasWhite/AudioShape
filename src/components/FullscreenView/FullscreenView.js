@@ -1,14 +1,15 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import './FullscreenView.css';
 
 import AudioSpectrum from '../AudioSpectrum/AudioSpectrum.js';
 import FullscreenPlaybar from '../Playbar/FullscreenPlaybar.js';
 import VideoPlayer from './VideoPlayer/VideoPlayer.js';
+import RightClickMenu from '../SongList/RightClickMenu';
 
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
-const FullscreenView = ({ toggleFullscreen }) => {
+const FullscreenView = ({ toggleFullscreen, handleSongEdit }) => {
   const {
     loadedSongs,
     currentSongId,
@@ -25,13 +26,22 @@ const FullscreenView = ({ toggleFullscreen }) => {
   }, [toggleFullscreen, requestScrollSongListToCurrentSong]);
   const song = loadedSongs[currentSongId];
 
-  // TODO: Changing volume rerenders this component...
-  console.log(song, currentSong);
+  const [clicked, setClicked] = useState({});
+
+  const handleSongContextMenu = (event) => {
+    if (!song) return;
+    event.preventDefault();
+    setClicked([event.clientX, event.clientY, song]);
+  };
 
   const isMP4 = song?.isVideo;
 
   return (
-    <div className="fullscreen-view">
+    <div
+      className="fullscreen-view"
+      onContextMenu={handleSongContextMenu}
+      onClick={() => setClicked({})}
+    >
       {!isMP4 ? (
         <>
           {song && (
@@ -71,6 +81,10 @@ const FullscreenView = ({ toggleFullscreen }) => {
       </div>
 
       <FullscreenPlaybar onExitFullscreen={exitFullscreen} />
+
+      {handleSongEdit && (
+        <RightClickMenu clickData={clicked} handleSongEditClick={handleSongEdit} />
+      )}
     </div>
   );
 };

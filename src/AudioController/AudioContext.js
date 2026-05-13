@@ -270,6 +270,17 @@ export const AudioProvider = ({ children }) => {
     setVideoTime(newVideoTime);
   };
 
+  // Fullscreen video follows `videoTime`. Restarts and prev-track restart set
+  // `currentSong.currentTime` without going through `changeVideoTime`, so mirror
+  // every completed audio seek (including programmatic) onto `videoTime`.
+  useEffect(() => {
+    const onSeeked = () => {
+      setVideoTime(currentSong.currentTime);
+    };
+    currentSong.addEventListener('seeked', onSeeked);
+    return () => currentSong.removeEventListener('seeked', onSeeked);
+  }, [currentSong]);
+
   const currentSongIdRef = useRef(null);
   currentSongIdRef.current = currentSongId;
 
@@ -528,22 +539,38 @@ export const AudioProvider = ({ children }) => {
         speedupIsEnabled,
         slowDownIsEnabled,
         handleSongExport: async () => {
+          const applyExportResult = (result) => {
+            if (result?.success && result.song) {
+              addSong(result.song);
+            }
+            return result;
+          };
+
           const nonSpeedEffects = Object.entries(effects).filter(([name]) => name !== 'speed');
           if (nonSpeedEffects.length > 0) {
-            // Render all active effects offline first, then export the result
-            const audioBuffer = await getCurrentAudioBuffer(fileLocation);
-            if (audioBuffer) {
-              const rendered = await renderAudioWithAllEffects(audioBuffer, effects);
-              downloadAudio(rendered);
-              const tempPath = await new Promise((resolve) => {
-                window.electron.ipcRenderer.once('TEMP_SONG_SAVED', (outputPath) => resolve(outputPath));
-              });
-              const result = await handleSongExport(currentSpeed, tempPath);
-              window.electron.ipcRenderer.sendMessage('DELETE_TEMP_SONG');
-              return result;
+            // Bake all non-speed effects offline, then SAVE_SONG applies speed (ffmpeg) only.
+            let audioBuffer = null;
+            if (currentSong?.src) {
+              audioBuffer = await getCurrentAudioBuffer(currentSong.src);
             }
+            if (!audioBuffer && fileLocation) {
+              audioBuffer = await getCurrentAudioBuffer(fileLocation);
+            }
+            if (!audioBuffer) {
+              throw new Error(
+                'Could not read the track for export. Reload the song or check the file path.',
+              );
+            }
+            const rendered = await renderAudioWithAllEffects(audioBuffer, effects);
+            downloadAudio(rendered, currentSong.src);
+            const tempPath = await new Promise((resolve) => {
+              window.electron.ipcRenderer.once('TEMP_SONG_SAVED', (outputPath) => resolve(outputPath));
+            });
+            const result = await handleSongExport(currentSpeed, tempPath);
+            window.electron.ipcRenderer.sendMessage('DELETE_TEMP_SONG');
+            return applyExportResult(result);
           }
-          return handleSongExport(currentSpeed);
+          return applyExportResult(await handleSongExport(currentSpeed));
         },
         addSong,
         playlists,

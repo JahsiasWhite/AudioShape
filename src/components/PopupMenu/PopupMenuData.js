@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
+import '../Playbar/SavedEffects/SavedEffects.css';
+
 const EffectTooltip = ({ effects }) => {
   if (!effects) return null;
   return (
@@ -62,7 +64,13 @@ export default function PopupMenuData({ setIsVisible }) {
                 onMouseEnter={() => setHoveredEffect(comboName)}
                 onMouseLeave={() => setHoveredEffect(null)}
               >
-                <div className="combo-name">{comboName}</div>
+                <div
+                  className={`combo-name${
+                    comboName === currentEffectCombo ? ' combo-name-active' : ''
+                  }`}
+                >
+                  {comboName}
+                </div>
                 <div className="saved-effect-actions">
                   <button
                     className="effect-action-btn effect-action-delete"

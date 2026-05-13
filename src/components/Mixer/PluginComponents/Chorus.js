@@ -1,4 +1,4 @@
-import React, { useState, useImperativeHandle, useEffect } from 'react';
+import React, { useState, useImperativeHandle } from 'react';
 
 import Knob from '../Knob';
 
@@ -36,8 +36,20 @@ const Chorus = React.forwardRef(({ interpolateValue, addEffect }, ref) => {
     }));
   };
 
+  /** Inverse of mapValueToChorus: audio value in 0…-20 → knob (-23…24). */
+  const applySavedChorus = (mappedValue) => {
+    setChorusKnobStyles((prev) => {
+      const [outMin, outMax] = [0, -20];
+      const knob =
+        ((mappedValue - outMin) / (outMax - outMin)) * (prev.max - prev.min) +
+        prev.min;
+      return { ...prev, value: knob };
+    });
+  };
+
   useImperativeHandle(ref, () => ({
     resetChorus,
+    applySavedChorus,
   }));
 
   return (

@@ -71,26 +71,24 @@ function Artists({ toggleSection }) {
   return (
     <div className="artists">
       <h1>Artists</h1>
-      <ul>
-        <div className="playlist-cards">
-          {Object.keys(artistsBySongs).map((artist) => (
-            <div
-              key={artist}
-              className="playlist-card"
-              onClick={() => handleArtistClick(artist)}
-            >
-              {artistsBySongs[artist].image && (
-                <img
-                  className="artist-image"
-                  src={artistsBySongs[artist].image}
-                  alt={`${artist} image`}
-                />
-              )}
-              <div className="artist-name">{artist}</div>
-            </div>
-          ))}
-        </div>
-      </ul>
+      <div className="playlist-cards">
+        {Object.keys(artistsBySongs).map((artist) => (
+          <div
+            key={artist}
+            className="playlist-card"
+            onClick={() => handleArtistClick(artist)}
+          >
+            {artistsBySongs[artist].image && (
+              <img
+                className="artist-image"
+                src={artistsBySongs[artist].image}
+                alt={`${artist} image`}
+              />
+            )}
+            <div className="artist-name">{artist}</div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

@@ -9,7 +9,7 @@
   </h4>
 
   <p>
-      <img src="https://img.shields.io/badge/version-0.3.2-green.svg" alt="version"/>
+      <img src="https://img.shields.io/badge/version-0.4.0-green.svg" alt="version"/>
       <img src="https://img.shields.io/badge/OS-windows-blue?style=flat&labelColor=363D44" alt="Operating systems"/>
       <a href="https://github.com/JahsiasWhite/AudioShape/actions/workflows/tests.yml" alt="tests"><img src="https://github.com/JahsiasWhite/AudioShape/actions/workflows/tests.yml/badge.svg" alt="tests"/></a>
   </p>

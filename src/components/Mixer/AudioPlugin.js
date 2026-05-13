@@ -88,9 +88,15 @@ const AudioPlugin = () => {
 
   // Sync knob visuals when a saved effect combo is applied
   useEffect(() => {
-    if (!currentEffectCombo || !savedEffects[currentEffectCombo]) return;
+    if (!currentEffectCombo) {
+      eqRef.current?.resetEq?.();
+      autoWahRef.current?.resetAutoWah?.();
+      chorusRef.current?.resetChorus?.();
+      return;
+    }
 
     const combo = savedEffects[currentEffectCombo];
+    if (!combo) return;
     const updates = {};
 
     if (combo.reverbIsActive !== undefined) updates.reverbIsActive = combo.reverbIsActive;
@@ -107,7 +113,26 @@ const AudioPlugin = () => {
     if (Object.keys(updates).length > 0) {
       setKnobs((prev) => ({ ...prev, ...updates }));
     }
-  }, [currentEffectCombo]);
+
+    const eqBands = combo.low ?? combo.mid ?? combo.high;
+    if (Array.isArray(eqBands) && eqBands.length === 3) {
+      eqRef.current?.applySavedEq?.(eqBands);
+    } else {
+      eqRef.current?.resetEq?.();
+    }
+
+    if (combo.autowah !== undefined) {
+      autoWahRef.current?.applySavedAutowah?.(combo.autowah);
+    } else {
+      autoWahRef.current?.resetAutoWah?.();
+    }
+
+    if (combo.chorus !== undefined) {
+      chorusRef.current?.applySavedChorus?.(combo.chorus);
+    } else {
+      chorusRef.current?.resetChorus?.();
+    }
+  }, [currentEffectCombo, savedEffects]);
 
   /* Styles for the different knobs */
   const speedKnobStyles = {

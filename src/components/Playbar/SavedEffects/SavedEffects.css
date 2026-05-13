@@ -83,6 +83,16 @@
   width: 50%;
 }
 
+.saved-effect-item-enabled .combo-name-active {
+  font-weight: 600;
+  color: var(--color-accent);
+  padding: 2px 8px;
+  margin: -2px -8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
 .effect-tooltip ul {
   margin: 0;
 }

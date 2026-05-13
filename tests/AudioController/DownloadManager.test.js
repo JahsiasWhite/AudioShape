@@ -56,6 +56,7 @@ describe('DownloadManager', () => {
       'SAVE_SONG',
       expect.any(String),
       undefined,
+      'sample-file',
     );
   });
 

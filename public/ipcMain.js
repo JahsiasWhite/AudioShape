@@ -218,10 +218,187 @@ let activeSongLoadRequestId = 0;
 
 /* When auto playing with edits on, we have to save the song to have full editing control */
 // TODO: Is there a way to not have to save file? Can't we just use in-memory buffers?
+/**
+ * Tone.Offline yields PCM; WAV is the interchange format ffmpeg can read reliably.
+ * Mixer export writes to OS temp only (`audioshape-export-*.wav`), not beside library files.
+ */
+function isMixerExportTempWav(filePath) {
+  const base = path.basename(filePath).toLowerCase();
+  return base.startsWith('audioshape-export-') && base.endsWith('.wav');
+}
+
+const VIDEO_CONTAINER_EXTS = new Set(['.mp4', '.mkv']);
+
+function exportTargetExt(libraryRef, srcPath) {
+  if (libraryRef) {
+    const e = path.extname(libraryRef).toLowerCase();
+    if (e) return e;
+  }
+  const se = path.extname(srcPath).toLowerCase();
+  return se || '.mp3';
+}
+
+/**
+ * Library video + baked WAV audio → one output (same container as library: .mp4 / .mkv).
+ */
+function remuxLibraryVideoWithWavAudio(libraryPath, wavPath, outputPath, speed) {
+  return new Promise((resolve, reject) => {
+    const s =
+      typeof speed === 'number' && !Number.isNaN(speed) && speed > 0
+        ? speed
+        : 1;
+
+    if (!s || s === 1) {
+      const cmd = ffmpeg(libraryPath)
+        .input(wavPath)
+        .outputOptions([
+          '-map',
+          '0:v:0',
+          '-map',
+          '1:a:0',
+          '-c:v',
+          'copy',
+          '-c:a',
+          'aac',
+          '-b:a',
+          '192k',
+          '-shortest',
+        ])
+        .output(outputPath)
+        .on('end', () => resolve())
+        .on('error', (err) => reject(err));
+      attachFfmpegTracking(cmd);
+      cmd.run();
+      return;
+    }
+
+    const atempoChain = buildAtempoFilters(s);
+    const spd = parseFloat(s.toFixed(6));
+    const fc = `[0:v]setpts=PTS/${spd}[vout];[1:a]${atempoChain}[aout]`;
+    const cmd = ffmpeg(libraryPath)
+      .input(wavPath)
+      .complexFilter(fc)
+      .outputOptions([
+        '-map',
+        '[vout]',
+        '-map',
+        '[aout]',
+        '-c:v',
+        'libx264',
+        '-preset',
+        'veryfast',
+        '-crf',
+        '20',
+        '-c:a',
+        'aac',
+        '-b:a',
+        '192k',
+        '-shortest',
+      ])
+      .output(outputPath)
+      .on('end', () => resolve())
+      .on('error', (err) => reject(err));
+    attachFfmpegTracking(cmd);
+    cmd.run();
+  });
+}
+
+function transcodeMixerExportWav(wavPath, outputPath, outputExt, speed) {
+  return new Promise((resolve, reject) => {
+    let cmd = ffmpeg(wavPath);
+    if (speed && speed !== 1) {
+      cmd = cmd.audioFilters(buildAtempoFilters(speed));
+    }
+    cmd = cmd.noVideo();
+    const ext = String(outputExt || '').toLowerCase();
+    if (ext === '.mp3') {
+      cmd = cmd.format('mp3').audioCodec('libmp3lame').audioBitrate(192);
+    } else if (ext === '.flac') {
+      cmd = cmd.format('flac');
+    } else if (ext === '.ogg') {
+      cmd = cmd.format('ogg').audioCodec('libvorbis');
+    } else if (ext === '.m4a') {
+      cmd = cmd.format('ipod').audioCodec('aac');
+    } else if (ext === '.aac') {
+      cmd = cmd.format('aac').audioCodec('aac');
+    } else if (ext === '.wav') {
+      cmd = cmd.format('wav').audioCodec('pcm_s16le');
+    } else {
+      cmd = cmd.format('mp3').audioCodec('libmp3lame').audioBitrate(192);
+    }
+    cmd
+      .output(outputPath)
+      .on('end', () => resolve())
+      .on('error', (err) => reject(err));
+    attachFfmpegTracking(cmd);
+    cmd.run();
+  });
+}
+
+function runSingleInputSpeedExport(srcPath, destPath, speed) {
+  return new Promise((resolve, reject) => {
+    const inExt = path.extname(srcPath).toLowerCase();
+    const outExt = path.extname(destPath).toLowerCase();
+    const atempoChain = buildAtempoFilters(speed);
+
+    if (VIDEO_CONTAINER_EXTS.has(inExt)) {
+      const cmd = ffmpeg(srcPath)
+        .audioFilters(atempoChain)
+        .videoFilters(`setpts=PTS/${speed}`)
+        .outputOptions([
+          '-c:v',
+          'libx264',
+          '-preset',
+          'veryfast',
+          '-crf',
+          '20',
+          '-c:a',
+          'aac',
+          '-b:a',
+          '192k',
+        ])
+        .output(destPath)
+        .on('end', () => resolve())
+        .on('error', (err) => reject(err));
+      attachFfmpegTracking(cmd);
+      cmd.run();
+      return;
+    }
+
+    let cmd = ffmpeg(srcPath).audioFilters(atempoChain).noVideo();
+    if (outExt === '.mp3') {
+      cmd = cmd.format('mp3').audioCodec('libmp3lame').audioBitrate(192);
+    } else if (outExt === '.flac') {
+      cmd = cmd.format('flac');
+    } else if (outExt === '.ogg') {
+      cmd = cmd.format('ogg').audioCodec('libvorbis');
+    } else if (outExt === '.m4a') {
+      cmd = cmd.format('ipod').audioCodec('aac');
+    } else if (outExt === '.aac') {
+      cmd = cmd.format('aac').audioCodec('aac');
+    } else if (outExt === '.wav') {
+      cmd = cmd.format('wav').audioCodec('pcm_s16le');
+    } else {
+      cmd = cmd.format('mp3').audioCodec('libmp3lame').audioBitrate(192);
+    }
+    cmd
+      .output(destPath)
+      .on('end', () => resolve())
+      .on('error', (err) => reject(err));
+    attachFfmpegTracking(cmd);
+    cmd.run();
+  });
+}
+
 const SAVE_TEMP_SONG = (dataDirectory, mainWindow) => {
-  ipcMain.on('SAVE_TEMP_SONG', async (event, audioData) => {
+  ipcMain.on('SAVE_TEMP_SONG', async (event, audioData, libraryPathOptional) => {
     console.error('Saving temp song');
-    newTemporaryFilePath = path.join(dataDirectory, `${uuidv4()}.wav`);
+    const lib = normalizeOptionalFilePath(
+      typeof libraryPathOptional === 'string' ? libraryPathOptional : '',
+    );
+    newTemporaryFilePath = lib
+      ? path.join(os.tmpdir(), `audioshape-export-${uuidv4()}.wav`)
+      : path.join(dataDirectory, `${uuidv4()}.wav`);
 
     // Construct the audio data into a Blob of wav data
     const wavData = await getAudioBuffer(audioData);
@@ -285,64 +462,99 @@ function buildAtempoFilters(speed) {
 }
 
 /**
- * Exports the given song, baking in the speed effect if needed.
- * Preserves the source file format: .mp4 sources are exported as .mp4 (with
- * video speed adjusted), everything else is exported as .mp3.
+ * Exports the given song. Mixer effects are baked offline in the renderer as a
+ * short-lived WAV in OS temp (PCM ffmpeg can decode); output matches the library
+ * file extension. Optional `libraryPathForContainer` (send `currentSong.src`) sets
+ * output folder, stem, and format; video tracks (.mp4/.mkv) are remuxed with new audio.
  */
-const SAVE_SONG = (dataDirectory) => {
-  ipcMain.on('SAVE_SONG', async (event, sourcePath, speed) => {
-    try {
-      // Cleanup the sourcePath: 'file:///C:/Example' -> 'C:/Example'
-      sourcePath = decodeURIComponent(sourcePath.replace('file:///', ''));
+const SAVE_SONG = (_dataDirectory) => {
+  ipcMain.on(
+    'SAVE_SONG',
+    async (event, sourcePath, speed, libraryPathForContainer) => {
+      try {
+        const srcPath = normalizeOptionalFilePath(sourcePath);
+        if (!srcPath) {
+          throw new Error('No source path for export.');
+        }
 
-      // Preserve the source format: .mp4 stays .mp4, everything else → .mp3
-      const sourceExt = path.extname(sourcePath).toLowerCase();
-      const outputExt = sourceExt === '.mp4' ? '.mp4' : '.mp3';
-      const newFilePath = path.join(
-        dataDirectory,
-        `export-${uuidv4()}${outputExt}`,
-      );
+        const libraryRef = normalizeOptionalFilePath(
+          typeof libraryPathForContainer === 'string'
+            ? libraryPathForContainer
+            : '',
+        );
+        const encodeExt = path.extname(srcPath).toLowerCase();
+        const libraryExt = libraryRef
+          ? path.extname(libraryRef).toLowerCase()
+          : '';
+        const targetExt = exportTargetExt(libraryRef, srcPath);
+        const namingRef = libraryRef || srcPath;
+        const newFilePath = createUniqueExportPath(namingRef, targetExt);
 
-      console.error('Source: ', sourcePath);
-      console.error('New Path: ', newFilePath);
-      console.error('Speed: ', speed);
+        const isEffectsWav =
+          encodeExt === '.wav' && isMixerExportTempWav(srcPath);
+        const shouldRemuxVideo =
+          isEffectsWav &&
+          libraryRef &&
+          fs.existsSync(libraryRef) &&
+          VIDEO_CONTAINER_EXTS.has(libraryExt);
 
-      if (speed && speed !== 1) {
-        const atempoChain = buildAtempoFilters(speed);
-        await new Promise((resolve, reject) => {
-          let cmd = ffmpeg(sourcePath).audioFilters(atempoChain);
+        console.error('Source: ', srcPath);
+        console.error('New Path: ', newFilePath);
+        console.error('Speed: ', speed);
+        console.error('Effects wav → remux video: ', shouldRemuxVideo);
 
-          if (sourceExt === '.mp4') {
-            // Adjust video speed to match audio
-            cmd = cmd.videoFilters(`setpts=PTS/${speed}`);
-          } else {
-            cmd = cmd.noVideo();
-          }
+        if (shouldRemuxVideo) {
+          await remuxLibraryVideoWithWavAudio(
+            libraryRef,
+            srcPath,
+            newFilePath,
+            speed,
+          );
+        } else if (isEffectsWav) {
+          await transcodeMixerExportWav(
+            srcPath,
+            newFilePath,
+            targetExt,
+            speed,
+          );
+        } else if (speed && speed !== 1) {
+          await runSingleInputSpeedExport(srcPath, newFilePath, speed);
+        } else {
+          await fs.promises.copyFile(srcPath, newFilePath);
+          console.error('Saved song.');
+        }
 
-          cmd
-            .output(newFilePath)
-            .on('end', () => {
-              console.error('Saved song with speed effect.');
-              resolve();
-            })
-            .on('error', (err) => {
-              console.error('Error applying speed effect:', err);
-              reject(err);
+        if (isMixerExportTempWav(srcPath)) {
+          try {
+            await fsPromises.unlink(srcPath);
+          } catch (unlinkErr) {
+            Logger.error('[export] Could not remove temp export wav', {
+              message: trimForLog(unlinkErr?.message ?? String(unlinkErr)),
             });
-          attachFfmpegTracking(cmd);
-          cmd.run();
-        });
-      } else {
-        await fs.promises.copyFile(sourcePath, newFilePath);
-        console.error('Saved song.');
-      }
+          }
+        }
 
-      event.reply('SAVE_SONG_RESULT', { success: true, path: newFilePath });
-    } catch (err) {
-      console.error('Error saving song:', err);
-      event.reply('SAVE_SONG_RESULT', { success: false, error: err.message });
-    }
-  });
+        let song = null;
+        try {
+          const metaInputPath = isEffectsWav && libraryRef ? libraryRef : srcPath;
+          song = await processConvertedSongMetadata(metaInputPath, newFilePath);
+        } catch (metaErr) {
+          Logger.error('[export] Failed to read metadata for exported file', {
+            message: trimForLog(metaErr?.message ?? String(metaErr)),
+          });
+        }
+
+        event.reply('SAVE_SONG_RESULT', {
+          success: true,
+          path: newFilePath,
+          song,
+        });
+      } catch (err) {
+        console.error('Error saving song:', err);
+        event.reply('SAVE_SONG_RESULT', { success: false, error: err.message });
+      }
+    },
+  );
 };
 
 const CONVERTER_INPUT_EXTENSIONS = [
@@ -376,6 +588,24 @@ function createUniqueConvertedPath(inputPath, outputFormat) {
     candidate = path.join(
       parsed.dir,
       `${parsed.name}-converted-${index}.${outputFormat}`,
+    );
+    index += 1;
+  }
+
+  return candidate;
+}
+
+/** Same folder as reference; `-edited` / `-edited-N`. */
+function createUniqueExportPath(referenceAudioPath, outputExt) {
+  const parsed = path.parse(referenceAudioPath);
+  const baseStem = parsed.name;
+  let candidate = path.join(parsed.dir, `${baseStem}-edited${outputExt}`);
+  let index = 1;
+
+  while (fs.existsSync(candidate)) {
+    candidate = path.join(
+      parsed.dir,
+      `${baseStem}-edited-${index}${outputExt}`,
     );
     index += 1;
   }

@@ -153,7 +153,13 @@ function App() {
         {isFullscreen && (
           <div className="fullscreen-with-titlebar">
             <TitleBar />
-            <FullscreenView toggleFullscreen={disableFullscreen} />
+            <FullscreenView
+              toggleFullscreen={disableFullscreen}
+              handleSongEdit={(id) => {
+                handleSongSelect(id);
+                disableFullscreen();
+              }}
+            />
           </div>
         )}
 
