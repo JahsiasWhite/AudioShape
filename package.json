@@ -3,7 +3,7 @@
   "productName": "AudioShape",
   "author": "Jahsias",
   "license": "ISC",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Music player with extra customizations",
   "homepage": "./",
   "main": "./public/electron.js",
@@ -55,9 +55,10 @@
     "ffmpeg-static": "^5.2.0",
     "fluent-ffmpeg": "^2.1.2",
     "glob": "^10.3.3",
-    "music-metadata": "^8.1.4",
+    "music-metadata": "^11.12.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-window": "^2.2.7",
     "spotify-web-api-node": "^5.0.2",
     "tone": "^14.7.77",
     "uuid": "^9.0.1",
@@ -78,18 +79,23 @@
   },
   "build": {
     "appId": "com.jahsias.AudioShape",
+    "icon": "src/logo.png",
     "asarUnpack": [
-      "node_modules/youtube-dl-exec/bin/**"
+      "node_modules/youtube-dl-exec/bin/**",
+      "node_modules/ffmpeg-static/**",
+      "src/logo.png"
     ],
     "files": [
       "dist/**/*",
       "package.json",
       "./public/electron.js",
       "./public/ipcMain.js",
+      "./public/songMetadataHelpers.js",
       "./public/preload.js",
       "./public/index.html",
       "./public/index.css",
       "./public/mainLogger.js",
+      "./src/logo.png",
       "build/**/*"
     ]
   }

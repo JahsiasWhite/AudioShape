@@ -20,8 +20,10 @@ const currentSong = {
   removeEventListener: jest.fn(),
   src: 'sample-file',
   play: jest.fn(),
+  pause: jest.fn(),
   playbackRate: 1,
   defaultPlaybackRate: 1,
+  paused: false,
 };
 
 const visibleSongs = {
@@ -325,6 +327,34 @@ describe('AudioEffects', () => {
     expect(result.current.currentSpeed).toBe(1);
     expect(result.current.speedupIsEnabled).toBe(false);
     expect(result.current.slowDownIsEnabled).toBe(false);
+  });
+
+  it('should turn off the active saved combo when re-clicking after currentSongId changes', () => {
+    const { result, rerender } = renderHook(
+      ({ songId }) =>
+        AudioEffects(currentSong, visibleSongs, songId, 1, 0.5),
+      { initialProps: { songId: 'song1' } },
+    );
+
+    act(() => {
+      result.current.setSavedEffects({ myCombo: { delay: 0.5 } });
+    });
+
+    act(() => {
+      result.current.applySavedEffects('myCombo');
+    });
+
+    expect(result.current.currentEffectCombo).toBe('myCombo');
+    expect(result.current.effectsEnabled).toBe(true);
+
+    rerender({ songId: 'song2' });
+
+    act(() => {
+      result.current.applySavedEffects('myCombo');
+    });
+
+    expect(result.current.effectsEnabled).toBe(false);
+    expect(result.current.currentEffectCombo).toBe('');
   });
 
   it('should handle a saved combo with only speed (no rendered effects)', async () => {

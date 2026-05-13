@@ -1,11 +1,47 @@
 .fullscreen-playbar {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2.5fr) minmax(0, 1fr);
   align-items: center;
   padding-top: 10px;
   padding-bottom: 10px;
   transition: transform 0.5s ease-in-out;
   transform: translateY(100%);
+}
+
+.fullscreen-playbar > .playbar-controls {
+  width: 100%;
+  min-width: 0;
+}
+
+.fullscreen-playbar-track {
+  padding-left: 16px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.fullscreen-playbar-title {
+  font-size: 14px;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fullscreen-playbar-album {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.fullscreen-right-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-right: 16px;
 }
 
 .fullscreen-playbar-show {

@@ -9,7 +9,12 @@ export const AudioControls = (currentSong) => {
   // Load saved volume from settings on startup
   useEffect(() => {
     const removeListener = window.electron.ipcRenderer.on('RETURN_VOLUME', (savedVolume) => {
-      const vol = savedVolume / 100;
+      const raw = Number(savedVolume);
+      if (!Number.isFinite(raw)) {
+        removeListener?.();
+        return;
+      }
+      const vol = Math.min(1, Math.max(0, raw / 100));
       currentSong.volume = vol;
       setVolume(vol);
       prevVolume = vol;

@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
+import '../Playbar/SavedEffects/SavedEffects.css';
+
 const EffectTooltip = ({ effects }) => {
+  if (!effects) return null;
   return (
     <div className="effect-tooltip">
       <ul>
@@ -14,8 +17,12 @@ const EffectTooltip = ({ effects }) => {
 };
 
 export default function PopupMenuData({ setIsVisible }) {
-  const { savedEffects, applySavedEffects, currentEffectCombo } =
-    useAudioPlayer();
+  const {
+    savedEffects,
+    applySavedEffects,
+    currentEffectCombo,
+    deleteEffectCombo,
+  } = useAudioPlayer();
   const [hoveredEffect, setHoveredEffect] = useState(null);
 
   const handleClose = () => {
@@ -27,8 +34,9 @@ export default function PopupMenuData({ setIsVisible }) {
     handleClose();
   };
 
-  const handleShowTooltip = (comboName) => {
-    setHoveredEffect(comboName);
+  const handleDelete = (e, comboName) => {
+    e.stopPropagation();
+    deleteEffectCombo(comboName);
   };
 
   useEffect(() => {
@@ -53,10 +61,25 @@ export default function PopupMenuData({ setIsVisible }) {
                     : ''
                 }`}
                 onClick={() => handleApplyEffect(comboName)}
-                onMouseEnter={() => handleShowTooltip(comboName)}
+                onMouseEnter={() => setHoveredEffect(comboName)}
                 onMouseLeave={() => setHoveredEffect(null)}
               >
-                <div className="combo-name">{comboName}</div>
+                <div
+                  className={`combo-name${
+                    comboName === currentEffectCombo ? ' combo-name-active' : ''
+                  }`}
+                >
+                  {comboName}
+                </div>
+                <div className="saved-effect-actions">
+                  <button
+                    className="effect-action-btn effect-action-delete"
+                    title="Delete"
+                    onClick={(e) => handleDelete(e, comboName)}
+                  >
+                    ✕
+                  </button>
+                </div>
               </div>
             ))}
           </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, renderHook, fireEvent } from '@testing-library/react';
+import { render, renderHook, fireEvent, waitFor } from '@testing-library/react';
 import SongList from '../../../src/components/SongList/SongList.js';
 import AudioContext, {
   AudioProvider,
@@ -43,6 +43,7 @@ window.electron = {
     on: jest.fn(),
     once: jest.fn(),
     sendMessage: jest.fn(),
+    invoke: jest.fn(),
   },
 };
 
@@ -118,6 +119,136 @@ describe('Song List', () => {
     expect(songListAfter).toEqual(['Song A', 'Song B', 'Song C']);
   });
 
+  it('keeps active search filter after visibleSongs refresh', () => {
+    const audioState = {
+      visibleSongs: {
+        keep: {
+          id: 'keep',
+          title: 'Keep This',
+          artist: 'Artist A',
+          album: 'Alpha',
+          duration: 100,
+          file: 'keep.mp3',
+        },
+        hide: {
+          id: 'hide',
+          title: 'Hide This',
+          artist: 'Artist B',
+          album: 'Beta',
+          duration: 120,
+          file: 'hide.mp3',
+        },
+      },
+      currentScreen: 'All Songs',
+      setCurrentScreen: jest.fn(),
+      initSongsLoading: false,
+      startSongsLoading: jest.fn(),
+      loadingQueue: [],
+    };
+
+    jest
+      .spyOn(
+        require('../../../src/AudioController/AudioContext'),
+        'useAudioPlayer'
+      )
+      .mockImplementation(() => audioState);
+
+    const { getByPlaceholderText, getAllByRole, queryByText, rerender } = render(
+      <AudioProvider>
+        <SongList handleSongEdit={jest.fn()} />
+      </AudioProvider>
+    );
+
+    fireEvent.change(getByPlaceholderText('Search...'), {
+      target: { value: 'keep' },
+    });
+
+    expect(getAllByRole('listitem')).toHaveLength(1);
+    expect(queryByText('Keep This')).toBeTruthy();
+    expect(queryByText('Hide This')).toBeNull();
+
+    audioState.visibleSongs = {
+      keep: {
+        id: 'keep',
+        title: 'Keep This Updated',
+        artist: 'Artist A',
+        album: 'Alpha',
+        duration: 100,
+        file: 'keep.mp3',
+      },
+      hide: {
+        id: 'hide',
+        title: 'Hide This',
+        artist: 'Artist B',
+        album: 'Beta',
+        duration: 120,
+        file: 'hide.mp3',
+      },
+      hide2: {
+        id: 'hide2',
+        title: 'Another Hidden Song',
+        artist: 'Artist C',
+        album: 'Gamma',
+        duration: 130,
+        file: 'hidden.mp3',
+      },
+    };
+
+    rerender(
+      <AudioProvider>
+        <SongList handleSongEdit={jest.fn()} />
+      </AudioProvider>
+    );
+
+    expect(getByPlaceholderText('Search...').value).toBe('keep');
+    expect(getAllByRole('listitem')).toHaveLength(1);
+    expect(queryByText('Keep This Updated')).toBeTruthy();
+    expect(queryByText('Hide This')).toBeNull();
+    expect(queryByText('Another Hidden Song')).toBeNull();
+  });
+
+  it('resets sort filter label to Title on remount', () => {
+    const audioState = {
+      visibleSongs: {
+        one: { id: 'one', title: 'Song A', artist: 'Artist A', album: 'Album A', duration: 100 },
+      },
+      currentScreen: 'All Songs',
+      setCurrentScreen: jest.fn(),
+      initSongsLoading: false,
+      startSongsLoading: jest.fn(),
+      loadingQueue: [],
+    };
+
+    jest
+      .spyOn(
+        require('../../../src/AudioController/AudioContext'),
+        'useAudioPlayer'
+      )
+      .mockImplementation(() => audioState);
+
+    const { container, unmount } = render(
+      <AudioProvider>
+        <SongList handleSongEdit={jest.fn()} />
+      </AudioProvider>
+    );
+
+    const filterButton = container.querySelector('.sortByFilterField');
+    expect(filterButton.textContent).toBe('Title');
+    fireEvent.click(filterButton);
+    expect(filterButton.textContent).toBe('Duration');
+
+    unmount();
+
+    const { container: remountedContainer } = render(
+      <AudioProvider>
+        <SongList handleSongEdit={jest.fn()} />
+      </AudioProvider>
+    );
+
+    const remountedFilterButton = remountedContainer.querySelector('.sortByFilterField');
+    expect(remountedFilterButton.textContent).toBe('Title');
+  });
+
   it('shows loading indicator when directory is empty and still loading', () => {
     const { useAudioPlayer } = require('../../../src/AudioController/AudioContext');
     useAudioPlayer.mockReturnValue({
@@ -178,7 +309,7 @@ describe('Song List', () => {
     expect(container).toBeDefined();
   });
 
-  it('handles import songs correctly', () => {
+  it('handles import songs correctly', async () => {
     // Mock the AudioContext values
     const mockAudioContext = {
       visibleSongs: [],
@@ -202,27 +333,20 @@ describe('Song List', () => {
       </AudioProvider>
     );
 
+    window.electron.ipcRenderer.invoke.mockResolvedValueOnce(
+      'C:\\Users\\test\\Music\\MyMusic'
+    );
+
     // Click FolderSelection button
     fireEvent.click(getByText('Choose Song Directory'));
 
-    // Simulate folder input change
-    const mockFile = {
-      path: 'C:\\Users\\test\\Music\\MyMusic',
-      webkitRelativePath: 'MyMusic/song.mp3',
-      name: 'song.mp3',
-    };
-    const input = getByTestId('folder-input');
-    fireEvent.change(input, {
-      target: {
-        files: [mockFile],
-      },
-    });
-
     // Verify nothing broke
     expect(SongList).toBeDefined();
-    expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith(
-      'GET_SONGS',
-      'C:\\Users\\test\\Music\\MyMusic'
-    );
+    await waitFor(() => {
+      expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith(
+        'GET_SONGS',
+        { folderPath: 'C:\\Users\\test\\Music\\MyMusic' }
+      );
+    });
   });
 });

@@ -85,7 +85,7 @@ export function updateLiveEffect(effectName, value) {
 
     case 'delay':
       if (value > 0) {
-        nodes.delay.delayTime.value = Math.min(value, 1); // clamp to 1s max
+        nodes.delay.delayTime.value = value;
         nodes.delay.wet.value = 0.5;
       } else {
         nodes.delay.wet.value = 0;

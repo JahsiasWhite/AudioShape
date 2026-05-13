@@ -1,0 +1,15 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#0D0E12"/>
+  <rect x="80" y="80" width="1040" height="470" rx="20" fill="#111115" stroke="#1E1E2A" stroke-width="2"/>
+  <text x="130" y="220" fill="#DDE0EA" font-family="Arial, Helvetica, sans-serif" font-size="84" font-weight="700">Audio<tspan fill="#00C8FF">Shape</tspan></text>
+  <text x="130" y="285" fill="#4A4A60" font-family="Arial, Helvetica, sans-serif" font-size="34">Free Windows music player with live EQ and effects</text>
+  <text x="130" y="338" fill="#4A4A60" font-family="Arial, Helvetica, sans-serif" font-size="34">Persistent per-track settings " Open source</text>
+  <rect x="130" y="390" width="265" height="64" rx="10" fill="#00C8FF"/>
+  <text x="162" y="433" fill="#08080F" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="700">Download now</text>
+  <rect x="760" y="175" width="280" height="240" rx="12" fill="#1C1C24" stroke="#1E1E2A"/>
+  <rect x="790" y="210" width="220" height="14" rx="7" fill="#00C8FF" fill-opacity="0.7"/>
+  <rect x="790" y="246" width="165" height="10" rx="5" fill="#4A4A60"/>
+  <rect x="790" y="274" width="210" height="10" rx="5" fill="#4A4A60"/>
+  <rect x="790" y="302" width="185" height="10" rx="5" fill="#4A4A60"/>
+  <rect x="790" y="330" width="140" height="10" rx="5" fill="#4A4A60"/>
+</svg>

@@ -1,4 +1,11 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, {
+  createContext,
+  useState,
+  useEffect,
+  useContext,
+  useRef,
+  useCallback,
+} from 'react';
 
 import { AudioObject } from './AudioObject';
 import { AudioControls } from './AudioControls';
@@ -21,10 +28,42 @@ const DEFAULT_SPEEDUP = 1.2;
 const DEFAULT_SLOWDOWN = 0.8;
 
 export const AudioProvider = ({ children }) => {
+  const MAX_HISTORY_ITEMS = 100;
+  const latestSongsRequestIdRef = useRef(0);
+  /** Bumped from playbar / finishLoading so SongListItems can scroll the virtual list. */
+  const requestScrollSongListToCurrentSongRef = useRef(() => {});
+
+  const buildMediaArtwork = (imageValue) => {
+    if (!imageValue || typeof imageValue !== 'string') return [];
+
+    if (imageValue.startsWith('data:')) {
+      const mimeMatch = imageValue.match(/^data:([^;]+);/i);
+      const mimeType = mimeMatch?.[1] || 'image/jpeg';
+      return [{ src: imageValue, type: mimeType }];
+    }
+
+    const normalized = imageValue.toLowerCase();
+    const mimeType = normalized.endsWith('.png')
+      ? 'image/png'
+      : normalized.endsWith('.webp')
+        ? 'image/webp'
+        : normalized.endsWith('.gif')
+          ? 'image/gif'
+          : 'image/jpeg';
+
+    return [
+      {
+        src: `file:///${imageValue.replace(/\\/g, '/')}`,
+        type: mimeType,
+      },
+    ];
+  };
+
   /* General songs */
   const [loadedSongs, setLoadedSongs] = useState({});
   const [visibleSongs, setVisibleSongs] = useState({}); // ! TODO, I think this would work better as an array
   const [initSongsLoading, setInitSongsLoading] = useState(true);
+  const [listeningHistory, setListeningHistory] = useState([]);
 
   /* General */
   const [loadingQueue, setLoadingQueue] = useState([]);
@@ -107,11 +146,8 @@ export const AudioProvider = ({ children }) => {
     console.log('Finished loading... Effect: ', effect, ' Queue: ', queue);
     setLoadingQueue(queue);
 
-    // Keep the song centered
     setTimeout(() => {
-      const songDiv = document.getElementById(currentSongId);
-      if (songDiv)
-        songDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      requestScrollSongListToCurrentSongRef.current();
     }, 100);
   };
 
@@ -147,6 +183,19 @@ export const AudioProvider = ({ children }) => {
       getCurrentAudioBuffer,
     );
 
+  /** Survives SongList unmount (e.g. fullscreen) so sort/search preferences restore when returning. */
+  const [songListSortFilterIndex, setSongListSortFilterIndex] = useState(0);
+  const [songListSortAscending, setSongListSortAscending] = useState(false);
+  const [songListHasCustomSort, setSongListHasCustomSort] = useState(false);
+
+  const [songListScrollToCurrentToken, setSongListScrollToCurrentToken] =
+    useState(0);
+  const requestScrollSongListToCurrentSong = useCallback(() => {
+    setSongListScrollToCurrentToken((t) => t + 1);
+  }, []);
+  requestScrollSongListToCurrentSongRef.current =
+    requestScrollSongListToCurrentSong;
+
   // Handles the overall functionality of playing and switching songs
   const {
     handleSongSelect,
@@ -163,6 +212,7 @@ export const AudioProvider = ({ children }) => {
     toggleShuffle,
     shuffleIsEnabled,
     loopIsEnabled,
+    syncPlaybackOrder,
   } = QueueManager(currentSong, visibleSongs, loadedSongs);
 
   // Handles all audio effects
@@ -172,6 +222,8 @@ export const AudioProvider = ({ children }) => {
     toggleSpeedup,
     toggleSlowDown,
     saveEffects,
+    deleteEffectCombo,
+    renameEffectCombo,
     clearEffects,
     resetCurrentSong,
     effects,
@@ -218,6 +270,20 @@ export const AudioProvider = ({ children }) => {
     setVideoTime(newVideoTime);
   };
 
+  // Fullscreen video follows `videoTime`. Restarts and prev-track restart set
+  // `currentSong.currentTime` without going through `changeVideoTime`, so mirror
+  // every completed audio seek (including programmatic) onto `videoTime`.
+  useEffect(() => {
+    const onSeeked = () => {
+      setVideoTime(currentSong.currentTime);
+    };
+    currentSong.addEventListener('seeked', onSeeked);
+    return () => currentSong.removeEventListener('seeked', onSeeked);
+  }, [currentSong]);
+
+  const currentSongIdRef = useRef(null);
+  currentSongIdRef.current = currentSongId;
+
   // Current song changed — just point the audio element at the new file.
   // The live effects chain stays wired and automatically applies to whatever is playing.
   useEffect(() => {
@@ -250,9 +316,7 @@ export const AudioProvider = ({ children }) => {
 
     if ('mediaSession' in navigator) {
       const song = loadedSongs[currentSongId];
-      const artwork = song?.albumImage
-        ? [{ src: `file:///${song.albumImage.replace(/\\/g, '/')}`, type: 'image/jpeg' }]
-        : [];
+      const artwork = buildMediaArtwork(song?.albumImage);
       navigator.mediaSession.metadata = new MediaMetadata({
         title: song?.title ?? '',
         artist: song?.artist ?? '',
@@ -260,7 +324,76 @@ export const AudioProvider = ({ children }) => {
         artwork,
       });
     }
+
+    setListeningHistory((currentHistory) => {
+      const lastEntry = currentHistory[0];
+      if (lastEntry && lastEntry.songId === currentSongId) {
+        return currentHistory;
+      }
+
+      const song = loadedSongs[currentSongId];
+      const updatedHistory = [
+        {
+          songId: currentSongId,
+          playedAt: new Date().toISOString(),
+          title: song?.title ?? 'Unknown Title',
+          artist: song?.artist ?? 'Unknown Artist',
+          album: song?.album ?? 'Unknown Album',
+          albumImage: song?.albumImage ?? null,
+        },
+        ...currentHistory,
+      ].slice(0, MAX_HISTORY_ITEMS);
+
+      window.electron.ipcRenderer.sendMessage('SAVE_HISTORY', updatedHistory);
+      return updatedHistory;
+    });
   }, [currentSongId]);
+
+  useEffect(() => {
+    const unsubHistory = window.electron.ipcRenderer.on(
+      'RETURN_HISTORY',
+      (history) => {
+        setListeningHistory(Array.isArray(history) ? history : []);
+      },
+    );
+    window.electron.ipcRenderer.sendMessage('GET_HISTORY');
+    return () => {
+      unsubHistory?.();
+    };
+  }, []);
+
+  useEffect(() => {
+    const unsub = window.electron.ipcRenderer.on(
+      'UPDATE_SONG_TAGS_RESULT',
+      (payload) => {
+        if (!payload?.success || !payload.song) return;
+        const updated = payload.song;
+        const id = updated.id;
+
+        setLoadedSongs((prev) => ({ ...prev, [id]: updated }));
+
+        setVisibleSongs((prev) => {
+          if (!Object.prototype.hasOwnProperty.call(prev, id)) {
+            return prev;
+          }
+          return { ...prev, [id]: updated };
+        });
+
+        if (id === currentSongIdRef.current && 'mediaSession' in navigator) {
+          const artwork = buildMediaArtwork(updated?.albumImage);
+          try {
+            navigator.mediaSession.metadata = new MediaMetadata({
+              title: updated?.title ?? '',
+              artist: updated?.artist ?? '',
+              album: updated?.album ?? '',
+              artwork,
+            });
+          } catch (_) {}
+        }
+      },
+    );
+    return () => unsub?.();
+  }, []);
 
   /* Media key IPC + navigator.mediaSession action handlers */
   useEffect(() => {
@@ -307,10 +440,44 @@ export const AudioProvider = ({ children }) => {
     setLoadedSongs({});
   };
 
-  window.electron.ipcRenderer.on('GRAB_SONGS', ({ songs, isComplete }) => {
-    console.error('GOT SONGS: ', songs);
-    initialSongLoad(songs, isComplete);
-  });
+  useEffect(() => {
+    const unsubSongs = window.electron.ipcRenderer.on(
+      'GRAB_SONGS',
+      ({ songs, songsDelta, isComplete, requestId }) => {
+        if (
+          typeof requestId === 'number' &&
+          requestId < latestSongsRequestIdRef.current
+        ) {
+          return;
+        }
+        if (typeof requestId === 'number') {
+          latestSongsRequestIdRef.current = requestId;
+        }
+
+        const hasDelta =
+          songsDelta != null &&
+          typeof songsDelta === 'object' &&
+          !Array.isArray(songsDelta);
+        const hasFull =
+          songs != null &&
+          typeof songs === 'object' &&
+          !Array.isArray(songs);
+
+        if (hasDelta) {
+          setLoadedSongs((prev) => ({ ...prev, ...songsDelta }));
+          setVisibleSongs((prev) => ({ ...prev, ...songsDelta }));
+          if (isComplete) setInitSongsLoading(false);
+          return;
+        }
+
+        initialSongLoad(hasFull ? songs : {}, isComplete);
+      },
+    );
+
+    return () => {
+      unsubSongs?.();
+    };
+  }, []);
 
   /**
    * Adds a new song to the list of songs
@@ -320,6 +487,11 @@ export const AudioProvider = ({ children }) => {
     const updatedSongs = { ...loadedSongs, [song.id]: song };
     setLoadedSongs(updatedSongs);
     setVisibleSongs(updatedSongs);
+  };
+
+  const clearListeningHistory = () => {
+    setListeningHistory([]);
+    window.electron.ipcRenderer.sendMessage('CLEAR_HISTORY');
   };
 
   return (
@@ -336,6 +508,7 @@ export const AudioProvider = ({ children }) => {
         setCurrentScreen,
         setVisibleSongs,
         initSongsLoading,
+        listeningHistory,
         currentSong,
         currentSongIndex,
         currentSongId,
@@ -354,6 +527,8 @@ export const AudioProvider = ({ children }) => {
         playNextSong,
         addEffect,
         saveEffects,
+        deleteEffectCombo,
+        renameEffectCombo,
         savedEffects,
         effects,
         setEffects,
@@ -364,22 +539,38 @@ export const AudioProvider = ({ children }) => {
         speedupIsEnabled,
         slowDownIsEnabled,
         handleSongExport: async () => {
+          const applyExportResult = (result) => {
+            if (result?.success && result.song) {
+              addSong(result.song);
+            }
+            return result;
+          };
+
           const nonSpeedEffects = Object.entries(effects).filter(([name]) => name !== 'speed');
           if (nonSpeedEffects.length > 0) {
-            // Render all active effects offline first, then export the result
-            const audioBuffer = await getCurrentAudioBuffer(fileLocation);
-            if (audioBuffer) {
-              const rendered = await renderAudioWithAllEffects(audioBuffer, effects);
-              downloadAudio(rendered);
-              const tempPath = await new Promise((resolve) => {
-                window.electron.ipcRenderer.once('TEMP_SONG_SAVED', (outputPath) => resolve(outputPath));
-              });
-              const result = await handleSongExport(currentSpeed, tempPath);
-              window.electron.ipcRenderer.sendMessage('DELETE_TEMP_SONG');
-              return result;
+            // Bake all non-speed effects offline, then SAVE_SONG applies speed (ffmpeg) only.
+            let audioBuffer = null;
+            if (currentSong?.src) {
+              audioBuffer = await getCurrentAudioBuffer(currentSong.src);
             }
+            if (!audioBuffer && fileLocation) {
+              audioBuffer = await getCurrentAudioBuffer(fileLocation);
+            }
+            if (!audioBuffer) {
+              throw new Error(
+                'Could not read the track for export. Reload the song or check the file path.',
+              );
+            }
+            const rendered = await renderAudioWithAllEffects(audioBuffer, effects);
+            downloadAudio(rendered, currentSong.src);
+            const tempPath = await new Promise((resolve) => {
+              window.electron.ipcRenderer.once('TEMP_SONG_SAVED', (outputPath) => resolve(outputPath));
+            });
+            const result = await handleSongExport(currentSpeed, tempPath);
+            window.electron.ipcRenderer.sendMessage('DELETE_TEMP_SONG');
+            return applyExportResult(result);
           }
-          return handleSongExport(currentSpeed);
+          return applyExportResult(await handleSongExport(currentSpeed));
         },
         addSong,
         playlists,
@@ -393,6 +584,16 @@ export const AudioProvider = ({ children }) => {
         loopIsEnabled,
         togglePopup,
         setTogglePopup,
+        clearListeningHistory,
+        songListSortFilterIndex,
+        setSongListSortFilterIndex,
+        songListSortAscending,
+        setSongListSortAscending,
+        songListHasCustomSort,
+        setSongListHasCustomSort,
+        syncPlaybackOrder,
+        songListScrollToCurrentToken,
+        requestScrollSongListToCurrentSong,
       }}
     >
       {children}

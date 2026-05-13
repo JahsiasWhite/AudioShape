@@ -1,78 +1,113 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import './Searchbar.css';
 
-import { useAudioPlayer } from '../../AudioController/AudioContext';
+/**
+ * File extensions recognized for extension-only search. Each can be queried as:
+ * `.mp3`, `*.mp3`, `mp3`, or `*mp3` (after normalizeSearchTerm lowercase trim).
+ *
+ * Matching is on the entire search box value only, so a regular query ending with a file extension still uses fuzzy
+ * title/artist/album logic instead of this. 
+ */
+const EXTENSION_FILTER_EXTS = ['.mp4', '.mp3', '.flac', '.wav', '.ogg', '.m4a', '.m4b'];
 
-function SearchBar({ setFilteredSongs }) {
-  const { visibleSongs, currentSongId, currentSong } = useAudioPlayer();
+function matchesExtensionOnlySearch(searchTerm, extWithDot) {
+  const noDot = extWithDot.slice(1);
+  return (
+    searchTerm === extWithDot ||
+    searchTerm === `*${extWithDot}` ||
+    searchTerm === noDot ||
+    searchTerm === `*${noDot}`
+  );
+}
 
-  var searchTerm = '';
+export function normalizeSearchTerm(rawTerm = '') {
+  let searchTerm = rawTerm.toLowerCase().trim();
 
-  const filterSongs = (e) => {
-    searchTerm += e.target.value.toLowerCase();
-    let filteredSongs = Object.entries(visibleSongs).filter(([key, value]) => {
-      if (searchTerm === '') {
-        return true; // Include all entries if no input
-      }
+  // Support both syntaxes: "!kanye" and !"kanye"
+  if (searchTerm.startsWith('!"') && searchTerm.endsWith('"')) {
+    searchTerm = `"!${searchTerm.slice(2, -1)}"`;
+  }
 
-      if (searchTerm === '.mp4' || searchTerm === '*.mp4') {
-        if (visibleSongs[key].file.endsWith('.mp4')) {
-          return true;
-        } else {
-          return false;
-        }
-      }
-      if (searchTerm === '.mp3' || searchTerm === '*.mp3') {
-        if (visibleSongs[key].file.endsWith('.mp3')) {
-          return true;
-        } else {
-          return false;
-        }
-      }
+  return searchTerm;
+}
 
-      // If the search is enclosed in quotations, make an exact search on the words
-      if (searchTerm.startsWith('"') && searchTerm.endsWith('"')) {
-        const exactMatch = searchTerm.slice(1, -1); // Extract the exact match value
-        const negate = exactMatch.startsWith('!'); // If the search starts with a '!', we negate the search
+export function doesSongMatchSearch(value, searchTerm) {
+  const songTitle = (value?.title ?? '').toString().toLowerCase();
+  const songArtist = (value?.artist ?? '').toString().toLowerCase();
+  const songAlbum = (value?.album ?? '').toString().toLowerCase();
+  const songFile = (value?.file ?? '').toString().toLowerCase();
 
-        const comparisonValue = negate ? exactMatch.slice(1) : exactMatch; // Remove '!' if negated
-        const matches =
-          value.title.toLowerCase() === comparisonValue ||
-          value.artist.toLowerCase() === comparisonValue ||
-          value.album.toLowerCase() === comparisonValue;
+  /*
+   * How this search works (title, artist, and album are always checked):
+   *
+   * 1) No quotes -> fuzzy text contains
+   *    Example: kanye
+   *
+   * 2) Double quotes -> exact phrase mode
+   *    Example: "kanye west" must equal an entire title/artist/album value
+   *
+   * 3) Double quotes + leading ! -> exclude mode
+   *    Example: "!kanye" removes rows where title/artist/album contains "kanye"
+   *
+   * 4) Single quotes -> REGEX mode (advanced)
+   *    Example: 'kanye.*west' matches using RegExp rules
+   *    Use this only when you intentionally want regex behavior.
+   *
+   * Important:
+   * - Negation is NOT available in single-quote regex mode.
+   * - So '!kanye' is treated as regex text, not "exclude kanye".
+   * - Use "!kanye" for exclusion.
+   */
+  if (searchTerm === '') {
+    return true; // Include all entries if no input
+  }
 
-        return negate ? !matches : matches; // Negate the result if required
-      }
+  const extensionMatch = EXTENSION_FILTER_EXTS.find((ext) =>
+    matchesExtensionOnlySearch(searchTerm, ext)
+  );
+  if (extensionMatch !== undefined) {
+    return songFile.endsWith(extensionMatch);
+  }
 
-      // Regex with single quotes :)
-      if (searchTerm.startsWith("'") && searchTerm.endsWith("'")) {
-        const regexPattern = searchTerm.slice(1, -1); // Extract pattern between quotes
+  // If the search is enclosed in quotations, make an exact search on the words
+  if (searchTerm.startsWith('"') && searchTerm.endsWith('"')) {
+    const exactMatch = searchTerm.slice(1, -1); // Extract the exact match value
+    const negate = exactMatch.startsWith('!'); // If the search starts with a '!', we negate the search
 
-        try {
-          const regex = new RegExp(regexPattern, 'i'); // Create case-insensitive regex
+    const comparisonValue = negate ? exactMatch.slice(1) : exactMatch; // Remove '!' if negated
+    const matches = negate
+      ? songTitle.includes(comparisonValue) ||
+        songArtist.includes(comparisonValue) ||
+        songAlbum.includes(comparisonValue)
+      : songTitle === comparisonValue ||
+        songArtist === comparisonValue ||
+        songAlbum === comparisonValue;
 
-          return (
-            regex.test(value.title) ||
-            regex.test(value.artist) ||
-            regex.test(value.album)
-          );
-        } catch (error) {
-          console.error('Invalid regex pattern:', regexPattern, error);
-          return false; // Gracefully handle invalid regex by returning false
-        }
-      }
+    return negate ? !matches : matches; // Negate the result if required
+  }
 
-      return (
-        value.title.toLowerCase().includes(searchTerm) ||
-        value.artist.toLowerCase().includes(searchTerm) ||
-        value.album.toLowerCase().includes(searchTerm)
-      );
-    });
+  // Regex with single quotes :)
+  if (searchTerm.startsWith("'") && searchTerm.endsWith("'")) {
+    const regexPattern = searchTerm.slice(1, -1); // Extract pattern between quotes
 
-    console.log('Filtered songs: ', filteredSongs);
-    return Object.fromEntries(filteredSongs);
-  };
+    try {
+      const regex = new RegExp(regexPattern, 'i'); // Create case-insensitive regex
 
+      return regex.test(songTitle) || regex.test(songArtist) || regex.test(songAlbum);
+    } catch (error) {
+      console.error('Invalid regex pattern:', regexPattern, error);
+      return false; // Gracefully handle invalid regex by returning false
+    }
+  }
+
+  return (
+    songTitle.includes(searchTerm) ||
+    songArtist.includes(searchTerm) ||
+    songAlbum.includes(searchTerm)
+  );
+}
+
+function SearchBar({ searchTerm, setSearchTerm }) {
   return (
     <div className="search-bar">
       <input
@@ -80,7 +115,8 @@ function SearchBar({ setFilteredSongs }) {
         variant="outlined"
         label="Search"
         placeholder="Search..."
-        onChange={(text) => setFilteredSongs(filterSongs(text))}
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
       />
     </div>
   );

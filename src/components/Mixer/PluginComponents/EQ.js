@@ -1,4 +1,4 @@
-import React, { useState, useImperativeHandle, useEffect } from 'react';
+import React, { useState, useImperativeHandle } from 'react';
 
 import Knob from '../Knob';
 
@@ -49,9 +49,31 @@ const EQ = React.forwardRef(({ interpolateValue, addEffect }, ref) => {
     }));
   };
 
+  /** Inverse of updateEqValue mapping: stored dB → knob position (-23…24). */
+  const applySavedEq = ([lowDb, midDb, highDb]) => {
+    const [dbMin, dbMax] = [-30, 30];
+    const knobMin = -23;
+    const knobMax = 24;
+    const dbToKnob = (db) =>
+      ((db - dbMin) / (dbMax - dbMin)) * (knobMax - knobMin) + knobMin;
+
+    const low = dbToKnob(lowDb);
+    const mid = dbToKnob(midDb);
+    const high = dbToKnob(highDb);
+
+    setEqValues([lowDb, midDb, highDb]);
+    setEqKnobStyles((prev) => ({
+      ...prev,
+      eq: { low, mid, high },
+    }));
+  };
+
   useImperativeHandle(ref, () => ({
     resetEq,
+    applySavedEq,
   }));
+
+  const eqLabel = (v) => Math.round(Number(v));
 
   return (
     <div className="module-container" style={{ gridRow: 'span 2' }}>
@@ -62,21 +84,21 @@ const EQ = React.forwardRef(({ interpolateValue, addEffect }, ref) => {
           knobValue={eqKnobStyles.eq.low}
           onChange={(val) => updateEqValue('low', val)}
         />
-        <p>LOW: {eqKnobStyles.eq.low}</p>
+        <p>LOW: {eqLabel(eqKnobStyles.eq.low)}</p>
 
         <Knob
           customProps={{ ...eqKnobStyles, value: eqKnobStyles.eq.mid }}
           knobValue={eqKnobStyles.eq.mid}
           onChange={(val) => updateEqValue('mid', val)}
         />
-        <p>MID: {eqKnobStyles.eq.mid}</p>
+        <p>MID: {eqLabel(eqKnobStyles.eq.mid)}</p>
 
         <Knob
           customProps={{ ...eqKnobStyles, value: eqKnobStyles.eq.high }}
           knobValue={eqKnobStyles.eq.high}
           onChange={(val) => updateEqValue('high', val)}
         />
-        <p>HIGH: {eqKnobStyles.eq.high}</p>
+        <p>HIGH: {eqLabel(eqKnobStyles.eq.high)}</p>
       </div>
     </div>
   );

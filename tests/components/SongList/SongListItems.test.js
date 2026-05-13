@@ -5,10 +5,44 @@ import {
   fireEvent,
   getByTestId,
 } from '@testing-library/react';
+import { mockScrollToRow } from 'react-window';
 import SongListItems from '../../../src/components/SongList/SongListItems.js';
 import AudioContext, {
   AudioProvider,
 } from '../../../src/AudioController/AudioContext';
+
+jest.mock('react-window', () => {
+  const React = require('react');
+  const mockScrollToRow = jest.fn();
+  function List({ rowComponent: Row, rowCount, rowProps, listRef }) {
+    React.useLayoutEffect(() => {
+      if (listRef) {
+        listRef.current = {
+          scrollToRow: mockScrollToRow,
+        };
+      }
+    });
+    if (!Row || !rowCount) return null;
+    const merged = rowProps || {};
+    return React.createElement(
+      'div',
+      { 'data-testid': 'virtual-list' },
+      Array.from({ length: rowCount }, (_, index) =>
+        React.createElement(Row, {
+          key: index,
+          index,
+          style: {},
+          ariaAttributes: {},
+          ...merged,
+        }),
+      ),
+    );
+  }
+  function useListRef() {
+    return React.useRef(null);
+  }
+  return { mockScrollToRow, List, useListRef };
+});
 
 const loadedSongs = [
   {
@@ -36,6 +70,8 @@ jest.mock('../../../src/AudioController/AudioContext', () => {
     handleSongSelect: (handleSongSelectMock = jest.fn()),
     loadingQueue: [],
     currentScreen: currentScreenMock,
+    currentSongId: null,
+    songListScrollToCurrentToken: 0,
   });
 
   return {
@@ -54,6 +90,24 @@ window.electron = {
 };
 
 describe('Song List Items', () => {
+  afterEach(() => {
+    mockScrollToRow.mockClear();
+    const {
+      useAudioPlayer,
+    } = require('../../../src/AudioController/AudioContext');
+    useAudioPlayer.mockReturnValue({
+      setVisibleSongs: mockSetVisibleSongs,
+      setCurrentScreen,
+      loadedSongs,
+      visibleSongs: loadedSongs,
+      handleSongSelect: handleSongSelectMock,
+      loadingQueue: [],
+      currentScreen: currentScreenMock,
+      currentSongId: null,
+      songListScrollToCurrentToken: 0,
+    });
+  });
+
   it('renders artists correctly', () => {
     const { container } = render(
       <AudioProvider>
@@ -119,5 +173,78 @@ describe('Song List Items', () => {
 
     expect(handleSongEditClick).toHaveBeenCalled();
     expect(setCurrentScreen).toHaveBeenCalled();
+  });
+
+  it('scrolls the virtual list to the current song when songListScrollToCurrentToken bumps (e.g. playbar title click)', () => {
+    const {
+      useAudioPlayer,
+    } = require('../../../src/AudioController/AudioContext');
+
+    const filtered = {
+      id: { title: 'title', artist: 'artist', id: 'id' },
+      id2: { title: 'title2', artist: 'artist2', id: 'id2' },
+    };
+
+    useAudioPlayer.mockReturnValue({
+      setVisibleSongs: mockSetVisibleSongs,
+      setCurrentScreen,
+      loadedSongs,
+      visibleSongs: loadedSongs,
+      handleSongSelect: handleSongSelectMock,
+      loadingQueue: [],
+      currentScreen: currentScreenMock,
+      currentSongId: 'id2',
+      songListScrollToCurrentToken: 0,
+    });
+
+    const { rerender } = render(
+      <AudioProvider>
+        <SongListItems
+          filteredSongs={filtered}
+          setFilteredSongs={jest.fn()}
+          toggleRightClickMenu={jest.fn()}
+        />
+      </AudioProvider>,
+    );
+
+    expect(mockScrollToRow).toHaveBeenCalledWith(
+      expect.objectContaining({
+        align: 'auto',
+        behavior: 'smooth',
+        index: 1,
+      }),
+    );
+
+    mockScrollToRow.mockClear();
+
+    useAudioPlayer.mockReturnValue({
+      setVisibleSongs: mockSetVisibleSongs,
+      setCurrentScreen,
+      loadedSongs,
+      visibleSongs: loadedSongs,
+      handleSongSelect: handleSongSelectMock,
+      loadingQueue: [],
+      currentScreen: currentScreenMock,
+      currentSongId: 'id2',
+      songListScrollToCurrentToken: 1,
+    });
+
+    rerender(
+      <AudioProvider>
+        <SongListItems
+          filteredSongs={filtered}
+          setFilteredSongs={jest.fn()}
+          toggleRightClickMenu={jest.fn()}
+        />
+      </AudioProvider>,
+    );
+
+    expect(mockScrollToRow).toHaveBeenCalledWith(
+      expect.objectContaining({
+        align: 'auto',
+        behavior: 'smooth',
+        index: 1,
+      }),
+    );
   });
 });

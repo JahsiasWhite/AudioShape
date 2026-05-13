@@ -47,3 +47,50 @@
   cursor: grabbing;
   box-shadow: 0 0 10px rgba(0, 200, 255, 0.7);
 }
+
+.settings-link-button {
+  border: 1px solid var(--color-accent);
+  background-color: var(--color-button);
+  color: var(--color-text);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.settings-tips-details {
+  margin-top: 4px;
+}
+
+.settings-tips-summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.settings-tips-summary:hover {
+  color: var(--color-accent);
+}
+
+.settings-tips-body {
+  margin-top: 12px;
+  padding-left: 4px;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+}
+
+.settings-tips-body ul {
+  margin: 8px 0 0;
+  padding-left: 1.25rem;
+}
+
+.settings-tips-body li {
+  margin-bottom: 8px;
+}
+
+.settings-tips-body code {
+  font-size: 0.9em;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.2);
+}

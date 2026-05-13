@@ -241,9 +241,12 @@ export async function renderAudioWithAllEffects(audioBuffer, effects) {
       .map(([name, value]) => createOfflineEffectNode(name, value))
       .filter(Boolean);
 
-    if (effectNodes.length === 0) return;
-
     const player = new Tone.Player(audioBuffer);
+    if (effectNodes.length === 0) {
+      player.toDestination();
+      player.start();
+      return;
+    }
 
     player.connect(effectNodes[0]);
     for (let i = 0; i < effectNodes.length - 1; i++) {

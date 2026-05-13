@@ -1,4 +1,4 @@
-const { ipcMain } = require('electron');
+const { app, dialog, ipcMain } = require('electron');
 
 const fs = require('fs');
 const fsPromises = require('fs').promises; // For deleting files
@@ -6,8 +6,155 @@ const { v4: uuidv4 } = require('uuid');
 const { glob } = require('glob');
 const ffmpeg = require('fluent-ffmpeg');
 
+const path = require('path');
+
+/**
+ * ffmpeg-static resolves to a path inside app.asar when packaged; binaries cannot be spawned from
+ * the asar archive. Prefer app.asar.unpacked (see package.json asarUnpack) or PATH.
+ */
+function configureFfmpegBinary() {
+  try {
+    let fromStatic = require('ffmpeg-static');
+    if (!fromStatic) return;
+
+    const candidates = [fromStatic];
+    if (app?.isPackaged && fromStatic.includes('app.asar')) {
+      candidates.unshift(fromStatic.replace(/app\.asar([/\\]|$)/, 'app.asar.unpacked$1'));
+    }
+
+    for (const candidate of candidates) {
+      if (candidate && fs.existsSync(candidate)) {
+        ffmpeg.setFfmpegPath(candidate);
+        return;
+      }
+    }
+
+    console.warn(
+      '[ffmpeg] ffmpeg-static path not found on disk; fluent-ffmpeg will use PATH if available.',
+      candidates,
+    );
+  } catch (e) {
+    console.warn('[ffmpeg] Could not set ffmpeg-static path:', e?.message ?? e);
+  }
+}
+
 // Logging
 const Logger = require('./mainLogger');
+configureFfmpegBinary();
+const {
+  addDirectoryImagesForAudioFiles,
+  listImageFilesInAlbumDir,
+  safeStatSize,
+  technicalFieldsFromFormat,
+} = require('./songMetadataHelpers');
+const {
+  safeReply,
+  isSongLoadRequestStale,
+} = require('./ipcSafety');
+
+/**
+ * Stable folder key for imageMap lookups: avoids missing directory art when paths differ by
+ * slash style or drive-letter casing (Windows), which would skip folder covers and fall back to
+ * embedded JPEG (often looks black in the UI).
+ */
+function canonicalAlbumDirKey(dirPath) {
+  if (!dirPath || typeof dirPath !== 'string') return '';
+  return path.normalize(dirPath).replace(/\\/g, '/').toLowerCase();
+}
+
+/** Images in the same folder as `audioFilePath`, keyed either by raw dirname or canonical key. */
+function getDirectoryImagesForFile(imageMap, audioFilePath) {
+  if (!imageMap || !audioFilePath) return [];
+  const albumDir = path.dirname(audioFilePath);
+  const canon = canonicalAlbumDirKey(albumDir);
+  if (imageMap[albumDir]?.length) return imageMap[albumDir];
+  const normKey = path.normalize(albumDir);
+  if (normKey !== albumDir && imageMap[normKey]?.length) {
+    return imageMap[normKey];
+  }
+  for (const [mapDir, imgs] of Object.entries(imageMap)) {
+    if (imgs?.length && canonicalAlbumDirKey(mapDir) === canon) {
+      return imgs;
+    }
+  }
+  return [];
+}
+
+function normalizeOptionalFilePath(maybePath) {
+  if (!maybePath || typeof maybePath !== 'string') return '';
+  let p = maybePath.trim();
+  if (!p || p.startsWith('data:')) return '';
+  if (p.startsWith('file://')) {
+    try {
+      p = fileURLToPath(p);
+    } catch {
+      p = decodeURIComponent(p.replace(/^file:\/+/, ''));
+    }
+  }
+  return path.normalize(p);
+}
+
+/** If the UI was showing a real image file next to the track, keep it after tag save when still valid. */
+function resolvedPreviousAlbumImagePath(previousAlbumImage, audioAbsPath) {
+  const prevPath = normalizeOptionalFilePath(previousAlbumImage);
+  if (!prevPath) return null;
+  try {
+    fs.accessSync(prevPath, fs.constants.R_OK);
+  } catch {
+    return null;
+  }
+  if (
+    canonicalAlbumDirKey(path.dirname(prevPath)) !==
+    canonicalAlbumDirKey(path.dirname(audioAbsPath))
+  ) {
+    return null;
+  }
+  return prevPath;
+}
+
+/** Child processes and ffmpeg jobs that must not outlive the app (keeps Node/Electron from exiting). */
+const trackedSpawnChildren = new Set();
+const activeFfmpegCommands = new Set();
+
+function trackSpawnedChild(proc) {
+  if (!proc || typeof proc.kill !== 'function') return proc;
+  trackedSpawnChildren.add(proc);
+  const untrack = () => trackedSpawnChildren.delete(proc);
+  proc.once('exit', untrack);
+  proc.once('error', untrack);
+  return proc;
+}
+
+function attachFfmpegTracking(cmd) {
+  if (!cmd) return;
+  activeFfmpegCommands.add(cmd);
+  const untrack = () => activeFfmpegCommands.delete(cmd);
+  cmd.once('end', untrack);
+  cmd.once('error', untrack);
+}
+
+function killHeavyworkChildren() {
+  const cmds = [...activeFfmpegCommands];
+  activeFfmpegCommands.clear();
+  for (const cmd of cmds) {
+    try {
+      cmd.kill('SIGKILL');
+    } catch (_) {
+      /* ignore */
+    }
+  }
+  const procs = [...trackedSpawnChildren];
+  trackedSpawnChildren.clear();
+  for (const proc of procs) {
+    try {
+      if (!proc.killed) proc.kill();
+    } catch (_) {
+      /* ignore */
+    }
+  }
+}
+
+app.on('before-quit', killHeavyworkChildren);
 
 // Annoying way to import this tbh
 let metadata;
@@ -49,7 +196,12 @@ function getYoutubeDl() {
   return createYoutubeDl(binaryPath);
 }
 
-const path = require('path');
+function trimForLog(value, max = 180) {
+  if (!value) return '';
+  return value.length > max ? `${value.slice(0, max)}...` : value;
+}
+
+const { fileURLToPath } = require('url');
 const os = require('os');
 const https = require('https');
 const http = require('http');
@@ -62,13 +214,191 @@ let effectCombosFile = null;
 
 /* Hmmmm */
 let mainWindow = undefined;
+let activeSongLoadRequestId = 0;
 
 /* When auto playing with edits on, we have to save the song to have full editing control */
 // TODO: Is there a way to not have to save file? Can't we just use in-memory buffers?
+/**
+ * Tone.Offline yields PCM; WAV is the interchange format ffmpeg can read reliably.
+ * Mixer export writes to OS temp only (`audioshape-export-*.wav`), not beside library files.
+ */
+function isMixerExportTempWav(filePath) {
+  const base = path.basename(filePath).toLowerCase();
+  return base.startsWith('audioshape-export-') && base.endsWith('.wav');
+}
+
+const VIDEO_CONTAINER_EXTS = new Set(['.mp4', '.mkv']);
+
+function exportTargetExt(libraryRef, srcPath) {
+  if (libraryRef) {
+    const e = path.extname(libraryRef).toLowerCase();
+    if (e) return e;
+  }
+  const se = path.extname(srcPath).toLowerCase();
+  return se || '.mp3';
+}
+
+/**
+ * Library video + baked WAV audio → one output (same container as library: .mp4 / .mkv).
+ */
+function remuxLibraryVideoWithWavAudio(libraryPath, wavPath, outputPath, speed) {
+  return new Promise((resolve, reject) => {
+    const s =
+      typeof speed === 'number' && !Number.isNaN(speed) && speed > 0
+        ? speed
+        : 1;
+
+    if (!s || s === 1) {
+      const cmd = ffmpeg(libraryPath)
+        .input(wavPath)
+        .outputOptions([
+          '-map',
+          '0:v:0',
+          '-map',
+          '1:a:0',
+          '-c:v',
+          'copy',
+          '-c:a',
+          'aac',
+          '-b:a',
+          '192k',
+          '-shortest',
+        ])
+        .output(outputPath)
+        .on('end', () => resolve())
+        .on('error', (err) => reject(err));
+      attachFfmpegTracking(cmd);
+      cmd.run();
+      return;
+    }
+
+    const atempoChain = buildAtempoFilters(s);
+    const spd = parseFloat(s.toFixed(6));
+    const fc = `[0:v]setpts=PTS/${spd}[vout];[1:a]${atempoChain}[aout]`;
+    const cmd = ffmpeg(libraryPath)
+      .input(wavPath)
+      .complexFilter(fc)
+      .outputOptions([
+        '-map',
+        '[vout]',
+        '-map',
+        '[aout]',
+        '-c:v',
+        'libx264',
+        '-preset',
+        'veryfast',
+        '-crf',
+        '20',
+        '-c:a',
+        'aac',
+        '-b:a',
+        '192k',
+        '-shortest',
+      ])
+      .output(outputPath)
+      .on('end', () => resolve())
+      .on('error', (err) => reject(err));
+    attachFfmpegTracking(cmd);
+    cmd.run();
+  });
+}
+
+function transcodeMixerExportWav(wavPath, outputPath, outputExt, speed) {
+  return new Promise((resolve, reject) => {
+    let cmd = ffmpeg(wavPath);
+    if (speed && speed !== 1) {
+      cmd = cmd.audioFilters(buildAtempoFilters(speed));
+    }
+    cmd = cmd.noVideo();
+    const ext = String(outputExt || '').toLowerCase();
+    if (ext === '.mp3') {
+      cmd = cmd.format('mp3').audioCodec('libmp3lame').audioBitrate(192);
+    } else if (ext === '.flac') {
+      cmd = cmd.format('flac');
+    } else if (ext === '.ogg') {
+      cmd = cmd.format('ogg').audioCodec('libvorbis');
+    } else if (ext === '.m4a') {
+      cmd = cmd.format('ipod').audioCodec('aac');
+    } else if (ext === '.aac') {
+      cmd = cmd.format('aac').audioCodec('aac');
+    } else if (ext === '.wav') {
+      cmd = cmd.format('wav').audioCodec('pcm_s16le');
+    } else {
+      cmd = cmd.format('mp3').audioCodec('libmp3lame').audioBitrate(192);
+    }
+    cmd
+      .output(outputPath)
+      .on('end', () => resolve())
+      .on('error', (err) => reject(err));
+    attachFfmpegTracking(cmd);
+    cmd.run();
+  });
+}
+
+function runSingleInputSpeedExport(srcPath, destPath, speed) {
+  return new Promise((resolve, reject) => {
+    const inExt = path.extname(srcPath).toLowerCase();
+    const outExt = path.extname(destPath).toLowerCase();
+    const atempoChain = buildAtempoFilters(speed);
+
+    if (VIDEO_CONTAINER_EXTS.has(inExt)) {
+      const cmd = ffmpeg(srcPath)
+        .audioFilters(atempoChain)
+        .videoFilters(`setpts=PTS/${speed}`)
+        .outputOptions([
+          '-c:v',
+          'libx264',
+          '-preset',
+          'veryfast',
+          '-crf',
+          '20',
+          '-c:a',
+          'aac',
+          '-b:a',
+          '192k',
+        ])
+        .output(destPath)
+        .on('end', () => resolve())
+        .on('error', (err) => reject(err));
+      attachFfmpegTracking(cmd);
+      cmd.run();
+      return;
+    }
+
+    let cmd = ffmpeg(srcPath).audioFilters(atempoChain).noVideo();
+    if (outExt === '.mp3') {
+      cmd = cmd.format('mp3').audioCodec('libmp3lame').audioBitrate(192);
+    } else if (outExt === '.flac') {
+      cmd = cmd.format('flac');
+    } else if (outExt === '.ogg') {
+      cmd = cmd.format('ogg').audioCodec('libvorbis');
+    } else if (outExt === '.m4a') {
+      cmd = cmd.format('ipod').audioCodec('aac');
+    } else if (outExt === '.aac') {
+      cmd = cmd.format('aac').audioCodec('aac');
+    } else if (outExt === '.wav') {
+      cmd = cmd.format('wav').audioCodec('pcm_s16le');
+    } else {
+      cmd = cmd.format('mp3').audioCodec('libmp3lame').audioBitrate(192);
+    }
+    cmd
+      .output(destPath)
+      .on('end', () => resolve())
+      .on('error', (err) => reject(err));
+    attachFfmpegTracking(cmd);
+    cmd.run();
+  });
+}
+
 const SAVE_TEMP_SONG = (dataDirectory, mainWindow) => {
-  ipcMain.on('SAVE_TEMP_SONG', async (event, audioData) => {
+  ipcMain.on('SAVE_TEMP_SONG', async (event, audioData, libraryPathOptional) => {
     console.error('Saving temp song');
-    newTemporaryFilePath = path.join(dataDirectory, `${uuidv4()}.wav`);
+    const lib = normalizeOptionalFilePath(
+      typeof libraryPathOptional === 'string' ? libraryPathOptional : '',
+    );
+    newTemporaryFilePath = lib
+      ? path.join(os.tmpdir(), `audioshape-export-${uuidv4()}.wav`)
+      : path.join(dataDirectory, `${uuidv4()}.wav`);
 
     // Construct the audio data into a Blob of wav data
     const wavData = await getAudioBuffer(audioData);
@@ -132,61 +462,243 @@ function buildAtempoFilters(speed) {
 }
 
 /**
- * Exports the given song, baking in the speed effect if needed.
- * Preserves the source file format: .mp4 sources are exported as .mp4 (with
- * video speed adjusted), everything else is exported as .mp3.
+ * Exports the given song. Mixer effects are baked offline in the renderer as a
+ * short-lived WAV in OS temp (PCM ffmpeg can decode); output matches the library
+ * file extension. Optional `libraryPathForContainer` (send `currentSong.src`) sets
+ * output folder, stem, and format; video tracks (.mp4/.mkv) are remuxed with new audio.
  */
-const SAVE_SONG = (dataDirectory) => {
-  ipcMain.on('SAVE_SONG', async (event, sourcePath, speed) => {
-    try {
-      // Cleanup the sourcePath: 'file:///C:/Example' -> 'C:/Example'
-      sourcePath = decodeURIComponent(sourcePath.replace('file:///', ''));
+const SAVE_SONG = (_dataDirectory) => {
+  ipcMain.on(
+    'SAVE_SONG',
+    async (event, sourcePath, speed, libraryPathForContainer) => {
+      try {
+        const srcPath = normalizeOptionalFilePath(sourcePath);
+        if (!srcPath) {
+          throw new Error('No source path for export.');
+        }
 
-      // Preserve the source format: .mp4 stays .mp4, everything else → .mp3
-      const sourceExt = path.extname(sourcePath).toLowerCase();
-      const outputExt = sourceExt === '.mp4' ? '.mp4' : '.mp3';
-      const newFilePath = path.join(
-        dataDirectory,
-        `export-${uuidv4()}${outputExt}`,
-      );
+        const libraryRef = normalizeOptionalFilePath(
+          typeof libraryPathForContainer === 'string'
+            ? libraryPathForContainer
+            : '',
+        );
+        const encodeExt = path.extname(srcPath).toLowerCase();
+        const libraryExt = libraryRef
+          ? path.extname(libraryRef).toLowerCase()
+          : '';
+        const targetExt = exportTargetExt(libraryRef, srcPath);
+        const namingRef = libraryRef || srcPath;
+        const newFilePath = createUniqueExportPath(namingRef, targetExt);
 
-      console.error('Source: ', sourcePath);
-      console.error('New Path: ', newFilePath);
-      console.error('Speed: ', speed);
+        const isEffectsWav =
+          encodeExt === '.wav' && isMixerExportTempWav(srcPath);
+        const shouldRemuxVideo =
+          isEffectsWav &&
+          libraryRef &&
+          fs.existsSync(libraryRef) &&
+          VIDEO_CONTAINER_EXTS.has(libraryExt);
 
-      if (speed && speed !== 1) {
-        const atempoChain = buildAtempoFilters(speed);
-        await new Promise((resolve, reject) => {
-          let cmd = ffmpeg(sourcePath).audioFilters(atempoChain);
+        console.error('Source: ', srcPath);
+        console.error('New Path: ', newFilePath);
+        console.error('Speed: ', speed);
+        console.error('Effects wav → remux video: ', shouldRemuxVideo);
 
-          if (sourceExt === '.mp4') {
-            // Adjust video speed to match audio
-            cmd = cmd.videoFilters(`setpts=PTS/${speed}`);
-          } else {
-            cmd = cmd.noVideo();
+        if (shouldRemuxVideo) {
+          await remuxLibraryVideoWithWavAudio(
+            libraryRef,
+            srcPath,
+            newFilePath,
+            speed,
+          );
+        } else if (isEffectsWav) {
+          await transcodeMixerExportWav(
+            srcPath,
+            newFilePath,
+            targetExt,
+            speed,
+          );
+        } else if (speed && speed !== 1) {
+          await runSingleInputSpeedExport(srcPath, newFilePath, speed);
+        } else {
+          await fs.promises.copyFile(srcPath, newFilePath);
+          console.error('Saved song.');
+        }
+
+        if (isMixerExportTempWav(srcPath)) {
+          try {
+            await fsPromises.unlink(srcPath);
+          } catch (unlinkErr) {
+            Logger.error('[export] Could not remove temp export wav', {
+              message: trimForLog(unlinkErr?.message ?? String(unlinkErr)),
+            });
           }
+        }
 
-          cmd
-            .output(newFilePath)
-            .on('end', () => {
-              console.error('Saved song with speed effect.');
-              resolve();
-            })
-            .on('error', (err) => {
-              console.error('Error applying speed effect:', err);
-              reject(err);
-            })
-            .run();
+        let song = null;
+        try {
+          const metaInputPath = isEffectsWav && libraryRef ? libraryRef : srcPath;
+          song = await processConvertedSongMetadata(metaInputPath, newFilePath);
+        } catch (metaErr) {
+          Logger.error('[export] Failed to read metadata for exported file', {
+            message: trimForLog(metaErr?.message ?? String(metaErr)),
+          });
+        }
+
+        event.reply('SAVE_SONG_RESULT', {
+          success: true,
+          path: newFilePath,
+          song,
         });
-      } else {
-        await fs.promises.copyFile(sourcePath, newFilePath);
-        console.error('Saved song.');
+      } catch (err) {
+        console.error('Error saving song:', err);
+        event.reply('SAVE_SONG_RESULT', { success: false, error: err.message });
+      }
+    },
+  );
+};
+
+const CONVERTER_INPUT_EXTENSIONS = [
+  'mp3',
+  'wav',
+  'ogg',
+  'mp4',
+  'flac',
+  'm4a',
+  'mkv',
+  'aac',
+];
+const CONVERTER_OUTPUT_FORMATS = new Set([
+  'mp3',
+  'wav',
+  'flac',
+  'ogg',
+  'm4a',
+  'aac',
+]);
+
+function createUniqueConvertedPath(inputPath, outputFormat) {
+  const parsed = path.parse(inputPath);
+  let candidate = path.join(
+    parsed.dir,
+    `${parsed.name}-converted.${outputFormat}`,
+  );
+  let index = 1;
+
+  while (fs.existsSync(candidate)) {
+    candidate = path.join(
+      parsed.dir,
+      `${parsed.name}-converted-${index}.${outputFormat}`,
+    );
+    index += 1;
+  }
+
+  return candidate;
+}
+
+/** Same folder as reference; `-edited` / `-edited-N`. */
+function createUniqueExportPath(referenceAudioPath, outputExt) {
+  const parsed = path.parse(referenceAudioPath);
+  const baseStem = parsed.name;
+  let candidate = path.join(parsed.dir, `${baseStem}-edited${outputExt}`);
+  let index = 1;
+
+  while (fs.existsSync(candidate)) {
+    candidate = path.join(
+      parsed.dir,
+      `${baseStem}-edited-${index}${outputExt}`,
+    );
+    index += 1;
+  }
+
+  return candidate;
+}
+
+function convertSongFile(inputPath, outputPath, outputFormat) {
+  return new Promise((resolve, reject) => {
+    const cmd = ffmpeg(inputPath)
+      .noVideo()
+      .format(outputFormat === 'm4a' ? 'ipod' : outputFormat)
+      .output(outputPath)
+      .on('end', resolve)
+      .on('error', reject);
+
+    attachFfmpegTracking(cmd);
+    cmd.run();
+  });
+}
+
+async function processConvertedSongMetadata(inputPath, outputPath) {
+  const inputDir = path.dirname(inputPath);
+  const outputDir = path.dirname(outputPath);
+  const imageMap = {
+    [outputDir]: await listImageFilesInAlbumDir(outputDir),
+  };
+
+  const [sourceSong, convertedSong] = await Promise.all([
+    processSongMetadata(inputPath, {
+      [inputDir]: imageMap[outputDir],
+    }),
+    processSongMetadata(outputPath, imageMap),
+  ]);
+
+  if (
+    convertedSong &&
+    !convertedSong.albumImage &&
+    sourceSong?.albumImage
+  ) {
+    convertedSong.albumImage = sourceSong.albumImage;
+  }
+
+  return convertedSong;
+}
+
+const SETUP_FILE_CONVERTER = (mainWindow) => {
+  ipcMain.handle('SELECT_CONVERTER_INPUT', async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openFile', 'multiSelections'],
+      filters: [
+        {
+          name: 'Song files',
+          extensions: CONVERTER_INPUT_EXTENSIONS,
+        },
+      ],
+    });
+
+    if (result.canceled || !result.filePaths?.length) {
+      return null;
+    }
+
+    return result.filePaths;
+  });
+
+  ipcMain.handle('CONVERT_SONG_FILE', async (_event, payload) => {
+    try {
+      const inputPath = normalizeOptionalFilePath(payload?.inputPath);
+      const outputFormat = String(payload?.outputFormat || '').toLowerCase();
+
+      if (!inputPath) {
+        throw new Error('Choose a source file first.');
+      }
+      if (!CONVERTER_OUTPUT_FORMATS.has(outputFormat)) {
+        throw new Error('Choose a supported output format.');
+      }
+      if (!fs.existsSync(inputPath)) {
+        throw new Error('The selected source file could not be found.');
       }
 
-      event.reply('SAVE_SONG_RESULT', { success: true, path: newFilePath });
+      const outputPath = createUniqueConvertedPath(inputPath, outputFormat);
+      await convertSongFile(inputPath, outputPath, outputFormat);
+      const song = await processConvertedSongMetadata(inputPath, outputPath);
+
+      return { success: true, outputPath, song };
     } catch (err) {
-      console.error('Error saving song:', err);
-      event.reply('SAVE_SONG_RESULT', { success: false, error: err.message });
+      Logger.error('[converter] Failed to convert song file', {
+        message: trimForLog(err?.message ?? String(err)),
+      });
+      return {
+        success: false,
+        error: err?.message || 'Conversion failed.',
+      };
     }
   });
 };
@@ -386,6 +898,53 @@ const SETUP_EFFECTS = (mainWindow, directory) => {
     // Send the new effects back to the client
     mainWindow.webContents.send('SAVE_EFFECT_COMBO', effectCombos);
   });
+
+  /**
+   * Deletes a saved effect combo from the local filesystem
+   */
+  ipcMain.on('DELETE_EFFECT_COMBO', (event, effectName) => {
+    let effectCombos = getEffectCombos(effectCombosFile);
+    delete effectCombos[effectName];
+    try {
+      fs.writeFileSync(effectCombosFile, JSON.stringify(effectCombos, null, 2));
+    } catch (error) {
+      Logger.error('Error writing combos file:', error);
+    }
+    mainWindow.webContents.send('GRAB_EFFECT_COMBOS', effectCombos);
+  });
+
+  /**
+   * Renames a saved effect combo in the local filesystem
+   */
+  ipcMain.on('RENAME_EFFECT_COMBO', (event, oldName, newName) => {
+    let effectCombos = getEffectCombos(effectCombosFile);
+    if (!effectCombos[oldName] || !newName.trim()) return;
+    effectCombos[newName.trim()] = effectCombos[oldName];
+    delete effectCombos[oldName];
+    try {
+      fs.writeFileSync(effectCombosFile, JSON.stringify(effectCombos, null, 2));
+    } catch (error) {
+      Logger.error('Error writing combos file:', error);
+    }
+    mainWindow.webContents.send('GRAB_EFFECT_COMBOS', effectCombos);
+  });
+};
+
+const SETUP_HISTORY = (mainWindow, dataDirectory) => {
+  userDataPath = dataDirectory;
+
+  ipcMain.on('GET_HISTORY', () => {
+    mainWindow.webContents.send('RETURN_HISTORY', getHistory());
+  });
+
+  ipcMain.on('SAVE_HISTORY', (_event, history) => {
+    writeHistory(history);
+  });
+
+  ipcMain.on('CLEAR_HISTORY', () => {
+    writeHistory([]);
+    mainWindow.webContents.send('RETURN_HISTORY', []);
+  });
 };
 
 const SETUP_SONG_DOWNLOADS = (mainW) => {
@@ -394,6 +953,9 @@ const SETUP_SONG_DOWNLOADS = (mainW) => {
    * Downloads the youtube video from the specified url
    */
   ipcMain.on('DOWNLOAD_YOUTUBE_VID', async (event, videoUrl) => {
+    Logger.info('[download] Received direct YouTube download request', {
+      url: trimForLog(videoUrl),
+    });
     downloadYoutubeVideo(videoUrl);
   });
 
@@ -404,25 +966,60 @@ const SETUP_SONG_DOWNLOADS = (mainW) => {
     'DOWNLOAD_SONG_FROM_YOUTUBE_SEARCH',
     async (event, songDetails) => {
       const query = `${songDetails.name} ${songDetails.artist} audio`;
+      Logger.info('[download] Starting YouTube search for song request', {
+        song: trimForLog(songDetails?.name),
+        artist: trimForLog(songDetails?.artist),
+        query: trimForLog(query),
+      });
       const result = await youtubeSearch(query);
 
       if (result.all.length === 0) {
-        console.error('No results found for the search query');
+        Logger.warn('[download] No YouTube search results found', {
+          query: trimForLog(query),
+        });
         return;
       }
 
       // download the song from youtube
       const url = result.all[0].url;
+      Logger.info('[download] YouTube search resolved top result', {
+        query: trimForLog(query),
+        url: trimForLog(url),
+      });
       downloadYoutubeVideo(url, songDetails);
     },
   );
 };
+
+function coerceFiniteDuration(value) {
+  if (value == null) return undefined;
+  const n = typeof value === 'string' ? parseFloat(value) : Number(value);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+/** When music-metadata omits duration (common for some .ogg), ffprobe still reports stream length. */
+function probeDurationSecondsWithFfmpeg(filePath) {
+  return new Promise((resolve) => {
+    ffmpeg.ffprobe(filePath, (err, metadata) => {
+      if (err) {
+        Logger.warn('[metadata] ffprobe duration fallback failed', {
+          file: trimForLog(filePath),
+          message: trimForLog(err?.message ?? String(err)),
+        });
+        resolve(undefined);
+        return;
+      }
+      resolve(coerceFiniteDuration(metadata?.format?.duration));
+    });
+  });
+}
 
 // Function to process song metadata
 const processSongMetadata = (file, imageMap) => {
   return new Promise((resolve, reject) => {
     try {
       if (path.extname(file).toLowerCase() === '.mkv') {
+        const fileSizeBytes = safeStatSize(file);
         resolve({
           id: file,
           file: file,
@@ -432,18 +1029,23 @@ const processSongMetadata = (file, imageMap) => {
           duration: undefined,
           albumImage: undefined,
           isVideo: false,
+          fileSizeBytes,
         });
         return;
       }
 
-      const hasDirectoryImage = !!imageMap[path.dirname(file)]?.length;
+      const dirImages = getDirectoryImagesForFile(imageMap, file);
+      const hasDirectoryImage = dirImages.length > 0;
       metadata
         .parseFile(file, { skipCovers: hasDirectoryImage })
-        .then((data) => {
+        .then(async (data) => {
           let title = data.common.title;
           let artist = data.common.artist;
           let album = data.common.album;
-          let duration = data.format.duration;
+          let duration = coerceFiniteDuration(data.format?.duration);
+          if (duration === undefined) {
+            duration = await probeDurationSecondsWithFfmpeg(file);
+          }
 
           let key = file;
 
@@ -490,20 +1092,20 @@ const processSongMetadata = (file, imageMap) => {
           // If no directory image is found, falls back to embedded album art
           // If no image is found, the frontend will check if the song is an .mp4 file
           // If it is, it will use a frame from the video as the album image
-          const albumDir = path.dirname(file);
           const fileName = path
             .basename(file)
             .substring(0, file.lastIndexOf('.'));
           let savedImage = undefined;
-          imageMap[albumDir]?.forEach((imageFile) => {
-            if (savedImage === fileName) {
+          for (const imageFile of dirImages) {
+            const imageBase = path.basename(imageFile, path.extname(imageFile));
+            if (imageBase === fileName) {
               savedImage = imageFile;
-              return;
+              break;
             }
             if (!savedImage) {
               savedImage = imageFile;
             }
-          });
+          }
 
           // Fall back to embedded album art if no directory image was found
           if (
@@ -524,6 +1126,7 @@ const processSongMetadata = (file, imageMap) => {
             duration: duration,
             albumImage: savedImage,
             isVideo: path.extname(file).toLowerCase() === '.mp4',
+            ...technicalFieldsFromFormat(data.format, file),
           };
 
           resolve(songData);
@@ -538,9 +1141,84 @@ const processSongMetadata = (file, imageMap) => {
   });
 };
 
+function sanitizeMetadataValue(val) {
+  if (val == null) return '';
+  return String(val).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, ' ');
+}
+
+/**
+ * Rewrites title/artist/album in the container without re-encoding (codec copy).
+ * @returns {Promise<string>} Path to the temporary output file (caller moves onto original).
+ */
+function overwriteEmbeddedTagsPreserveStreams(absPath, tagFields) {
+  const title = sanitizeMetadataValue(tagFields.title);
+  const artist = sanitizeMetadataValue(tagFields.artist);
+  const album = sanitizeMetadataValue(tagFields.album);
+  const ext = path.extname(absPath);
+  const dir = path.dirname(absPath);
+  const tmpPath = path.join(dir, `.audioshape-meta-${uuidv4()}${ext}`);
+
+  return new Promise((resolve, reject) => {
+    const timeoutMs = 45000;
+    let settled = false;
+    const timeoutId = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      reject(
+        new Error(`[UPDATE_SONG_TAGS] ffmpeg timed out after ${timeoutMs}ms`),
+      );
+      fsPromises
+        .unlink(tmpPath)
+        .catch(() => {}); // best-effort cleanup; ffmpeg may still hold the file
+    }, timeoutMs);
+
+    const ffTagCmd = ffmpeg(absPath)
+      .outputOption('-map', '0')
+      .outputOption('-c', 'copy')
+      .outputOptions('-metadata', `title=${title}`)
+      .outputOptions('-metadata', `artist=${artist}`)
+      .outputOptions('-metadata', `album=${album}`)
+      .output(tmpPath)
+      .on('end', () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeoutId);
+        resolve(tmpPath);
+      })
+      .on('error', (err) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeoutId);
+        reject(err);
+      });
+    attachFfmpegTracking(ffTagCmd);
+    ffTagCmd.run();
+  });
+}
+
+async function replaceOriginalWithTempFile(originalAbsPath, tempPath) {
+  const backupPath = `${originalAbsPath}.audioshape-bak-${uuidv4()}`;
+  await fsPromises.rename(originalAbsPath, backupPath);
+  try {
+    await fsPromises.rename(tempPath, originalAbsPath);
+    await fsPromises.unlink(backupPath);
+  } catch (err) {
+    try {
+      await fsPromises.rename(backupPath, originalAbsPath);
+    } catch {}
+    try {
+      await fsPromises.unlink(tempPath);
+    } catch {}
+    throw err;
+  }
+}
+
 const SETUP_GET_SONGS = (mainW) => {
   mainWindow = mainW;
-  ipcMain.on('GET_SONGS', async (event, folderPath) => {
+  ipcMain.on('GET_SONGS', async (event, payload) => {
+    const folderPath =
+      typeof payload === 'string' ? payload : payload?.folderPath ?? '';
+    const requestId = ++activeSongLoadRequestId;
     console.error('FOLDER PATH: ', folderPath);
     // folderPath = getParentDirectory(folderPath);
     // console.error('FOLDER PATH2: ', folderPath);
@@ -562,7 +1240,16 @@ const SETUP_GET_SONGS = (mainW) => {
 
     // The user has not selected a directory, so we should return an empty object
     if (correctedPath === '') {
-      event.reply('GRAB_SONGS', { songs: {}, isComplete: true });
+      safeReply(
+        event,
+        'GRAB_SONGS',
+        {
+          songsDelta: {},
+          isComplete: true,
+          requestId,
+        },
+        Logger,
+      );
       return;
     }
 
@@ -570,36 +1257,36 @@ const SETUP_GET_SONGS = (mainW) => {
     const songTypes = 'mp3,wav,ogg,mp4,flac,m4a,mkv';
     const audios = await glob(correctedPath + '/**/*.{' + songTypes + '}');
 
-    // Get and set a map of image files for easier access
-    const imageFiles = await glob(correctedPath + '/**/*.{jpg,jpeg,png}');
-    const imageMap = {};
-    imageFiles.forEach((imageFile) => {
-      const imageDir = path.dirname(imageFile);
-      if (!imageMap[imageDir]) {
-        imageMap[imageDir] = [];
-      }
-      imageMap[imageDir].push(imageFile);
-    });
-    console.error('Image Map: ', imageMap);
-
     // Make sure we have at least one song in the directory
     if (audios.length === 0) {
-      // ! OUTPUT ERROR HERE?
-      event.reply('GRAB_SONGS', { songs: {}, isComplete: true });
+      safeReply(
+        event,
+        'GRAB_SONGS',
+        {
+          songsDelta: {},
+          isComplete: true,
+          requestId,
+        },
+        Logger,
+      );
       return;
     }
-
-    /* Get all songs */
-    songs = {}; // ? Reset songs here?
 
     const total = audios.length;
     Logger.info(`Loading ${total} songs from ${correctedPath}`);
     console.log(`[Songs] Found ${total} songs — loading metadata...`);
 
-    const BATCH_SIZE = 20;
+    const BATCH_SIZE = 200;
+    const imageMap = {};
 
     for (let i = 0; i < audios.length; i += BATCH_SIZE) {
+      if (isSongLoadRequestStale(requestId, activeSongLoadRequestId)) {
+        Logger.info(`[Songs] Cancelled stale load request ${requestId}`);
+        return;
+      }
+
       const batch = audios.slice(i, i + BATCH_SIZE);
+      await addDirectoryImagesForAudioFiles(batch, imageMap);
       const batchResults = await Promise.all(
         batch.map((file) =>
           processSongMetadata(file, imageMap).catch((error) => {
@@ -614,8 +1301,9 @@ const SETUP_GET_SONGS = (mainW) => {
         ),
       );
 
+      const songsDelta = {};
       batchResults.forEach((songData) => {
-        if (songData) songs[songData.id] = songData;
+        if (songData) songsDelta[songData.id] = songData;
       });
 
       const resolved = i + batch.length;
@@ -624,11 +1312,106 @@ const SETUP_GET_SONGS = (mainW) => {
       console.log(
         `[Songs] ${resolved}/${total} (${pct}%)${isComplete ? ' — done!' : ''}`,
       );
-      mainWindow.webContents.send('GRAB_SONGS', {
-        songs,
-        isComplete,
-        progress: { resolved, total },
+      if (isSongLoadRequestStale(requestId, activeSongLoadRequestId)) {
+        Logger.info(`[Songs] Cancelled stale load request ${requestId}`);
+        return;
+      }
+      const sent = safeReply(
+        event,
+        'GRAB_SONGS',
+        {
+          songsDelta,
+          isComplete,
+          progress: { resolved, total },
+          requestId,
+        },
+        Logger,
+      );
+      if (!sent) {
+        Logger.info(
+          `[Songs] Stopping load ${requestId}: renderer frame unavailable`,
+        );
+        return;
+      }
+    }
+  });
+
+  ipcMain.on('UPDATE_SONG_TAGS', async (event, payload) => {
+    const replyErr = (message) =>
+      event.reply('UPDATE_SONG_TAGS_RESULT', { success: false, error: message });
+
+    if (
+      !payload ||
+      typeof payload.filePath !== 'string' ||
+      payload.filePath.trim() === ''
+    ) {
+      return replyErr('Missing file path.');
+    }
+
+    let absPath = payload.filePath.trim();
+    if (absPath.startsWith('file://')) {
+      try {
+        absPath = fileURLToPath(absPath);
+      } catch {
+        absPath = decodeURIComponent(absPath.replace(/^file:\/+/, ''));
+      }
+    }
+    absPath = path.normalize(absPath);
+
+    const title = payload.title != null ? String(payload.title) : '';
+    const artist = payload.artist != null ? String(payload.artist) : '';
+    const album = payload.album != null ? String(payload.album) : '';
+
+    try {
+      await fsPromises.access(absPath, fs.constants.F_OK | fs.constants.R_OK);
+    } catch {
+      return replyErr(`File not found or not readable: ${absPath}`);
+    }
+
+    let tmpOut = null;
+    try {
+      tmpOut = await overwriteEmbeddedTagsPreserveStreams(absPath, {
+        title,
+        artist,
+        album,
       });
+      await replaceOriginalWithTempFile(absPath, tmpOut);
+      tmpOut = null;
+    } catch (err) {
+      if (tmpOut) {
+        try {
+          await fsPromises.unlink(tmpOut);
+        } catch {}
+      }
+      Logger.error('[UPDATE_SONG_TAGS] Failed to write tags', err);
+      return replyErr(err?.message || String(err));
+    }
+
+    try {
+      const albumDir = path.dirname(absPath);
+      const images = await listImageFilesInAlbumDir(albumDir);
+      const imageMap = { [albumDir]: images };
+      const songData = await processSongMetadata(absPath, imageMap);
+      if (!songData) {
+        return replyErr('Tags may have been written but metadata could not be re-read.');
+      }
+      if (typeof payload.filePath === 'string' && payload.filePath.trim() !== '') {
+        songData.id = payload.filePath.trim();
+      }
+      const keptArt = resolvedPreviousAlbumImagePath(
+        payload.previousAlbumImage,
+        absPath,
+      );
+      if (keptArt) {
+        songData.albumImage = keptArt;
+      }
+      event.reply('UPDATE_SONG_TAGS_RESULT', { success: true, song: songData });
+    } catch (err) {
+      Logger.error('[UPDATE_SONG_TAGS] Re-parse failed', err);
+      return replyErr(
+        err?.message ||
+          'Tags were written but the library could not refresh this track.',
+      );
     }
   });
 
@@ -706,7 +1489,14 @@ function embedMetadata(inputFilePath, outputFilePath, metadata) {
   return new Promise(async (resolve, reject) => {
     let tempImagePath = null;
     try {
-      if (metadata.imageUrl) {
+      const ext = path.extname(inputFilePath).toLowerCase();
+      const isVideoContainer = ['.mp4', '.webm', '.mkv', '.mov', '.m4v'].includes(
+        ext,
+      );
+      // Album art as attached_pic is only wired for MP4; other containers get metadata only.
+      const embedCoverInVideo = ['.mp4', '.m4v'].includes(ext);
+
+      if (metadata.imageUrl && (!isVideoContainer || embedCoverInVideo)) {
         tempImagePath = path.join(os.tmpdir(), `cover-${Date.now()}.jpg`);
         await downloadImage(metadata.imageUrl, tempImagePath);
       }
@@ -717,15 +1507,25 @@ function embedMetadata(inputFilePath, outputFilePath, metadata) {
         .outputOption('-metadata', `album=${metadata.album}`);
 
       if (tempImagePath) {
-        cmd = cmd
-          .addInput(tempImagePath)
-          .outputOption('-map', '0:0')
-          .outputOption('-map', '1:0')
-          .outputOption('-c:a', 'copy')
-          .outputOption('-c:v', 'copy')
-          .outputOption('-id3v2_version', '3')
-          .outputOption('-metadata:s:v', 'title=Album cover')
-          .outputOption('-metadata:s:v', 'comment=Cover (front)');
+        cmd = cmd.addInput(tempImagePath);
+        if (embedCoverInVideo) {
+          // MP4 has video at 0:v and audio at 0:a; mapping only 0:0 drops all audio.
+          cmd = cmd
+            .outputOption('-map', '0')
+            .outputOption('-map', '1:0')
+            .outputOption('-c', 'copy')
+            .outputOption('-c:v:1', 'mjpeg')
+            .outputOption('-disposition:v:1', 'attached_pic');
+        } else {
+          cmd = cmd
+            .outputOption('-map', '0:0')
+            .outputOption('-map', '1:0')
+            .outputOption('-c:a', 'copy')
+            .outputOption('-c:v', 'copy')
+            .outputOption('-id3v2_version', '3')
+            .outputOption('-metadata:s:v', 'title=Album cover')
+            .outputOption('-metadata:s:v', 'comment=Cover (front)');
+        }
       }
 
       cmd
@@ -755,8 +1555,9 @@ function embedMetadata(inputFilePath, outputFilePath, metadata) {
             } catch {}
           }
           reject(err);
-        })
-        .run();
+        });
+      attachFfmpegTracking(cmd);
+      cmd.run();
     } catch (error) {
       Logger.error('Error embedding metadata:', error);
       if (tempImagePath) {
@@ -799,8 +1600,19 @@ function writeMetadata(title, filePath) {
 async function downloadYoutubeVideo(url, songDetails) {
   const settings = getSettings();
   const songDirectory = settings.libraryDirectory;
+  const requestLabel = songDetails?.name || 'direct-youtube-request';
+  Logger.info('[download] Starting downloadYoutubeVideo', {
+    request: trimForLog(requestLabel),
+    url: trimForLog(url),
+    directoryConfigured: songDirectory !== '',
+    mp4Enabled: !!settings.mp4DownloadEnabled,
+    embedExtraMetadata: settings.attchingExtraDetails ?? true,
+  });
 
   if (songDirectory === '') {
+    Logger.warn('[download] Download aborted: missing song directory', {
+      request: trimForLog(requestLabel),
+    });
     mainWindow.webContents.send(
       'download-error',
       `No valid song directory found. Please choose a song directory from the settings page to download songs.`,
@@ -812,14 +1624,21 @@ async function downloadYoutubeVideo(url, songDetails) {
   const youtubeDl = getYoutubeDl();
   let info;
   try {
-    info = await youtubeDl(url, {
+    const infoJob = youtubeDl(url, {
       dumpSingleJson: true,
       noWarnings: true,
       noCheckCertificates: true,
       preferFreeFormats: true,
     });
+    trackSpawnedChild(infoJob);
+    info = await infoJob;
   } catch (err) {
     Logger.error('Failed to get video info:', err.stderr || err.message || err);
+    Logger.error('[download] Download aborted while fetching video info', {
+      request: trimForLog(requestLabel),
+      url: trimForLog(url),
+      error: trimForLog(err.stderr || err.message || String(err)),
+    });
     mainWindow.webContents.send(
       'download-error',
       `Failed to get video info: ${err.stderr || err.message}`,
@@ -840,18 +1659,25 @@ async function downloadYoutubeVideo(url, songDetails) {
 
   // Downloading audio only (MP3)
   if (!settings.mp4DownloadEnabled) {
+    Logger.info('[download] Download mode selected', {
+      request: trimForLog(songDetails?.name),
+      mode: 'mp3',
+      outputName: trimForLog(videoTitle),
+    });
     const tempFilePath = path.join(songDirectory, `temp-${videoTitle}.mp3`);
     const finalFilePath = path.join(songDirectory, `${videoTitle}.mp3`);
 
     try {
-      const subprocess = youtubeDl.exec(url, {
-        extractAudio: true,
-        audioFormat: 'mp3',
-        audioQuality: 0,
-        output: tempFilePath,
-        noPlaylist: true,
-        noCheckCertificates: true,
-      });
+      const subprocess = trackSpawnedChild(
+        youtubeDl.exec(url, {
+          extractAudio: true,
+          audioFormat: 'mp3',
+          audioQuality: 0,
+          output: tempFilePath,
+          noPlaylist: true,
+          noCheckCertificates: true,
+        }),
+      );
 
       const onMp3Progress = (data) => {
         const match = data.toString().match(/\[download\]\s+([\d.]+)%/);
@@ -869,6 +1695,10 @@ async function downloadYoutubeVideo(url, songDetails) {
       subprocess.stderr.on('data', onMp3Progress);
 
       await subprocess;
+      Logger.info('[download] yt-dlp audio fetch complete', {
+        request: trimForLog(songDetails?.name),
+        tempPath: trimForLog(tempFilePath),
+      });
 
       let songData;
       if (embedExtraMetadata) {
@@ -883,11 +1713,21 @@ async function downloadYoutubeVideo(url, songDetails) {
         'Download completed!',
         songData,
       );
+      Logger.info('[download] Download completed successfully', {
+        request: trimForLog(songDetails?.name),
+        mode: 'mp3',
+        outputPath: trimForLog(embedExtraMetadata ? finalFilePath : tempFilePath),
+      });
     } catch (err) {
       Logger.error(
         'Error downloading audio:',
         err.stderr || err.message || err,
       );
+      Logger.error('[download] Download failed', {
+        request: trimForLog(songDetails?.name),
+        mode: 'mp3',
+        error: trimForLog(err.stderr || err.message || String(err)),
+      });
       mainWindow.webContents.send(
         'download-error',
         songDetails.name,
@@ -898,17 +1738,24 @@ async function downloadYoutubeVideo(url, songDetails) {
   }
 
   // Downloading video + audio (MP4)
+  Logger.info('[download] Download mode selected', {
+    request: trimForLog(songDetails?.name),
+    mode: 'mp4',
+    outputName: trimForLog(videoTitle),
+  });
   const tempFilePath = path.join(songDirectory, `temp-${videoTitle}.mp4`);
   const finalFilePath = path.join(songDirectory, `${videoTitle}.mp4`);
 
   try {
-    const subprocess = youtubeDl.exec(url, {
-      format: 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best',
-      mergeOutputFormat: 'mp4',
-      output: tempFilePath,
-      noPlaylist: true,
-      noCheckCertificates: true,
-    });
+    const subprocess = trackSpawnedChild(
+      youtubeDl.exec(url, {
+        format: 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best',
+        mergeOutputFormat: 'mp4',
+        output: tempFilePath,
+        noPlaylist: true,
+        noCheckCertificates: true,
+      }),
+    );
 
     // MP4 downloads video first (0→100%) then audio (0→100%), then merges.
     // We map these two phases onto a single 0–100% bar so it never resets.
@@ -957,6 +1804,10 @@ async function downloadYoutubeVideo(url, songDetails) {
     subprocess.stderr.on('data', onMp4Progress);
 
     await subprocess;
+    Logger.info('[download] yt-dlp video/audio fetch complete', {
+      request: trimForLog(songDetails?.name),
+      tempPath: trimForLog(tempFilePath),
+    });
 
     let songData;
     if (embedExtraMetadata) {
@@ -971,8 +1822,18 @@ async function downloadYoutubeVideo(url, songDetails) {
       'Download completed!',
       songData,
     );
+    Logger.info('[download] Download completed successfully', {
+      request: trimForLog(songDetails?.name),
+      mode: 'mp4',
+      outputPath: trimForLog(embedExtraMetadata ? finalFilePath : tempFilePath),
+    });
   } catch (err) {
     Logger.error('Error downloading video:', err.stderr || err.message || err);
+    Logger.error('[download] Download failed', {
+      request: trimForLog(songDetails?.name),
+      mode: 'mp4',
+      error: trimForLog(err.stderr || err.message || String(err)),
+    });
     mainWindow.webContents.send(
       'download-error',
       songDetails.name,
@@ -1057,6 +1918,11 @@ function createSettingsPath() {
   return settingsPath;
 }
 
+function createHistoryPath() {
+  const historyPath = path.join(userDataPath, 'Data', 'history.json');
+  return historyPath;
+}
+
 function getSettings(settingsPath) {
   // Optional parameter
   if (settingsPath === undefined) {
@@ -1067,13 +1933,38 @@ function getSettings(settingsPath) {
   return JSON.parse(settingsData);
 }
 
+function getHistory() {
+  const historyPath = createHistoryPath();
+  try {
+    const historyData = fs.readFileSync(historyPath, 'utf-8');
+    if (!historyData) return [];
+    const parsed = JSON.parse(historyData);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.error('Error reading history file:', error);
+    return [];
+  }
+}
+
+function writeHistory(history) {
+  const historyPath = createHistoryPath();
+  try {
+    const safeHistory = Array.isArray(history) ? history : [];
+    fs.writeFileSync(historyPath, JSON.stringify(safeHistory, null, 2));
+  } catch (error) {
+    console.error('Error writing history file:', error);
+  }
+}
+
 module.exports = {
   SAVE_TEMP_SONG,
   DELETE_TEMP_SONG,
   SAVE_SONG,
+  SETUP_FILE_CONVERTER,
   SETUP_SETINGS,
   SETUP_PLAYLISTS,
   SETUP_EFFECTS,
+  SETUP_HISTORY,
   SETUP_SONG_DOWNLOADS,
   SETUP_GET_SONGS,
 };

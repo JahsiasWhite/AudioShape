@@ -1,5 +1,19 @@
+/* flex-shrink: 0 — with overflow-x: hidden, flex min-size can become 0 and the
+   bar collapses beside a wide main pane (regressed when overflow was added for
+   the file converter tab). */
 .layout-bar {
+  flex-shrink: 0;
   padding-top: 5px;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  overscroll-behavior: contain;
+}
+
+.layout-bar::-webkit-scrollbar {
+  display: none;
 }
 
 .centered-content {

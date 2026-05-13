@@ -4,6 +4,7 @@ const {
   ipcMain,
   protocol,
   globalShortcut,
+  dialog,
 } = require('electron');
 
 const path = require('path');
@@ -15,9 +16,11 @@ const {
   SAVE_TEMP_SONG,
   DELETE_TEMP_SONG,
   SAVE_SONG,
+  SETUP_FILE_CONVERTER,
   SETUP_SETINGS,
   SETUP_PLAYLISTS,
   SETUP_EFFECTS,
+  SETUP_HISTORY,
   SETUP_SONG_DOWNLOADS,
   SETUP_GET_SONGS,
 } = require('./ipcMain');
@@ -40,6 +43,7 @@ function initializeAppConstants() {
   const settingsFile = path.join(dataDirectory, 'settings.json');
   const playlistsFile = path.join(dataDirectory, 'playlists.json');
   const effectCombosFile = path.join(dataDirectory, 'effectCombos.json');
+  const historyFile = path.join(dataDirectory, 'history.json');
   const tempSongFolder = path.join(dataDirectory, 'temp-songs');
 
   return {
@@ -48,6 +52,7 @@ function initializeAppConstants() {
     settingsFile,
     playlistsFile,
     effectCombosFile,
+    historyFile,
     tempSongFolder,
   };
 }
@@ -58,6 +63,7 @@ const {
   settingsFile,
   playlistsFile,
   effectCombosFile,
+  historyFile,
   tempSongFolder,
 } = initializeAppConstants();
 
@@ -81,8 +87,30 @@ if (!fs.existsSync(playlistsFile)) {
 if (!fs.existsSync(effectCombosFile)) {
   fs.writeFileSync(effectCombosFile, JSON.stringify({}));
 }
+if (!fs.existsSync(historyFile)) {
+  fs.writeFileSync(historyFile, JSON.stringify([]));
+}
 
 app.name = 'AudioShape';
+
+function resolveWindowIconPath() {
+  const candidates = [
+    path.join(__dirname, 'logo.png'),
+    path.join(__dirname, '..', 'src', 'logo.png'),
+  ];
+  // Windows often cannot use icons that only exist inside app.asar; keep logo in asarUnpack.
+  if (app.isPackaged) {
+    candidates.unshift(
+      path.join(process.resourcesPath, 'app.asar.unpacked', 'src', 'logo.png'),
+    );
+  }
+  for (const p of candidates) {
+    if (fs.existsSync(p)) {
+      return p;
+    }
+  }
+  return undefined;
+}
 
 // Register the custom protocol handler
 protocol.registerSchemesAsPrivileged([
@@ -97,6 +125,8 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 app.on('ready', function () {
+  const windowIcon = resolveWindowIconPath();
+
   // Create our app
   const mainWindow = new BrowserWindow({
     width: app.isPackaged ? 800 : 1100, // If we are debugging, we want to double the width for the debug window
@@ -107,6 +137,8 @@ app.on('ready', function () {
 
     // Remove the native title bar; we use a custom one in React
     frame: false,
+
+    ...(windowIcon ? { icon: windowIcon } : {}),
 
     webPreferences: {
       // Set the path of an additional "preload" script that can be used to
@@ -147,10 +179,25 @@ app.on('ready', function () {
   SAVE_TEMP_SONG(tempSongFolder, mainWindow);
   DELETE_TEMP_SONG();
   SAVE_SONG(dataDirectory);
+  SETUP_FILE_CONVERTER(mainWindow);
   SETUP_SETINGS(mainWindow, app.getPath('userData'));
   SETUP_PLAYLISTS(mainWindow, app.getPath('userData'));
   SETUP_EFFECTS(mainWindow, effectCombosFile);
+  SETUP_HISTORY(mainWindow, app.getPath('userData'));
   SETUP_SONG_DOWNLOADS(mainWindow);
+
+  // Native folder picker: avoids renderer webkitdirectory crawl on huge trees.
+  ipcMain.handle('SELECT_LIBRARY_DIRECTORY', async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openDirectory'],
+    });
+
+    if (result.canceled || !result.filePaths?.length) {
+      return null;
+    }
+
+    return result.filePaths[0];
+  });
 
   /* Window control handlers for the custom title bar */
   ipcMain.on('WINDOW_MINIMIZE', () => mainWindow.minimize());

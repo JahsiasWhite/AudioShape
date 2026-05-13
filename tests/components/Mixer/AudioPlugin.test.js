@@ -218,4 +218,63 @@ describe('<AudioPlugin />', () => {
       expect(getByText('MULTIPLIER: 1.2x')).not.toBeNull();
     });
   });
+
+  it('updates EQ readouts when a saved preset with EQ is applied', async () => {
+    const mockUseAudioPlayer =
+      require('../../../src/AudioController/AudioContext').useAudioPlayer;
+
+    mockUseAudioPlayer.mockReturnValue({
+      effects: {},
+      setEffects: jest.fn(),
+      loadingQueue: [],
+      currentSpeed: 1,
+      currentSong: mockCurrentSong,
+      savedEffects: {
+        eqBank: {
+          low: [-30, 0, 30],
+          mid: [-30, 0, 30],
+          high: [-30, 0, 30],
+        },
+      },
+      currentEffectCombo: 'eqBank',
+      clearEffects: clearEffectsMock,
+      addEffect: jest.fn(),
+      saveEffects: jest.fn(),
+      handleSongExport: jest.fn(),
+      speedupIsEnabled: false,
+      slowdownIsEnabled: false,
+      toggleSpeedup: jest.fn(),
+      effectsEnabled: true,
+    });
+
+    const { getByText } = render(
+      <AudioProvider>
+        <AudioPlugin />
+      </AudioProvider>,
+    );
+
+    await waitFor(() => {
+      expect(getByText(/LOW: -23/)).not.toBeNull();
+      expect(getByText(/MID: 1/)).not.toBeNull();
+      expect(getByText(/HIGH: 24/)).not.toBeNull();
+    });
+
+    mockUseAudioPlayer.mockReturnValue({
+      effects: effects,
+      setEffects: setEffectsMock,
+      loadingQueue: loadingQueue,
+      currentSpeed: 1,
+      currentSong: mockCurrentSong,
+      savedEffects: savedEffects,
+      currentEffectCombo: '',
+      clearEffects: clearEffectsMock,
+      addEffect: jest.fn(),
+      saveEffects: jest.fn(),
+      handleSongExport: jest.fn(),
+      speedupIsEnabled: false,
+      slowdownIsEnabled: false,
+      toggleSpeedup: jest.fn(),
+      effectsEnabled: false,
+    });
+  });
 });

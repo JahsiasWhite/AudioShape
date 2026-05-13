@@ -2,3 +2,23 @@
   /* width: 100%; */
   /* height: 100%; */
 }
+
+.effect-combo-badge {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(49, 107, 170, 0.12);
+  border: 1px solid rgba(49, 107, 170, 0.35);
+  border-radius: 4px;
+  padding: 4px 10px;
+  margin-right: auto;
+}
+
+.effect-combo-hidden {
+  visibility: hidden;
+}
+
+.effect-combo-name {
+  font-size: 12px;
+  color: var(--color-accent);
+  font-weight: 500;
+}

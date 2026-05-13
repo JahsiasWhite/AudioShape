@@ -1,13 +1,15 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 
 import Playbar from './components/Playbar/Playbar';
 import SongList from './components/SongList/SongList';
+import History from './components/History/History';
 import Playlists from './components/Playlists/Playlists';
 import Artists from './components/Artists/Artists';
 import Settings from './components/Settings/Settings';
 import Spotify from './components/Spotify/Spotify';
 import Youtube from './components/Youtube/Youtube';
+import FileConverter from './components/FileConverter/FileConverter';
 import LayoutBar from './components/LayoutBar/LayoutBar';
 import TitleBar from './components/TitleBar/TitleBar';
 import Mixer from './components/Mixer/Mixer';
@@ -43,7 +45,7 @@ function App() {
    */
   useEffect(() => {
     // Fetch initial songs when the component mounts
-    window.electron.ipcRenderer.sendMessage('GET_SONGS', '');
+    window.electron.ipcRenderer.sendMessage('GET_SONGS', { folderPath: '' });
 
     // Fetch color settings
     // This will create a duplicate of each style
@@ -112,9 +114,16 @@ function App() {
                 currentSection={currentSection}
                 setCurrentSection={setCurrentSection}
               />
-              <div className="main-content">
+              <div
+                className={
+                  'main-content' +
+                  (currentSection === 'allSongs' ? ' main-content--songlist' : '')
+                }
+              >
                 {currentSection === 'allSongs' ? (
                   <SongList handleSongEdit={handleSongSelect} />
+                ) : currentSection === 'history' ? (
+                  <History handleSongEdit={handleSongSelect} />
                 ) : currentSection === 'playlists' ? (
                   <Playlists toggleSection={toggleSection} />
                 ) : currentSection === 'artists' ? (
@@ -122,12 +131,14 @@ function App() {
                 ) : currentSection === 'spotify' ? (
                   <Spotify />
                 ) : currentSection === 'settings' ? (
-                  <Settings />
+                  <Settings openHistory={() => setCurrentSection('history')} />
                 ) : currentSection === 'mixer' ? (
                   <Mixer
                     selectedIndex={selectedSongIndex}
                     setSelectedIndex={setSelectedSongIndex}
                   />
+                ) : currentSection === 'fileConverter' ? (
+                  <FileConverter />
                 ) : currentSection === 'youtube' ? (
                   <Youtube />
                 ) : (
@@ -142,7 +153,13 @@ function App() {
         {isFullscreen && (
           <div className="fullscreen-with-titlebar">
             <TitleBar />
-            <FullscreenView toggleFullscreen={disableFullscreen} />
+            <FullscreenView
+              toggleFullscreen={disableFullscreen}
+              handleSongEdit={(id) => {
+                handleSongSelect(id);
+                disableFullscreen();
+              }}
+            />
           </div>
         )}
 

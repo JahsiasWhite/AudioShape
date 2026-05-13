@@ -16,7 +16,6 @@ export const AudioEffects = (
   const [currentSpeed, setCurrentSpeed] = useState(1);
   const [speedupIsEnabled, setSpeedupIsEnabled] = useState(false);
   const [slowDownIsEnabled, setSlowDownIsEnabled] = useState(false);
-  const [effectSongId, setEffectSongId] = useState(null);
 
   /**
    * Applies an effect instantly via the live audio chain.
@@ -50,9 +49,9 @@ export const AudioEffects = (
    * Applies a saved effect combo instantly via the live audio chain.
    */
   const applySavedEffects = (comboName) => {
-    const isSameCombo = currentEffectCombo === comboName;
-    const isSameSong = effectSongId === currentSongId;
-    if (isSameCombo && isSameSong) {
+    // Toggle off when clicking the same preset that is already active (highlighted),
+    // regardless of track changes — `currentEffectCombo` is the source of truth for UI.
+    if (currentEffectCombo === comboName) {
       toggleSavedEffectOff();
       return;
     }
@@ -67,7 +66,6 @@ export const AudioEffects = (
     if (savedEffects[comboName]) {
       setEffectsEnabled(true);
       setCurrentEffectCombo(comboName);
-      setEffectSongId(currentSongId);
       setSpeedupIsEnabled(false);
       setSlowDownIsEnabled(false);
 
@@ -136,6 +134,15 @@ export const AudioEffects = (
     );
   };
 
+  const deleteEffectCombo = (comboName) => {
+    if (currentEffectCombo === comboName) clearEffects();
+    window.electron.ipcRenderer.sendMessage('DELETE_EFFECT_COMBO', comboName);
+  };
+
+  const renameEffectCombo = (oldName, newName) => {
+    window.electron.ipcRenderer.sendMessage('RENAME_EFFECT_COMBO', oldName, newName);
+  };
+
   const handleEffectComboAdded = (newEffectCombos) => {
     setSavedEffects(newEffectCombos);
   };
@@ -154,7 +161,6 @@ export const AudioEffects = (
     const wasPaused = currentSong.paused;
     resetAllLiveEffects();
     setEffects({});
-    setEffectSongId(null);
     setCurrentEffectCombo('');
     setEffectsEnabled(false);
     setSpeedupIsEnabled(false);
@@ -186,6 +192,8 @@ export const AudioEffects = (
     toggleSpeedup,
     toggleSlowDown,
     saveEffects,
+    deleteEffectCombo,
+    renameEffectCombo,
     clearEffects,
     resetCurrentSong,
     effects,

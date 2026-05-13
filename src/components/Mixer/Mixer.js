@@ -28,9 +28,6 @@ function Mixer({ selectedIndex, setSelectedIndex }) {
   return (
     <div className="mixer">
       {/* {currentSong && <div>{currentSong.title}</div>} */}
-      {currentEffectCombo && (
-        <div>Current Effect Combo: {currentEffectCombo}</div>
-      )}
       <AudioPlugin />
     </div>
   );

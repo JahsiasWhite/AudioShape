@@ -48,8 +48,8 @@ export const DownloadManager = (
    * @param {string} [overridePath] - Optional pre-rendered temp file path (used when effects are active)
    */
   async function handleSongExport(speed, overridePath) {
-    const sourcePath = overridePath ?? currentSong.src;
-    if (!sourcePath || sourcePath === '') return;
+    const encodePath = overridePath ?? currentSong.src;
+    if (!encodePath || encodePath === '') return;
 
     return new Promise((resolve, reject) => {
       window.electron.ipcRenderer.once('SAVE_SONG_RESULT', (result) => {
@@ -59,14 +59,29 @@ export const DownloadManager = (
           reject(new Error(result.error));
         }
       });
-      window.electron.ipcRenderer.sendMessage('SAVE_SONG', sourcePath, speed);
+      window.electron.ipcRenderer.sendMessage(
+        'SAVE_SONG',
+        encodePath,
+        speed,
+        currentSong?.src,
+      );
     });
   }
 
-  async function downloadAudio(audioBuffer) {
+  /**
+   * @param {string} [libraryPathForSidecarTemp] - When set, export work WAV is written under OS temp (not your music folder).
+   */
+  async function downloadAudio(audioBuffer, libraryPathForSidecarTemp) {
     const wavBytes = createWavBytes(audioBuffer);
-    window.electron.ipcRenderer.sendMessage('SAVE_TEMP_SONG', wavBytes);
-    // getTempSong();
+    if (libraryPathForSidecarTemp) {
+      window.electron.ipcRenderer.sendMessage(
+        'SAVE_TEMP_SONG',
+        wavBytes,
+        libraryPathForSidecarTemp,
+      );
+    } else {
+      window.electron.ipcRenderer.sendMessage('SAVE_TEMP_SONG', wavBytes);
+    }
   }
 
   function createWavBytes(buffer) {

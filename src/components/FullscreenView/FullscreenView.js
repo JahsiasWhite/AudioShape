@@ -1,25 +1,47 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 
 import './FullscreenView.css';
 
 import AudioSpectrum from '../AudioSpectrum/AudioSpectrum.js';
 import FullscreenPlaybar from '../Playbar/FullscreenPlaybar.js';
 import VideoPlayer from './VideoPlayer/VideoPlayer.js';
+import RightClickMenu from '../SongList/RightClickMenu';
 
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
-const FullscreenView = ({ toggleFullscreen }) => {
-  const { loadedSongs, currentSongId, currentSong, loadingQueue } =
-    useAudioPlayer(); // TODO: Do I have to import currentSong
+const FullscreenView = ({ toggleFullscreen, handleSongEdit }) => {
+  const {
+    loadedSongs,
+    currentSongId,
+    currentSong,
+    loadingQueue,
+    requestScrollSongListToCurrentSong,
+  } = useAudioPlayer(); // TODO: Do I have to import currentSong
+
+  const exitFullscreen = useCallback(() => {
+    toggleFullscreen();
+    setTimeout(() => {
+      requestScrollSongListToCurrentSong?.();
+    }, 100);
+  }, [toggleFullscreen, requestScrollSongListToCurrentSong]);
   const song = loadedSongs[currentSongId];
 
-  // TODO: Changing volume rerenders this component...
-  console.log(song, currentSong);
+  const [clicked, setClicked] = useState({});
+
+  const handleSongContextMenu = (event) => {
+    if (!song) return;
+    event.preventDefault();
+    setClicked([event.clientX, event.clientY, song]);
+  };
 
   const isMP4 = song?.isVideo;
 
   return (
-    <div className="fullscreen-view">
+    <div
+      className="fullscreen-view"
+      onContextMenu={handleSongContextMenu}
+      onClick={() => setClicked({})}
+    >
       {!isMP4 ? (
         <>
           {song && (
@@ -48,13 +70,21 @@ const FullscreenView = ({ toggleFullscreen }) => {
 
       <div className="middle-content">
         {isMP4 ? (
-          <VideoPlayer songFile={song.file} song={currentSong} />
+          <VideoPlayer
+            songFile={song.file}
+            song={currentSong}
+            onExitFullscreen={exitFullscreen}
+          />
         ) : (
           <AudioSpectrum song={currentSong} loading={loadingQueue.length > 0} />
         )}
       </div>
 
-      <FullscreenPlaybar toggleFullscreen={toggleFullscreen} />
+      <FullscreenPlaybar onExitFullscreen={exitFullscreen} />
+
+      {handleSongEdit && (
+        <RightClickMenu clickData={clicked} handleSongEditClick={handleSongEdit} />
+      )}
     </div>
   );
 };

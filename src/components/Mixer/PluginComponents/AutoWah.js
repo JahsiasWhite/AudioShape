@@ -40,8 +40,20 @@ const AutoWah = React.forwardRef(({ interpolateValue, addEffect }, ref) => {
     }));
   };
 
+  /** Inverse of mapValueToAutoWah: audio value in 0…100 → knob (-23…24). */
+  const applySavedAutowah = (mappedValue) => {
+    setAutoWahKnobStyles((prev) => {
+      const [outMin, outMax] = [0, 100];
+      const knob =
+        ((mappedValue - outMin) / (outMax - outMin)) * (prev.max - prev.min) +
+        prev.min;
+      return { ...prev, value: knob };
+    });
+  };
+
   useImperativeHandle(ref, () => ({
     resetAutoWah,
+    applySavedAutowah,
   }));
 
   return (

@@ -3,11 +3,13 @@ import './FullscreenPlaybar.css';
 
 import VolumeControl from './VolumeControl/VolumeControl'; // ! I don't know if I like this name
 import CenterPlaybar from './CenterPlaybar';
+import ExitFullscreenButtonSVG from './ExitFullscreenButtonSVG';
 
 import { useAudioPlayer } from '../../AudioController/AudioContext';
 
-function FullscreenPlaybar({ toggleFullscreen }) {
-  const { currentSongId } = useAudioPlayer();
+function FullscreenPlaybar({ onExitFullscreen }) {
+  const { currentSongId, loadedSongs } = useAudioPlayer();
+  const song = loadedSongs[currentSongId];
 
   const [playbarVisible, setPlaybarVisible] = useState(true);
   const [timeoutId, setTimeoutId] = useState(null);
@@ -25,17 +27,6 @@ function FullscreenPlaybar({ toggleFullscreen }) {
   const showPlaybar = () => {
     clearTimeout(timeoutId);
     setPlaybarVisible(true);
-  };
-
-  const exitFullscreen = () => {
-    toggleFullscreen();
-
-    // Scrolls to the current song // TODO: I dont like this here. SHould probably make all of these a function as well
-    setTimeout(() => {
-      const songDiv = document.getElementById(currentSongId);
-      if (songDiv)
-        songDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }, 100);
   };
 
   // Add mousemove event listener to detect mouse position
@@ -84,16 +75,20 @@ function FullscreenPlaybar({ toggleFullscreen }) {
         </div>
         <PlaybackTimer />
       </div> */}
+      <div className="fullscreen-playbar-track">
+        {song ? (
+          <>
+            <div className="fullscreen-playbar-title">{song.title}</div>
+            <div className="fullscreen-playbar-album">{song.album}</div>
+          </>
+        ) : (
+          <div className="fullscreen-playbar-title">No song playing</div>
+        )}
+      </div>
       <CenterPlaybar />
-
-      <VolumeControl />
-      <div
-        className="fullscreen-button"
-        onClick={() => {
-          exitFullscreen();
-        }}
-      >
-        +
+      <div className="fullscreen-right-controls">
+        <VolumeControl />
+        <ExitFullscreenButtonSVG onClick={onExitFullscreen} />
       </div>
     </div>
   );

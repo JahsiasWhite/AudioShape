@@ -86,6 +86,54 @@ const AudioPlugin = () => {
     setMultiplier(currentSpeed);
   }, [currentSpeed, savedEffects]);
 
+  // Sync knob visuals when a saved effect combo is applied
+  useEffect(() => {
+    if (!currentEffectCombo) {
+      eqRef.current?.resetEq?.();
+      autoWahRef.current?.resetAutoWah?.();
+      chorusRef.current?.resetChorus?.();
+      return;
+    }
+
+    const combo = savedEffects[currentEffectCombo];
+    if (!combo) return;
+    const updates = {};
+
+    if (combo.reverbIsActive !== undefined) updates.reverbIsActive = combo.reverbIsActive;
+    if (combo.reverbWetness !== undefined) {
+      // Reverse-map from 0-1 audio range back to 1-100 knob range
+      updates.reverbWetness = Math.round(combo.reverbWetness * 99 + 1);
+    }
+    if (combo.delay !== undefined) {
+      updates.delay = Math.round(combo.delay * 100);
+    }
+    if (combo.bitCrusher !== undefined) updates.bitCrusher = combo.bitCrusher;
+    if (combo.pitchShift !== undefined) updates.pitchShift = combo.pitchShift;
+
+    if (Object.keys(updates).length > 0) {
+      setKnobs((prev) => ({ ...prev, ...updates }));
+    }
+
+    const eqBands = combo.low ?? combo.mid ?? combo.high;
+    if (Array.isArray(eqBands) && eqBands.length === 3) {
+      eqRef.current?.applySavedEq?.(eqBands);
+    } else {
+      eqRef.current?.resetEq?.();
+    }
+
+    if (combo.autowah !== undefined) {
+      autoWahRef.current?.applySavedAutowah?.(combo.autowah);
+    } else {
+      autoWahRef.current?.resetAutoWah?.();
+    }
+
+    if (combo.chorus !== undefined) {
+      chorusRef.current?.applySavedChorus?.(combo.chorus);
+    } else {
+      chorusRef.current?.resetChorus?.();
+    }
+  }, [currentEffectCombo, savedEffects]);
+
   /* Styles for the different knobs */
   const speedKnobStyles = {
     degrees: 260,
@@ -109,7 +157,7 @@ const AudioPlugin = () => {
     color: true,
     size: 75,
     numTicks: 6,
-    min: 1,
+    min: 0,
     max: 100,
     value: knobs.delay,
   };
@@ -184,8 +232,7 @@ const AudioPlugin = () => {
   };
 
   const mapValueToDelay = (newValue) => {
-    // Our desired range
-    const delayRange = [0, 5];
+    const delayRange = [0, 1];
 
     const mappedValue = interpolateValue(delayRange, newValue, delayKnobStyles);
 
@@ -202,7 +249,11 @@ const AudioPlugin = () => {
   };
 
   const saveSettings = () => {
-    setShowSavePopup(true);
+    if (currentEffectCombo) {
+      saveEffects(currentEffectCombo);
+    } else {
+      setShowSavePopup(true);
+    }
   };
 
   const closeNamePopup = () => {
@@ -237,6 +288,27 @@ const AudioPlugin = () => {
       className={`audio-plugin ${loadingQueue.length > 0 ? 'unclickable' : ''}`}
     >
       <div className="plugin-settings-container">
+        <div className={`effect-combo-badge ${currentEffectCombo ? '' : 'effect-combo-hidden'}`}>
+          <span className="effect-combo-name">{currentEffectCombo}</span>
+        </div>
+        <div className="plugin-button-container">
+          Reset
+          <div
+            className="synth-button"
+            onClick={() => {
+              resetSong();
+            }}
+          ></div>
+        </div>
+        <div className="plugin-button-container">
+          Save
+          <div
+            className="synth-button"
+            onClick={() => {
+              saveSettings();
+            }}
+          ></div>
+        </div>
         <div className="plugin-button-container">
           Export
           <div
@@ -263,24 +335,6 @@ const AudioPlugin = () => {
           {exportStatus === 'error' && (
             <span style={{ fontSize: '10px', color: '#f44336' }}>Failed</span>
           )}
-        </div>
-        <div className="plugin-button-container">
-          Save
-          <div
-            className="synth-button"
-            onClick={() => {
-              saveSettings();
-            }}
-          ></div>
-        </div>
-        <div className="plugin-button-container">
-          Reset
-          <div
-            className="synth-button"
-            onClick={() => {
-              resetSong();
-            }}
-          ></div>
         </div>
       </div>
 
@@ -339,7 +393,7 @@ const AudioPlugin = () => {
               knobValue={knobs.delay}
               onChange={mapValueToDelay}
             />
-            <p>DELAY: {knobs.delay}s</p>
+            <p>DELAY: {(knobs.delay / 100).toFixed(2)}s</p>
           </div>
         </div>
         <div className="module-container">

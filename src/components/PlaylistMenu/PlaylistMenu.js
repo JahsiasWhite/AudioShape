@@ -65,7 +65,10 @@ function PlaylistMenu({ song, closePlaylistMenu }) {
   };
 
   return (
-    <div className="popup-container">
+    <div
+      className="popup-container"
+      onClick={(e) => e.stopPropagation()}
+    >
       <div className="song-name">{song.title}</div>
       <div className="close-menu" onClick={closePlaylistMenu}>
         X
