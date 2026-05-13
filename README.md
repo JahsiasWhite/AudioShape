@@ -46,11 +46,6 @@ Go to [releases](https://github.com/JahsiasWhite/AudioShape/releases) and downlo
 `npm install --production`<br>
 `npm install webpack-cli`<br>
 
-<!-- #### Run webpack
-
-`npm run watch` <br>
-This will create a new folder titled 'build' -->
-
 #### Build App
 
 `npm run react-build`
@@ -58,8 +53,6 @@ This will create a new folder titled 'build'
 
 `npm run electron-build`
 This will create a new folder titled 'dist'. This is where the installer.exe is
-
-- If you can't build, make sure react-scripts is not installed
 
 #### Run the app :)
 
